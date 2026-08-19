@@ -83,6 +83,7 @@ This document provides a data dictionary for the three domains used in CompareX.
     - `Image-URL-S` / `Image-URL-M` / `Image-URL-L`: URLs to book cover images.
 - **Data quality concerns**:
   - `timestamp`: Not available in source data (this is expected).
+  - Some `Book-Title` and `Publisher` fields contain unescaped HTML entities (e.g., `&amp` instead of `&`). Frontend display code should HTML-decode these fields when rendering in Browse/Compare (or they can be cleaned during ingestion).
 - **Metadata richness**: High (Title, Author, Year, Publisher, Cover Images). This makes BookCrossing the primary UI-showcase domain candidate.
 
 ---
