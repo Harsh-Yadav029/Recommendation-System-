@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Lint Frontend
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Install Gateway Dependencies
+        working-directory: ./gateway
+        run: npm ci
+
+      - name: Lint Gateway
+        working-directory: ./gateway
+        run: npm run lint
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install ML Service Dependencies
+        working-directory: ./ml-service
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 mypy
+
+      - name: Lint ML Service (flake8)
+        working-directory: ./ml-service
+        run: flake8 app
+
+      - name: Type-check ML Service (mypy)
+        working-directory: ./ml-service
+        run: mypy app

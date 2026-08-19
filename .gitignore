@@ -1,0 +1,30 @@
+# Node
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Data files (Phase 0 output)
+# We might want to track data dictionary, but not huge raw datasets if they exceed git limits.
+# Usually raw .dat files are ignored in real repos, but since we committed to copying them:
+# We will leave data/raw/ tracked unless you specifically want them ignored.
+# data/raw/

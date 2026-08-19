@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  gateway:
+    build:
+      context: ./gateway
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - ml-service
+
+  ml-service:
+    build:
+      context: ./ml-service
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URI=${MONGODB_URI:-mongodb://localhost:27017/comparex}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
