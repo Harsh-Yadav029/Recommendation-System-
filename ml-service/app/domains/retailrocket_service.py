@@ -1,0 +1,106 @@
+from typing import List, Dict, Any
+import os
+import json
+import pickle
+import numpy as np
+from app.contracts.recommender import BaseRecommenderService
+from app.models.schemas import UserProfile, Constraints, RankedItem, ComparisonTable
+
+class RetailrocketService(BaseRecommenderService):
+    def __init__(self):
+        self.domain = "retailrocket"
+        self.model = None
+        self.user_to_idx = {}
+        self.item_to_idx = {}
+        self.idx_to_user = []
+        self.idx_to_item = []
+        
+        self.baseline_items = []
+        
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
+        
+        # Load baseline
+        baseline_path = os.path.join(project_root, "models", "retailrocket_baseline.json")
+        if os.path.exists(baseline_path):
+            with open(baseline_path, "r") as f:
+                self.baseline_items = json.load(f)
+                
+        # Load ALS model
+        model_path = os.path.join(project_root, "models", "retailrocket_als.pkl")
+        if os.path.exists(model_path):
+            try:
+                with open(model_path, "rb") as f:
+                    artifact = pickle.load(f)
+                    self.model = artifact["model"]
+                    self.user_to_idx = artifact["user_to_idx"]
+                    self.item_to_idx = artifact["item_to_idx"]
+                    self.idx_to_user = artifact["idx_to_user"]
+                    self.idx_to_item = artifact["idx_to_item"]
+            except Exception as e:
+                print(f"Failed to load ALS model: {e}")
+                self.model = None
+                
+    def _get_baseline_recommendations(self, n: int = 10) -> List[RankedItem]:
+        results = []
+        for item in self.baseline_items[:n]:
+            results.append(RankedItem(
+                item_id=str(item["item_id"]),
+                score=float(item["score"]),
+                matched_constraints=[],
+                similarity_basis="popularity baseline fallback",
+                domain=self.domain
+            ))
+        return results
+        
+    def get_recommendations(self, user_profile: UserProfile, constraints: Constraints) -> List[RankedItem]:
+        if self.model is None or user_profile.user_id not in self.user_to_idx:
+            return self._get_baseline_recommendations(10)
+            
+        u_idx = self.user_to_idx[user_profile.user_id]
+        
+        try:
+            ids, scores = self.model.recommend(u_idx, None, N=10, filter_already_liked_items=False)
+            
+            results = []
+            if isinstance(ids, np.ndarray):
+                for i in range(len(ids)):
+                    item_id = self.idx_to_item[ids[i]]
+                    results.append(RankedItem(
+                        item_id=str(item_id),
+                        score=float(scores[i]),
+                        matched_constraints=[],
+                        similarity_basis="collaborative filtering based on similar purchase patterns",
+                        domain=self.domain
+                    ))
+            return results
+        except Exception:
+            return self._get_baseline_recommendations(10)
+
+    def compare(self, item_ids: List[str]) -> ComparisonTable:
+        items = []
+        
+        # Build score map from baseline for rank/score info
+        score_map = {str(item["item_id"]): item["score"] for item in self.baseline_items}
+        
+        for item_id in item_ids:
+            item_data = {
+                "item_id": item_id,
+                "title": "not specified",
+                "category": "not specified",
+                "price": "not specified",
+                "popularity_score": score_map.get(item_id, 0)
+            }
+            items.append(item_data)
+            
+        return ComparisonTable(items=items)
+
+    def cold_start_recommend(self, preference_answers: dict) -> List[RankedItem]:
+        # Retailrocket has no content metadata, so preferences can't be matched
+        return self._get_baseline_recommendations(10)
+
+    def explain(self, item_id: str, user_profile: UserProfile) -> str:
+        # Return raw structured reasoning
+        if self.model is None or user_profile.user_id not in self.user_to_idx:
+            return "matched_constraints=[], similarity_basis='popularity baseline fallback (no metadata constraints available)'"
+        return "matched_constraints=[], similarity_basis='collaborative filtering based on similar purchase patterns'"

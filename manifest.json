@@ -1,4 +1,10 @@
 {
   "models": {},
-  "datasets": {}
+  "datasets": {},
+  "retailrocket": {
+    "model_file": "models/retailrocket_als.pkl",
+    "version": "1.0.0",
+    "type": "ALS",
+    "description": "Implicit ALS model for retailrocket"
+  }
 }
