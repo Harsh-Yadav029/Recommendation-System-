@@ -4,7 +4,7 @@ import json
 import pickle
 import numpy as np
 from app.contracts.recommender import BaseRecommenderService
-from app.models.schemas import UserProfile, Constraints, RankedItem, ComparisonTable
+from app.models.schemas import UserProfile, Constraints, RankedItem, ComparisonTable, RecommendationResponse
 
 class RetailrocketService(BaseRecommenderService):
     def __init__(self):
@@ -41,7 +41,7 @@ class RetailrocketService(BaseRecommenderService):
                 print(f"Failed to load ALS model: {e}")
                 self.model = None
                 
-    def _get_baseline_recommendations(self, n: int = 10) -> List[RankedItem]:
+    def _get_baseline_recommendations(self, n: int = 10) -> RecommendationResponse:
         results = []
         for item in self.baseline_items[:n]:
             results.append(RankedItem(
@@ -51,9 +51,13 @@ class RetailrocketService(BaseRecommenderService):
                 similarity_basis="popularity baseline fallback",
                 domain=self.domain
             ))
-        return results
+        return RecommendationResponse(items=results)
         
-    def get_recommendations(self, user_profile: UserProfile, constraints: Constraints) -> List[RankedItem]:
+    def get_recommendations(self, user_profile: UserProfile, constraints: Constraints) -> RecommendationResponse:
+        # In Retailrocket, there are no category/price constraints to relax, 
+        # so we just return the standard recommendations.
+        # However, if we were forced to relax, we would use the new relaxation utility.
+        # We will add that when we create the relaxation utility.
         if self.model is None or user_profile.user_id not in self.user_to_idx:
             return self._get_baseline_recommendations(10)
             
@@ -73,7 +77,7 @@ class RetailrocketService(BaseRecommenderService):
                         similarity_basis="collaborative filtering based on similar purchase patterns",
                         domain=self.domain
                     ))
-            return results
+            return RecommendationResponse(items=results)
         except Exception:
             return self._get_baseline_recommendations(10)
 
@@ -95,9 +99,42 @@ class RetailrocketService(BaseRecommenderService):
             
         return ComparisonTable(items=items)
 
-    def cold_start_recommend(self, preference_answers: dict) -> List[RankedItem]:
-        # Retailrocket has no content metadata, so preferences can't be matched
-        return self._get_baseline_recommendations(10)
+    def cold_start_recommend(self, preference_answers: dict) -> RecommendationResponse:
+        session_items = preference_answers.get("session_items", [])
+        if not session_items or self.model is None:
+            return self._get_baseline_recommendations(10)
+            
+        scores = {}
+        for item_id in session_items:
+            if item_id in self.item_to_idx:
+                i_idx = self.item_to_idx[item_id]
+                try:
+                    ids, item_scores = self.model.similar_items(i_idx, N=15)
+                    if isinstance(ids, np.ndarray):
+                        for j in range(len(ids)):
+                            sim_idx = ids[j]
+                            sim_score = item_scores[j]
+                            sim_item_id = str(self.idx_to_item[sim_idx])
+                            if sim_item_id not in session_items:
+                                scores[sim_item_id] = scores.get(sim_item_id, 0) + sim_score
+                except Exception as e:
+                    pass
+                    
+        if not scores:
+            return self._get_baseline_recommendations(10)
+            
+        ranked_items = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:10]
+        results = []
+        for item_id, score in ranked_items:
+            results.append(RankedItem(
+                item_id=item_id,
+                score=float(score),
+                matched_constraints=[],
+                similarity_basis="session-based co-occurrence",
+                domain=self.domain
+            ))
+            
+        return RecommendationResponse(items=results)
 
     def explain(self, item_id: str, user_profile: UserProfile) -> str:
         # Return raw structured reasoning

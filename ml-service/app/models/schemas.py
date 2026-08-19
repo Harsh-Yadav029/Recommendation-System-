@@ -21,6 +21,12 @@ class RankedItem(BaseModel):
     domain: str
 
 
+class RecommendationResponse(BaseModel):
+    items: List[RankedItem]
+    relaxed: bool = False
+    relaxed_constraint: Optional[str] = None
+
+
 class ComparisonTable(BaseModel):
     items: List[Dict[str, Any]]
 

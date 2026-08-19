@@ -128,13 +128,13 @@ FastAPI ML service, and is never modified per-domain — only implemented.
 class BaseRecommenderService(Protocol):
     def get_recommendations(
         self, user_profile: UserProfile, constraints: Constraints
-    ) -> list[RankedItem]: ...
+    ) -> RecommendationResponse: ...
 
     def compare(self, item_ids: list[str]) -> ComparisonTable: ...
 
     def cold_start_recommend(
         self, preference_answers: dict
-    ) -> list[RankedItem]: ...
+    ) -> RecommendationResponse: ...
 
     def explain(self, item_id: str, user_profile: UserProfile) -> str: ...
 ```
@@ -234,6 +234,26 @@ empty result with no explanation. Required fallback sequence:
    response as `relaxed: true` with which constraint was relaxed
 3. If still empty, return a "no exact matches" response with the closest
    available items and a clear reason — never a blank UI state or raw error
+
+---
+
+## 4e. Reusable Constraint Relaxation (Phase 4+)
+
+When implementing `BaseRecommenderService.get_recommendations()` for domains with strict content metadata (e.g. Steam, BookCrossing), do **not** write bespoke empty-result handling. Instead, wrap your data-fetching logic using the shared utility located at `ml-service/app/core/relaxation.py`:
+
+```python
+from app.core.relaxation import relax_constraints_and_retry
+
+def get_recommendations(self, user_profile: UserProfile, constraints: Constraints) -> RecommendationResponse:
+    def _fetch(c: Constraints) -> RecommendationResponse:
+        # 1. Fetch from Vector DB / ALS using constraints `c`
+        # 2. Return RecommendationResponse(items=[...])
+        return RecommendationResponse(items=results)
+
+    return relax_constraints_and_retry(_fetch, constraints, target_count=10)
+```
+
+The `relax_constraints_and_retry` utility automatically manages the relaxation sequence (`tags` -> `budget_max` -> `category`) if fewer than `target_count` items are found. It will seamlessly retry the `_fetch` callback, and if it is forced to relax constraints or fully fallback to an unconstrained query, it will automatically populate the `relaxed` and `relaxed_constraint` top-level flags on the returned `RecommendationResponse` so the frontend can notify the user.
 
 ---
 
