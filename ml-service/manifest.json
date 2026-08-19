@@ -1,0 +1,12 @@
+{
+  "steam": {
+    "model_type": "implicit_als",
+    "model_path": "models/steam_als.pkl",
+    "baseline_path": "models/steam_baseline.json"
+  },
+  "bookcrossing": {
+    "model_type": "surprise_svd",
+    "model_path": "models/bookcrossing_svd.pkl",
+    "baseline_path": "models/bookcrossing_baseline.json"
+  }
+}
