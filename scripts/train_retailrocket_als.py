@@ -68,7 +68,39 @@ async def train_als():
     model = implicit.als.AlternatingLeastSquares(factors=50, regularization=0.01, iterations=15, random_state=42)
     model.fit(user_items)
     
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--retrain", action="store_true", help="Auto-increment version")
+    args = parser.parse_args()
+    
     os.makedirs("models", exist_ok=True)
+    manifest_path = "manifest.json"
+    manifest = {}
+    if os.path.exists(manifest_path):
+        with open(manifest_path, "r") as f:
+            try:
+                manifest = json.load(f)
+            except:
+                pass
+                
+    # Determine version and filename
+    version = 1
+    if "retailrocket" in manifest and "version" in manifest["retailrocket"]:
+        current_version_str = manifest["retailrocket"]["version"]
+        try:
+            version = int(current_version_str.split(".")[0])
+            if args.retrain:
+                version += 1
+        except:
+            pass
+            
+    # Save the old entry for rollback safety if retraining
+    if args.retrain and "retailrocket" in manifest:
+        old_v = manifest["retailrocket"]["version"]
+        manifest[f"retailrocket_{old_v}"] = manifest["retailrocket"]
+        
+    model_filename = f"retailrocket_als_v{version}.pkl" if version > 1 else "retailrocket_als.pkl"
+    model_path = f"models/{model_filename}"
     
     artifact = {
         "model": model,
@@ -78,26 +110,16 @@ async def train_als():
         "idx_to_item": idx_to_item
     }
     
-    model_path = "models/retailrocket_als.pkl"
     with open(model_path, "wb") as f:
         pickle.dump(artifact, f)
         
     print(f"Saved ALS model to {model_path}")
-    
-    manifest_path = "manifest.json"
-    manifest = {}
-    if os.path.exists(manifest_path):
-        with open(manifest_path, "r") as f:
-            try:
-                manifest = json.load(f)
-            except:
-                pass
             
     manifest["retailrocket"] = {
         "model_file": model_path,
-        "version": "1.0.0",
+        "version": f"{version}.0.0",
         "type": "ALS",
-        "description": "Implicit ALS model for retailrocket"
+        "description": f"Implicit ALS model for retailrocket (version {version})"
     }
     
     with open(manifest_path, "w") as f:

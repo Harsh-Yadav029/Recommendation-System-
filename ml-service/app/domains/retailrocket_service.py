@@ -26,8 +26,15 @@ class RetailrocketService(BaseRecommenderService):
             with open(baseline_path, "r") as f:
                 self.baseline_items = json.load(f)
                 
-        # Load ALS model
+        # Load ALS model path from manifest
         model_path = os.path.join(project_root, "models", "retailrocket_als.pkl")
+        manifest_path = os.path.join(project_root, "manifest.json")
+        if os.path.exists(manifest_path):
+            with open(manifest_path, "r") as f:
+                manifest = json.load(f)
+                if "retailrocket" in manifest:
+                    model_path = os.path.join(project_root, manifest["retailrocket"]["model_file"])
+                    
         if os.path.exists(model_path):
             try:
                 with open(model_path, "rb") as f:

@@ -36,11 +36,14 @@ class IntentResult(BaseModel):
     confidence: float
 
 
+from typing import Literal
+
 class Interaction(BaseModel):
-    user_id: str
+    user_id: Optional[str] = None
+    session_id: Optional[str] = None
     item_id: str
     domain: str
-    event_type: str
+    event_type: Literal["view", "cart", "purchase", "rating", "play", "compare_select", "click", "cold_start_answer"]
     value: Optional[float] = None
     timestamp: Optional[int] = None
 

@@ -18,3 +18,6 @@ app = FastAPI(title="CompareX ML Service", lifespan=lifespan)
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "ml-service"}
+
+from app.api.routes.interactions import router as interactions_router
+app.include_router(interactions_router, prefix="/api/interactions", tags=["Interactions"])

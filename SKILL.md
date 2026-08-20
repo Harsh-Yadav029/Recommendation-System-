@@ -378,3 +378,9 @@ Phase 0 data audit findings in Section 1 (confirmed domain roles: BookCrossing
 in any of the three domains). This project is a recommendation platform,
 not a chat app. Chat is one entry point on top of a real product, not the
 product itself.*
+
+---
+
+## 10. Phase 13 Deployment Notes (TODO)
+
+- **MongoDB Atlas Network Access**: During Phase 6, the IP whitelist was temporarily set to `0.0.0.0/0` (open access) to unblock the dynamic IP of the development environment. **This must be tightened to specific IPs (or removed in favor of proper VPC/private networking/peering)** before Phase 13 deployment. This is a known temporary exception, not a permanent security decision.
