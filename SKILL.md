@@ -216,6 +216,8 @@ class RankedItem(BaseModel):
     matched_constraints: list[str]      # e.g. ["budget<=1200", "category=laptop"]
     similarity_basis: str | None        # e.g. "users who interacted with X also chose this"
     domain: str
+    title: str | None                   # Display title if available
+    metadata: dict                      # Raw metadata dict for the frontend
 ```
 
 The LLM's `explain_recommendation()` call receives this structured data and

@@ -48,13 +48,8 @@ class SteamService(BaseRecommenderService):
         self.db = None
                 
     def _get_item_metadata(self, item_ids: List[str]) -> Dict[str, Dict]:
-        # Helper to fetch metadata. In synchronous code without async db, we might need a sync driver 
-        # or pre-cache. We'll use motor in a sync wrapper if needed, but compare() is sync in the interface.
-        # Actually, FastAPI routes can be async and call async service methods, but BaseRecommenderService 
-        # is defined with sync methods in SKILL.md. We must fetch from DB synchronously or use an existing client.
-        # To avoid blocking issues, we can just load the entire items collection for Steam into memory,
-        # it's only 5155 items. Let's do that lazily.
-        if not self.item_metadata:
+        missing_ids = [iid for iid in item_ids if iid not in self.item_metadata]
+        if missing_ids:
             from pymongo import MongoClient
             from dotenv import load_dotenv
             load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
@@ -63,20 +58,28 @@ class SteamService(BaseRecommenderService):
             db = client.get_default_database()
             if db.name == 'test' and "comparex" in uri:
                 db = client["comparex"]
-            for doc in db.items.find({"domain": "steam"}):
+            for doc in db.items.find({"domain": "steam", "item_id": {"$in": missing_ids}}):
                 self.item_metadata[str(doc["item_id"])] = doc
                 
         return {iid: self.item_metadata.get(iid, {}) for iid in item_ids}
                 
     def _get_baseline_recommendations(self, n: int = 10) -> RecommendationResponse:
         results = []
+        # Pre-fetch metadata
+        item_ids = [str(item["item_id"]) for item in self.baseline_items[:n]]
+        metadata_map = self._get_item_metadata(item_ids)
+
         for item in self.baseline_items[:n]:
+            item_id = str(item["item_id"])
+            meta = metadata_map.get(item_id, {})
             results.append(RankedItem(
-                item_id=str(item["item_id"]),
+                item_id=item_id,
                 score=float(item["score"]),
                 matched_constraints=[],
                 similarity_basis="popularity baseline fallback",
-                domain=self.domain
+                domain=self.domain,
+                title=meta.get("title", f"Steam Item #{item_id}"),
+                metadata=meta.get("metadata", {})
             ))
         return RecommendationResponse(items=results)
         
@@ -92,14 +95,21 @@ class SteamService(BaseRecommenderService):
                 
                 results = []
                 if isinstance(ids, np.ndarray):
+                    # Pre-fetch metadata
+                    raw_ids = [str(self.idx_to_item[ids[i]]) for i in range(len(ids))]
+                    metadata_map = self._get_item_metadata(raw_ids)
+
                     for i in range(len(ids)):
-                        item_id = str(self.idx_to_item[ids[i]])
+                        item_id = raw_ids[i]
+                        meta = metadata_map.get(item_id, {})
                         results.append(RankedItem(
                             item_id=item_id,
                             score=float(scores[i]),
                             matched_constraints=[],
                             similarity_basis="collaborative filtering based on similar purchase/play patterns",
-                            domain=self.domain
+                            domain=self.domain,
+                            title=meta.get("title", f"Steam Item #{item_id}"),
+                            metadata=meta.get("metadata", {})
                         ))
                 
                 # Apply constraints (Steam has no category/price, but just in case)

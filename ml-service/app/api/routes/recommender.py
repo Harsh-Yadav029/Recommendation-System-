@@ -8,6 +8,8 @@ from typing import List
 
 router = APIRouter()
 
+_services = {}
+
 def get_enabled_domains() -> List[str]:
     return [d.strip() for d in os.environ.get("ENABLED_DOMAINS", "retailrocket,steam,bookcrossing").split(",")]
 
@@ -15,14 +17,17 @@ def get_service(domain: str):
     if domain not in get_enabled_domains():
         raise HTTPException(status_code=400, detail=f"Domain '{domain}' is not supported or not enabled.")
     
-    if domain == "retailrocket":
-        return RetailrocketService()
-    elif domain == "steam":
-        return SteamService()
-    elif domain == "bookcrossing":
-        return BookCrossingService()
-    else:
-        raise HTTPException(status_code=400, detail=f"Domain '{domain}' service not found.")
+    if domain not in _services:
+        if domain == "retailrocket":
+            _services[domain] = RetailrocketService()
+        elif domain == "steam":
+            _services[domain] = SteamService()
+        elif domain == "bookcrossing":
+            _services[domain] = BookCrossingService()
+        else:
+            raise HTTPException(status_code=400, detail=f"Domain '{domain}' service not found.")
+            
+    return _services[domain]
 
 @router.post("/recommend/{domain}", response_model=RecommendationResponse)
 async def get_recommendations(domain: str, user_profile: UserProfile = Body(...), constraints: Constraints = Body(...)):

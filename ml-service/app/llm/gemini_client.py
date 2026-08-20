@@ -1,7 +1,10 @@
 import os
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from google.genai.errors import APIError
+
+load_dotenv()
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from app.contracts.llm import BaseLLMClient

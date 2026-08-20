@@ -19,6 +19,8 @@ class RankedItem(BaseModel):
     matched_constraints: List[str]
     similarity_basis: Optional[str] = None
     domain: str
+    title: Optional[str] = None
+    metadata: Dict[str, Any] = {}
 
 
 class RecommendationResponse(BaseModel):

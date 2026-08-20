@@ -116,5 +116,14 @@ router.post('/interactions/log', async (req, res) => {
     return handleProxyError(err, res);
   }
 });
+// POST /api/assistant/chat -> POST to ML service
+router.post('/assistant/chat', async (req, res) => {
+  try {
+    const response = await api.post('/api/assistant/chat', req.body);
+    return res.json(response.data);
+  } catch (err) {
+    return handleProxyError(err, res);
+  }
+});
 
 module.exports = router;

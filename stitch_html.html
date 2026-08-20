@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CompareX - Browse</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed-variant": "#39485a",
+                      "inverse-primary": "#68dba9",
+                      "error-container": "#ffdad6",
+                      "on-primary-container": "#f5fff7",
+                      "on-primary": "#ffffff",
+                      "on-primary-fixed": "#002114",
+                      "on-surface-variant": "#3d4a42",
+                      "on-tertiary": "#ffffff",
+                      "outline-variant": "#bccac0",
+                      "inverse-on-surface": "#f0f1f2",
+                      "on-secondary-fixed": "#07006c",
+                      "on-primary-fixed-variant": "#005137",
+                      "tertiary-fixed": "#d4e4fa",
+                      "surface-container-low": "#f3f4f5",
+                      "error": "#ba1a1a",
+                      "primary-container": "#00855d",
+                      "surface-dim": "#d9dadb",
+                      "on-error": "#ffffff",
+                      "surface-bright": "#f8f9fa",
+                      "primary": "#006948",
+                      "surface": "#f8f9fa",
+                      "surface-tint": "#006c4a",
+                      "on-secondary-fixed-variant": "#2f2ebe",
+                      "tertiary-fixed-dim": "#b9c8de",
+                      "tertiary": "#4f5d70",
+                      "on-tertiary-fixed": "#0d1c2d",
+                      "surface-container-high": "#e7e8e9",
+                      "surface-container": "#edeeef",
+                      "secondary-fixed-dim": "#c0c1ff",
+                      "secondary-fixed": "#e1e0ff",
+                      "surface-variant": "#e1e3e4",
+                      "primary-fixed": "#85f8c4",
+                      "on-background": "#191c1d",
+                      "on-tertiary-container": "#fdfcff",
+                      "background": "#f8f9fa",
+                      "outline": "#6d7a72",
+                      "on-secondary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-container": "#fffbff",
+                      "primary-fixed-dim": "#68dba9",
+                      "surface-container-highest": "#e1e3e4",
+                      "secondary": "#4648d4",
+                      "tertiary-container": "#677689",
+                      "secondary-container": "#6063ee",
+                      "inverse-surface": "#2e3132",
+                      "on-surface": "#191c1d"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "base": "4px",
+                      "xl": "32px",
+                      "grid-margin": "24px",
+                      "grid-gutter": "16px",
+                      "lg": "24px",
+                      "sm": "8px",
+                      "md": "16px",
+                      "max-width": "1280px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Geist"
+                      ],
+                      "headline-md": [
+                              "Geist"
+                      ],
+                      "label-md": [
+                              "Geist"
+                      ],
+                      "headline-lg-mobile": [
+                              "Geist"
+                      ],
+                      "body-sm": [
+                              "Geist"
+                      ],
+                      "headline-lg": [
+                              "Geist"
+                      ],
+                      "label-sm": [
+                              "Geist"
+                      ],
+                      "headline-sm": [
+                              "Geist"
+                      ],
+                      "body-md": [
+                              "Geist"
+                      ],
+                      "display-lg": [
+                              "Geist"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 1,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+        
+        /* Custom scrollbar for minimal feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col relative overflow-x-hidden">
+<!-- TopAppBar (CompareX) -->
+<header class="bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center px-grid-margin w-full mx-auto h-16 sticky top-0 z-40">
+<div class="flex items-center gap-xl h-full">
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">CompareX</h1>
+<nav class="hidden md:flex items-center h-full gap-md ml-xl">
+<button class="h-full flex items-center border-b-2 border-transparent text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors duration-200">Retailrocket</button>
+<button class="h-full flex items-center border-b-2 border-transparent text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors duration-200">Steam</button>
+<button class="h-full flex items-center text-secondary border-b-2 border-secondary font-label-md text-label-md transition-colors duration-200 opacity-80 scale-95 pb-2">BookCrossing</button>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-variant overflow-hidden ml-sm">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A detailed headshot portrait of a professional individual in a corporate setting. High-key lighting, modern aesthetic, light mode friendly. The person is smiling warmly, wearing business casual attire. Clean white background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-aZ9cwz4R5id5ebTkmAN2hEZFFh-8FC4lswfqfYZTSSGXMWGrkytyRHRKV8-O0vaPNa1q5TYqxoPP0j9WFXxvb98KQ3c9Lgvh3SAlbM44Mu6yZloirMwV4-_8iyqfX03ylFE23cSex3MXXA0Wd8mvConae7cO0PusU5-pUPcrMlL0UyLq1J1D1WE4pEK794JEnKymOHh47_eva3RWIHjuEVCIqVqe36BipWsLTAhVO0Me3OjTKpabSQ"/>
+</div>
+</div>
+</header>
+<div class="flex flex-1 max-w-max-width mx-auto w-full">
+<!-- SideNavBar (BookCrossing Filters) -->
+<aside class="hidden lg:flex flex-col h-[calc(100vh-64px)] w-64 sticky top-16 py-lg bg-surface-container-low border-r border-outline-variant shrink-0">
+<div class="px-md mb-xl">
+<h2 class="font-headline-sm text-headline-sm text-primary mb-1">Expert Assistant</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Analytical Engine</p>
+</div>
+<nav class="flex flex-col gap-sm flex-1 px-sm">
+<button class="flex items-center gap-sm p-sm rounded-lg bg-tertiary-fixed text-on-tertiary-fixed font-label-md text-label-md mx-2 translate-x-1">
+<span class="material-symbols-outlined text-[20px]" data-icon="search">search</span>
+                    Browse
+                </button>
+<button class="flex items-center gap-sm p-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all font-label-md text-label-md mx-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="compare_arrows">compare_arrows</span>
+                    Comparison
+                </button>
+<button class="flex items-center gap-sm p-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all font-label-md text-label-md mx-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="analytics">analytics</span>
+                    Insights
+                </button>
+<button class="flex items-center gap-sm p-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all font-label-md text-label-md mx-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="history">history</span>
+                    History
+                </button>
+</nav>
+<div class="px-md mt-auto pt-xl border-t border-outline-variant">
+<h3 class="font-label-sm text-label-sm text-outline mb-sm uppercase tracking-wider">Book Filters</h3>
+<div class="space-y-md">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-xs">Author</label>
+<select class="w-full bg-surface border-outline-variant rounded-DEFAULT text-body-sm py-1">
+<option>Any Author</option>
+<option>F. Scott Fitzgerald</option>
+<option>Jane Austen</option>
+</select>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-xs">Year</label>
+<div class="flex gap-sm">
+<input class="w-full bg-surface border-outline-variant rounded-DEFAULT text-body-sm py-1 px-2" placeholder="Min" type="text"/>
+<input class="w-full bg-surface border-outline-variant rounded-DEFAULT text-body-sm py-1 px-2" placeholder="Max" type="text"/>
+</div>
+</div>
+</div>
+<button class="w-full mt-xl py-sm bg-primary text-on-primary font-label-md rounded-lg hover:bg-surface-tint transition-colors">
+                    New Analysis
+                </button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 w-full p-grid-margin pb-32">
+<!-- Notice Banner -->
+<div class="bg-secondary-fixed text-on-secondary-fixed p-md rounded-lg mb-xl flex items-start gap-md border border-secondary-fixed-dim">
+<span class="material-symbols-outlined text-secondary mt-0.5" data-icon="info">info</span>
+<div>
+<h4 class="font-label-md text-label-md mb-1">Showing broader results</h4>
+<p class="font-body-sm text-body-sm opacity-90">We expanded your search to find more matches based on your analytical profile.</p>
+</div>
+</div>
+<div class="flex justify-between items-end mb-lg">
+<h2 class="font-headline-md text-headline-md text-on-background">Recommended Entities</h2>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Showing 24 results</span>
+</div>
+<!-- Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-grid-gutter">
+<!-- Card 1: BookCrossing (Rich) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md hover:shadow-sm transition-shadow group relative flex flex-col">
+<div class="absolute top-md right-md z-10">
+<input class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+</div>
+<div class="w-full h-48 bg-surface-variant rounded-md mb-md overflow-hidden relative">
+<img alt="Book Cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A stylized book cover for 'The Great Gatsby'. Art deco design elements, geometric patterns in gold and black, a subtle minimalist illustration of the roaring twenties. High-quality vector art style, clean and modern for a corporate analytical tool interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXx5MZaZs8o0K5sXHOxrR0c8zmC6NldWxQoX3pzxp-fgu9sbfhc6rPH3jhnQWvZ3gKeeOB11Zq6_NpIqD9T0kYLakfjRL82qzi3GSZIh4TBSini4rNtgCgionC36zrjGPbw25aUaklZVPOM0PsuRxCIWfy5yIavoEv796O1gF_rEU78efXF8fqA7VpV4Vgj3CQnGQ9AZ4_UNMPrDbsc13Kecsuf9h2AGzrhbIvRVwUVnj8TTeJszWauw"/>
+<div class="absolute bottom-sm left-sm bg-surface-container-lowest/90 backdrop-blur-sm px-2 py-1 rounded font-label-sm text-label-sm text-on-surface flex items-center gap-1 border border-outline-variant">
+<span class="material-symbols-outlined text-[14px]" data-icon="book">book</span> BookCrossing
+                        </div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-headline-sm text-headline-sm text-on-surface line-clamp-1 pr-6">The Great Gatsby</h3>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">F. Scott Fitzgerald</p>
+<div class="flex items-center gap-sm mb-md">
+<div class="h-1.5 flex-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[98%]"></div>
+</div>
+<span class="font-label-sm text-label-sm text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="verified">verified</span> 98% Match
+                            </span>
+</div>
+<div class="inline-flex items-center gap-1 px-2 py-1 bg-secondary-fixed text-on-secondary-fixed rounded text-[11px] font-medium border border-secondary-fixed-dim">
+<span class="material-symbols-outlined text-[12px]" data-icon="psychology">psychology</span>
+                            Similar to books you've rated highly
+                        </div>
+</div>
+</div>
+<!-- Card 2: Steam (Medium) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md hover:shadow-sm transition-shadow group relative flex flex-col">
+<div class="absolute top-md right-md z-10">
+<input checked="" class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+</div>
+<div class="flex items-center gap-sm mb-md">
+<div class="w-10 h-10 rounded bg-surface-variant flex items-center justify-center text-on-surface-variant border border-outline-variant">
+<span class="material-symbols-outlined" data-icon="sports_esports">sports_esports</span>
+</div>
+<div class="bg-surface-container-low px-2 py-1 rounded font-label-sm text-label-sm text-on-surface flex items-center gap-1 border border-outline-variant">
+<span class="material-symbols-outlined text-[14px]" data-icon="stadia_controller">stadia_controller</span> Steam
+                        </div>
+</div>
+<div class="flex-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs pr-6">Cyberpunk 2077</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md line-clamp-2">An open-world, action-adventure RPG set in the megalopolis of Night City, where you play as a cyberpunk mercenary wrapped up in a do-or-die fight for survival.</p>
+<div class="flex items-center gap-sm mb-md">
+<div class="h-1.5 flex-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[92%]"></div>
+</div>
+<span class="font-label-sm text-label-sm text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span> 92% Match
+                            </span>
+</div>
+<div class="inline-flex items-center gap-1 px-2 py-1 bg-secondary-fixed text-on-secondary-fixed rounded text-[11px] font-medium border border-secondary-fixed-dim">
+<span class="material-symbols-outlined text-[12px]" data-icon="category">category</span>
+                            Popular in RPG genre
+                        </div>
+</div>
+</div>
+<!-- Card 3: Retailrocket (Minimal) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-sm hover:shadow-sm transition-shadow group relative flex flex-col justify-center">
+<div class="absolute top-sm right-sm z-10">
+<input checked="" class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+</div>
+<div class="flex items-center gap-sm mb-sm">
+<div class="bg-surface-container-low px-2 py-1 rounded font-label-sm text-label-sm text-on-surface flex items-center gap-1 border border-outline-variant">
+<span class="material-symbols-outlined text-[14px]" data-icon="shopping_cart">shopping_cart</span> Retailrocket
+                        </div>
+</div>
+<div class="flex-1 flex flex-col justify-center">
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-xs">Item #82941</h3>
+<div class="flex items-center gap-sm mb-sm">
+<div class="h-1.5 flex-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary-fixed-dim w-[85%]"></div>
+</div>
+<span class="font-label-sm text-label-sm text-primary-fixed-variant">
+                                85% Score
+                            </span>
+</div>
+<div class="inline-flex items-center gap-1 px-2 py-1 bg-secondary-fixed text-on-secondary-fixed rounded text-[11px] font-medium border border-secondary-fixed-dim w-fit">
+<span class="material-symbols-outlined text-[12px]" data-icon="group">group</span>
+                            Popular among similar users
+                        </div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Floating Compare Bar -->
+<div class="fixed bottom-0 left-0 right-0 bg-surface-container-lowest border-t border-outline-variant shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-30 transition-transform duration-300">
+<div class="max-w-max-width mx-auto px-grid-margin py-md flex items-center justify-between">
+<div class="flex items-center gap-xl">
+<span class="font-headline-sm text-headline-sm text-on-surface">Compare <span class="text-on-surface-variant font-normal">(2/4)</span></span>
+<div class="hidden sm:flex items-center gap-sm">
+<!-- Selected Item Thumbnails -->
+<div class="w-12 h-12 rounded border border-outline-variant bg-surface-variant flex items-center justify-center text-on-surface-variant overflow-hidden relative group cursor-pointer">
+<span class="material-symbols-outlined" data-icon="sports_esports">sports_esports</span>
+<div class="absolute inset-0 bg-error/90 hidden group-hover:flex items-center justify-center text-on-error">
+<span class="material-symbols-outlined text-[20px]" data-icon="close">close</span>
+</div>
+</div>
+<div class="w-12 h-12 rounded border border-outline-variant bg-surface-container flex items-center justify-center text-on-surface-variant overflow-hidden relative group cursor-pointer">
+<span class="font-label-sm text-xs text-center leading-tight">Item<br/>#82941</span>
+<div class="absolute inset-0 bg-error/90 hidden group-hover:flex items-center justify-center text-on-error">
+<span class="material-symbols-outlined text-[20px]" data-icon="close">close</span>
+</div>
+</div>
+<!-- Empty Slots -->
+<div class="w-12 h-12 rounded border border-dashed border-outline-variant flex items-center justify-center opacity-50"></div>
+<div class="w-12 h-12 rounded border border-dashed border-outline-variant flex items-center justify-center opacity-50"></div>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface hidden sm:block">Clear All</button>
+<button class="px-lg py-2 bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:bg-surface-tint transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="compare">compare</span>
+                    Compare Now
+                </button>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant w-full py-md px-grid-margin flex justify-between items-center mt-auto pb-24 lg:pb-md">
+<div class="font-label-md text-label-md font-bold text-outline">CompareX</div>
+<p class="hidden md:block font-label-sm text-label-sm text-on-surface-variant">© 2024 CompareX Analytical Recommendation Engine. Precise. Impartial. Efficient.</p>
+<div class="flex gap-md">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary hover:underline transition-all" href="#">Documentation</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary hover:underline transition-all" href="#">Methodology</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary hover:underline transition-all" href="#">Privacy</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary hover:underline transition-all" href="#">API</a>
+</div>
+</footer>
+<!-- Onboarding Modal Overlay (Hidden by default for visual cleanliness, imagine script toggles it) -->
+<!-- 
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-md">
+        <div class="bg-surface-container-lowest rounded-xl shadow-lg max-w-lg w-full p-xl border border-outline-variant relative">
+            <button class="absolute top-md right-md text-on-surface-variant hover:bg-surface-variant rounded-full p-1 transition-colors">
+                <span class="material-symbols-outlined" data-icon="close">close</span>
+            </button>
+            
+            <div class="text-center mb-lg">
+                <div class="w-16 h-16 bg-primary-container text-on-primary-container rounded-full flex items-center justify-center mx-auto mb-md">
+                    <span class="material-symbols-outlined text-display-lg" data-icon="explore">explore</span>
+                </div>
+                <h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">What are you analyzing today?</h2>
+                <p class="font-body-md text-body-md text-on-surface-variant">Select a domain to calibrate the recommendation engine.</p>
+            </div>
+            
+            <div class="flex flex-wrap gap-sm justify-center mb-xl">
+                <button class="px-md py-2 rounded-full border border-outline-variant text-on-surface font-label-md hover:bg-surface-variant transition-colors">Retail Products</button>
+                <button class="px-md py-2 rounded-full border border-outline-variant text-on-surface font-label-md hover:bg-surface-variant transition-colors">Digital Games</button>
+                <button class="px-md py-2 rounded-full bg-secondary-fixed border border-secondary-fixed-dim text-on-secondary-fixed font-label-md">Literature</button>
+                <button class="px-md py-2 rounded-full border border-outline-variant text-on-surface font-label-md hover:bg-surface-variant transition-colors">Electronics</button>
+                <button class="px-md py-2 rounded-full border border-outline-variant text-on-surface font-label-md hover:bg-surface-variant transition-colors">Financial Data</button>
+            </div>
+            
+            <button class="w-full py-md bg-primary text-on-primary font-label-md rounded-lg hover:bg-surface-tint transition-colors text-center">
+                Initialize Engine
+            </button>
+        </div>
+    </div>
+    -->
+</body></html>

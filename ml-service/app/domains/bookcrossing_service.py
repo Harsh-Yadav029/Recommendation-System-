@@ -38,7 +38,8 @@ class BookCrossingService(BaseRecommenderService):
                 self.model = None
                 
     def _get_item_metadata(self, item_ids: List[str]) -> Dict[str, Dict]:
-        if not self.item_metadata:
+        missing_ids = [iid for iid in item_ids if iid not in self.item_metadata]
+        if missing_ids:
             from pymongo import MongoClient
             from dotenv import load_dotenv
             load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
@@ -47,20 +48,28 @@ class BookCrossingService(BaseRecommenderService):
             db = client.get_default_database()
             if db.name == 'test' and "comparex" in uri:
                 db = client["comparex"]
-            for doc in db.items.find({"domain": "bookcrossing"}):
+            for doc in db.items.find({"domain": "bookcrossing", "item_id": {"$in": missing_ids}}):
                 self.item_metadata[str(doc["item_id"])] = doc
                 
         return {iid: self.item_metadata.get(iid, {}) for iid in item_ids}
                 
     def _get_baseline_recommendations(self, n: int = 10) -> RecommendationResponse:
         results = []
+        # Pre-fetch metadata
+        item_ids = [str(item["item_id"]) for item in self.baseline_items[:n]]
+        metadata_map = self._get_item_metadata(item_ids)
+
         for item in self.baseline_items[:n]:
+            item_id = str(item["item_id"])
+            meta = metadata_map.get(item_id, {})
             results.append(RankedItem(
-                item_id=str(item["item_id"]),
+                item_id=item_id,
                 score=float(item["score"]),
                 matched_constraints=[],
                 similarity_basis="popularity baseline fallback (Bayesian average)",
-                domain=self.domain
+                domain=self.domain,
+                title=meta.get("title", f"Book #{item_id}"),
+                metadata=meta.get("metadata", {})
             ))
         return RecommendationResponse(items=results)
         
@@ -91,13 +100,19 @@ class BookCrossingService(BaseRecommenderService):
                 top_preds = predictions[:20]
                 
                 results = []
+                # Pre-fetch metadata
+                metadata_map = self._get_item_metadata([iid for iid, _ in top_preds])
+
                 for item_id, est in top_preds:
+                    meta = metadata_map.get(item_id, {})
                     results.append(RankedItem(
                         item_id=item_id,
                         score=float(est),
                         matched_constraints=[],
                         similarity_basis="explicit matrix factorization (SVD)",
-                        domain=self.domain
+                        domain=self.domain,
+                        title=meta.get("title", f"Book #{item_id}"),
+                        metadata=meta.get("metadata", {})
                     ))
                 
                 if c.category:
@@ -121,12 +136,12 @@ class BookCrossingService(BaseRecommenderService):
             item_data = {
                 "item_id": item_id,
                 "title": meta.get("title", "not specified"),
-                "author": meta.get("metadata", {}).get("Book-Author", "not specified"),
-                "year": meta.get("metadata", {}).get("Year-Of-Publication", "not specified"),
-                "publisher": meta.get("metadata", {}).get("Publisher", "not specified"),
-                "image_url_s": meta.get("metadata", {}).get("Image-URL-S", "not specified"),
-                "image_url_m": meta.get("metadata", {}).get("Image-URL-M", "not specified"),
-                "image_url_l": meta.get("metadata", {}).get("Image-URL-L", "not specified"),
+                "author": meta.get("metadata", {}).get("author", "not specified"),
+                "year": meta.get("metadata", {}).get("year", "not specified"),
+                "publisher": meta.get("metadata", {}).get("publisher", "not specified"),
+                "image_url_s": meta.get("metadata", {}).get("image_url_s", "not specified"),
+                "image_url_m": meta.get("metadata", {}).get("image_url_m", "not specified"),
+                "image_url_l": meta.get("metadata", {}).get("image_url_l", "not specified"),
                 "popularity_score": score_map.get(item_id, 0)
             }
             items.append(item_data)
