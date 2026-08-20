@@ -21,6 +21,9 @@ async def health_check():
 
 from app.api.routes.interactions import router as interactions_router
 from app.api.routes.recommender import router as recommender_router
+from app.api.routes.assistant import router as assistant_router
 
+# Register standard routers
 app.include_router(interactions_router, prefix="/api/interactions", tags=["Interactions"])
 app.include_router(recommender_router, prefix="/api", tags=["Recommender"])
+app.include_router(assistant_router, prefix="/api/assistant", tags=["Assistant"])
