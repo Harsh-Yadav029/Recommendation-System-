@@ -1,30 +1,55 @@
+require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
+const { helmetMiddleware, corsMiddleware, rateLimiter, csrfProtection, csrfGenerate } = require('./middleware/security');
+const { verifyToken } = require('./middleware/auth');
+
+const authRoutes = require('./routes/auth');
+const proxyRoutes = require('./routes/proxy');
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3000;
 
-// Security Middlewares
-app.use(helmet());
-app.use(cors());
+// Basic middleware
+app.use(helmetMiddleware);
+app.use(corsMiddleware);
+app.use(rateLimiter);
 
-// Rate Limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use(limiter);
-
-// Body parsing
+// Parsers
 app.use(express.json());
+app.use(cookieParser());
 
-// Health Check Route
+// Apply CSRF to /api/auth/session to allow token generation without validation
+app.use('/api/auth/session', csrfGenerate);
+
+// Auth routes
+app.use('/api/auth', authRoutes);
+
+// Apply strict CSRF protection to all state-changing routes after this point
+app.use(csrfProtection);
+
+// Public healthcheck
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', service: 'gateway' });
+  res.json({ status: 'ok', service: 'gateway' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Gateway running on port ${PORT}`);
+// Protected Proxy routes
+app.use('/api', verifyToken, proxyRoutes);
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  if (err.code === 'EBADCSRFTOKEN') {
+    return res.status(403).json({ error: 'Invalid CSRF token' });
+  }
+  console.error("Unhandled Gateway Error:", err);
+  res.status(500).json({ error: 'Internal Server Error' });
 });
+
+// Start server (only if not required by tests)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Gateway listening on port ${PORT}`);
+  });
+}
+
+module.exports = app; // For testing

@@ -20,4 +20,7 @@ async def health_check():
     return {"status": "ok", "service": "ml-service"}
 
 from app.api.routes.interactions import router as interactions_router
+from app.api.routes.recommender import router as recommender_router
+
 app.include_router(interactions_router, prefix="/api/interactions", tags=["Interactions"])
+app.include_router(recommender_router, prefix="/api", tags=["Recommender"])
