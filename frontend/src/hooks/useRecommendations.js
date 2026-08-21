@@ -23,6 +23,7 @@ export function useRecommendations(domain, filters, csrfToken) {
 
         const response = await fetch(`/api/recommend/${domain}`, {
           method: 'POST',
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
             'CSRF-Token': csrfToken

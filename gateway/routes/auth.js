@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const { registerUser, loginUser, logoutUser } = require('../controllers/auth.controller');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -15,11 +16,31 @@ const COOKIE_OPTIONS = {
   sameSite: 'lax',
 };
 
-// POST /api/auth/session -> Initial anonymous session creation
+// POST /api/auth/session -> Initial anonymous session creation (or restore)
 router.post('/session', (req, res) => {
-  const sessionId = crypto.randomUUID();
+  let sessionId;
+  let role = 'anonymous';
+  let userId = null;
+  let email = null;
+  let isReturning = false;
+
+  const token = req.cookies.access_token || req.cookies.refresh_token;
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      sessionId = decoded.session_id;
+      role = decoded.role || 'anonymous';
+      userId = decoded.user_id;
+      email = decoded.email;
+      isReturning = true;
+    } catch (e) {}
+  }
+
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+  }
   
-  const payload = { session_id: sessionId, role: 'anonymous' };
+  const payload = { session_id: sessionId, role, user_id: userId, email };
   
   const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
   const refreshToken = jwt.sign(payload, JWT_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY });
@@ -33,8 +54,10 @@ router.post('/session', (req, res) => {
   
   return res.json({
     status: 'success',
-    message: 'Anonymous session created',
-    csrfToken
+    message: isReturning ? 'Session restored' : 'Anonymous session created',
+    csrfToken,
+    user: role === 'registered' ? { id: userId, email } : null,
+    isReturning
   });
 });
 
@@ -62,5 +85,9 @@ router.post('/refresh', (req, res) => {
     return res.status(401).json({ error: 'Invalid or expired refresh token. Please request a new session.' });
   }
 });
+
+router.post('/register', registerUser);
+router.post('/login', loginUser);
+router.post('/logout', logoutUser);
 
 module.exports = router;

@@ -1,4 +1,10 @@
 require('dotenv').config();
+const mongoose = require('mongoose');
+
+mongoose.connect(process.env.MONGODB_URI, { family: 4 })
+  .then(() => console.log('Gateway connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const { helmetMiddleware, corsMiddleware, rateLimiter, csrfProtection, csrfGenerate } = require('./middleware/security');

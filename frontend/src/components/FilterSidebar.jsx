@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function FilterSidebar({ domain, filters }) {
+export function FilterSidebar({ domain, filters, setFilters, onNavigate }) {
   // Filter fields that exist for this domain
   const validFilters = filters || [];
   
@@ -37,21 +37,13 @@ export function FilterSidebar({ domain, filters }) {
       </div>
       
       <nav className="flex flex-col gap-2 flex-1 px-2">
-        <button className="flex items-center gap-2 p-2 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed text-sm font-semibold mx-2">
+        <button onClick={() => onNavigate && onNavigate('browse')} className="flex items-center gap-2 p-2 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed text-sm font-semibold mx-2">
           <span className="material-symbols-outlined text-[20px]">search</span>
           Browse
         </button>
-        <button className="flex items-center gap-2 p-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all text-sm font-semibold mx-2">
+        <button onClick={() => onNavigate && onNavigate('compare')} className="flex items-center gap-2 p-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all text-sm font-semibold mx-2">
           <span className="material-symbols-outlined text-[20px]">compare_arrows</span>
           Comparison
-        </button>
-        <button className="flex items-center gap-2 p-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all text-sm font-semibold mx-2">
-          <span className="material-symbols-outlined text-[20px]">analytics</span>
-          Insights
-        </button>
-        <button className="flex items-center gap-2 p-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all text-sm font-semibold mx-2">
-          <span className="material-symbols-outlined text-[20px]">history</span>
-          History
         </button>
       </nav>
 
@@ -61,10 +53,20 @@ export function FilterSidebar({ domain, filters }) {
           {Object.entries(activeFilters).map(([filterKey, filterValues]) => (
             <div key={filterKey}>
               <label className="text-xs font-medium text-on-surface-variant block mb-1 capitalize">{filterKey}</label>
-              <select className="w-full bg-surface border-outline-variant rounded text-sm py-1">
-                <option>Any {filterKey}</option>
+              <select 
+                className="w-full bg-surface border-outline-variant rounded text-sm py-1"
+                value={filters?.[filterKey] || ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFilters?.(prev => ({ 
+                    ...prev, 
+                    [filterKey]: val.startsWith('Any ') ? '' : val 
+                  }));
+                }}
+              >
+                <option value="">Any {filterKey}</option>
                 {filterValues.map((val) => (
-                  <option key={val}>{val}</option>
+                  <option key={val} value={val}>{val}</option>
                 ))}
               </select>
             </div>

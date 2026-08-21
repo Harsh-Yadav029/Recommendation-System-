@@ -11,7 +11,8 @@ export function BrowseSurface({
   setSelectedItems, 
   selectedDomain, 
   setSelectedDomain, 
-  onCompare 
+  onCompare,
+  onNavigate
 }) {
   const [filters, setFilters] = useState({ budget_max: null, category: "", tags: [] });
   const [chatOpen, setChatOpen] = useState(false);
@@ -101,7 +102,7 @@ export function BrowseSurface({
 
       <div className="flex flex-1 max-w-[1280px] mx-auto w-full">
         {/* Sidebar */}
-        <FilterSidebar filters={filters} setFilters={setFilters} domain={selectedDomain} />
+        <FilterSidebar filters={filters} setFilters={setFilters} domain={selectedDomain} onNavigate={onNavigate} />
 
         {/* Main Content */}
         <main className="flex-1 w-full p-4 md:p-6 lg:p-[24px] pb-32">

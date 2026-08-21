@@ -29,6 +29,7 @@ export function ChatPanel({ domain, csrfToken, isOpen, onClose, onToggleSelect, 
 
       const res = await fetch("/api/assistant/chat", {
         method: "POST",
+        credentials: 'include',
         headers: {
           "Content-Type": "application/json",
           "CSRF-Token": csrfToken,

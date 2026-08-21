@@ -19,6 +19,7 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken }) {
     setLoading(true);
     fetch(`/api/compare/${domain}`, {
       method: "POST",
+      credentials: "include",
       headers: { 
         "Content-Type": "application/json",
         "CSRF-Token": csrfToken

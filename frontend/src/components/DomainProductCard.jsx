@@ -103,6 +103,13 @@ export function DomainProductCard({ domain, item, isSelected, onToggleSelect }) 
             src={coverUrl}
             alt={title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            // DO NOT REMOVE: handles Amazon's 1x1 pixel fallback for missing covers (August 2026)
+            onLoad={(e) => {
+              if (e.target.naturalWidth <= 1) {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }
+            }}
             onError={(e) => {
               e.target.style.display = 'none';
               e.target.nextSibling.style.display = 'flex';

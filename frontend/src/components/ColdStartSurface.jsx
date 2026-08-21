@@ -65,6 +65,7 @@ export function ColdStartSurface({ csrfToken, onComplete, onSkip }) {
       // Call the cold-start endpoint with preferences
       const response = await fetch(`/api/cold-start/${selectedDomain}`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
           "CSRF-Token": csrfToken,

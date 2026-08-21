@@ -385,4 +385,4 @@ product itself.*
 
 ## 10. Phase 13 Deployment Notes (TODO)
 
-- **MongoDB Atlas Network Access**: During Phase 6, the IP whitelist was temporarily set to `0.0.0.0/0` (open access) to unblock the dynamic IP of the development environment. **This must be tightened to specific IPs (or removed in favor of proper VPC/private networking/peering)** before Phase 13 deployment. This is a known temporary exception, not a permanent security decision.
+- **MongoDB Atlas Network Access**: During Phase 6, the IP whitelist was temporarily set to `0.0.0.0/0` (open access) to unblock the dynamic IP of the development environment. **For Phase 13 deployment on Render/Vercel**, this `0.0.0.0/0` setting MUST be maintained because these PaaS providers use dynamic IPs, unless you upgrade to a dedicated IP/VPC setup. Ensure it is set to `0.0.0.0/0` to prevent `ECONNREFUSED` errors during deployment.
