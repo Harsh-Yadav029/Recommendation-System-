@@ -2,9 +2,6 @@ import React from 'react';
 
 export function FilterSidebar({ domain, filters, setFilters, onNavigate }) {
   // Filter fields that exist for this domain
-  const validFilters = filters || [];
-  
-  // Domain-specific filter options
   const FILTER_OPTIONS = {
     bookcrossing: {
       category: ['Fiction', 'Non-Fiction', 'Academic', 'Poetry'],
@@ -24,37 +21,32 @@ export function FilterSidebar({ domain, filters, setFilters, onNavigate }) {
 
   const activeFilters = FILTER_OPTIONS[domain] || {};
 
-  const applyFilters = (filterKey, value) => {
-    console.log(`Filter applied: ${domain} - ${filterKey}: ${value}`);
-    // This would update the recommendations filter
-  };
-
   return (
-    <aside className="hidden lg:flex flex-col h-[calc(100vh-64px)] w-64 sticky top-16 py-6 bg-surface-container-low border-r border-outline-variant shrink-0">
-      <div className="px-4 mb-8">
-        <h2 className="text-xl font-semibold text-primary mb-1">Expert Assistant</h2>
-        <p className="text-sm text-on-surface-variant">Analytical Engine</p>
-      </div>
+    <aside className="bg-surface-container-lowest border border-secondary/10 rounded-[16px] p-6 card-shadow sticky top-24 w-full">
+      <h2 className="font-headline-md text-headline-md mb-4 text-primary">Filters</h2>
       
-      <nav className="flex flex-col gap-2 flex-1 px-2">
-        <button onClick={() => onNavigate && onNavigate('browse')} className="flex items-center gap-2 p-2 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed text-sm font-semibold mx-2">
+      {/* Navigation links inside the sidebar since TopNav doesn't have them yet */}
+      <nav className="flex flex-col gap-2 mb-6 border-b border-surface-variant pb-4">
+        <button onClick={() => onNavigate && onNavigate('browse')} className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 text-primary font-label-md transition-colors hover:bg-primary/20">
           <span className="material-symbols-outlined text-[20px]">search</span>
           Browse
         </button>
-        <button onClick={() => onNavigate && onNavigate('compare')} className="flex items-center gap-2 p-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all text-sm font-semibold mx-2">
+        <button onClick={() => onNavigate && onNavigate('compare')} className="flex items-center gap-2 p-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all font-label-md">
           <span className="material-symbols-outlined text-[20px]">compare_arrows</span>
           Comparison
         </button>
       </nav>
 
-      <div className="px-4 mt-auto pt-8 border-t border-outline-variant">
-        <h3 className="text-xs font-medium text-outline mb-2 uppercase tracking-wider">{domain} Filters</h3>
+      <div className="space-y-6">
+        {/* Dynamic Domain Filters */}
         <div className="space-y-4">
+          <h3 className="font-label-md text-label-md mb-3 text-on-surface uppercase border-b border-surface-variant pb-2">{domain}</h3>
+          
           {Object.entries(activeFilters).map(([filterKey, filterValues]) => (
-            <div key={filterKey}>
-              <label className="text-xs font-medium text-on-surface-variant block mb-1 capitalize">{filterKey}</label>
+            <div key={filterKey} className="mb-4">
+              <label className="font-label-sm text-label-sm text-on-surface-variant block mb-2 capitalize">{filterKey}</label>
               <select 
-                className="w-full bg-surface border-outline-variant rounded text-sm py-1"
+                className="w-full bg-surface-container-lowest border border-surface-variant rounded-xl text-body-sm font-body-sm py-2 px-3 input-focus-ring outline-none transition-colors"
                 value={filters?.[filterKey] || ""}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -71,10 +63,10 @@ export function FilterSidebar({ domain, filters, setFilters, onNavigate }) {
               </select>
             </div>
           ))}
+          {Object.keys(activeFilters).length === 0 && (
+            <div className="font-body-sm text-body-sm text-tertiary">No filters available.</div>
+          )}
         </div>
-        <button className="w-full mt-8 py-2 bg-primary text-on-primary text-sm font-semibold rounded-lg hover:bg-surface-tint transition-colors">
-          New Analysis
-        </button>
       </div>
     </aside>
   );

@@ -32,70 +32,74 @@ export function LoginSurface({ onLoginSuccess, onSwitchToRegister, onBack }) {
   };
 
   return (
-    <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-surface">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-on-surface">
-          Sign in to your account
-        </h2>
-        <p className="mt-2 text-center text-sm text-on-surface-variant">
-          Or{' '}
-          <button onClick={onSwitchToRegister} className="font-medium text-primary hover:text-surface-tint">
-            create a new account
-          </button>
-        </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-surface-container-low py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-outline-variant">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-error-container text-on-error-container p-3 rounded text-sm">
-                {error}
-              </div>
-            )}
-            
+    <div className="flex items-center justify-center font-body-md text-on-background p-margin-mobile md:p-margin-desktop min-h-screen bg-background">
+      <div className="w-full max-w-[480px] bg-surface-container-lowest rounded-[16px] shadow-ambient-lvl1 p-8 md:p-10 border border-secondary/10 relative overflow-hidden transition-all duration-300 hover:shadow-ambient-lvl2 hover:-translate-y-0.5 card-shadow hover:card-shadow-hover">
+        {/* Decorative Glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-32 bg-primary/10 blur-[50px] rounded-full pointer-events-none"></div>
+        <div className="text-center mb-8 relative z-10">
+          <h1 className="font-display-lg-mobile md:font-display-lg text-primary tracking-tight mb-2">CompareX</h1>
+          <p className="font-body-md text-body-md text-tertiary">Welcome back. Please log in to your account.</p>
+        </div>
+        
+        <form className="space-y-6 relative z-10" onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-error-container text-on-error-container p-3 rounded text-sm">
+              {error}
+            </div>
+          )}
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-on-surface">Email address</label>
-              <div className="mt-1">
-                <input
+              <label className="block font-label-md text-label-md text-on-surface-variant mb-1.5" htmlFor="email">Email</label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary">person</span>
+                <input 
+                  className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-[16px] font-body-md text-body-md text-on-surface placeholder:text-tertiary focus:outline-none focus:border-primary focus:ring-4 focus:ring-secondary-container/50 transition-all input-focus-ring" 
+                  id="email" 
+                  name="email" 
+                  placeholder="Enter your email" 
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full appearance-none rounded-md border border-outline-variant px-3 py-2 placeholder-outline text-on-surface bg-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm"
                 />
               </div>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-on-surface">Password</label>
-              <div className="mt-1">
-                <input
+              <label className="block font-label-md text-label-md text-on-surface-variant mb-1.5" htmlFor="password">Password</label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary">lock</span>
+                <input 
+                  className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-[16px] font-body-md text-body-md text-on-surface placeholder:text-tertiary focus:outline-none focus:border-primary focus:ring-4 focus:ring-secondary-container/50 transition-all input-focus-ring" 
+                  id="password" 
+                  name="password" 
+                  placeholder="Enter your password" 
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full appearance-none rounded-md border border-outline-variant px-3 py-2 placeholder-outline text-on-surface bg-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm"
                 />
               </div>
             </div>
-
-            <div className="flex items-center justify-between">
-              <button type="button" onClick={onBack} className="text-sm font-medium text-on-surface-variant hover:text-on-surface">
-                Back to home
-              </button>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex w-full justify-center rounded-md border border-transparent bg-primary py-2 px-4 text-sm font-medium text-on-primary shadow-sm hover:bg-surface-tint focus:outline-none disabled:opacity-50"
-              >
-                {loading ? 'Signing in...' : 'Sign in'}
-              </button>
-            </div>
-          </form>
+          </div>
+          <div className="flex items-center justify-between">
+            <button type="button" onClick={onBack} className="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface">
+              Back to home
+            </button>
+            <a className="font-label-sm text-label-sm text-primary hover:text-primary-container transition-colors" href="#">Forgot password?</a>
+          </div>
+          <button 
+            className="w-full bg-primary text-on-primary font-label-md text-label-md py-3.5 px-6 rounded-[16px] shadow-sm hover:bg-primary/90 hover:shadow-ambient-lvl1 active:scale-[0.98] transition-all duration-200 disabled:opacity-50" 
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
+        </form>
+        <div className="mt-8 text-center relative z-10">
+          <p className="font-body-sm text-body-sm text-tertiary">
+            Don't have an account? 
+            <button onClick={onSwitchToRegister} className="font-label-md text-label-md text-primary hover:underline hover:text-primary-container ml-1 transition-colors">Register</button>
+          </p>
         </div>
       </div>
     </div>

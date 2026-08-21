@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { ImageOff } from "lucide-react";
 
-export function CompareSurface({ selectedItems, domain, onBack, csrfToken }) {
+export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user, onLogout }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // If no items selected, we still attempt to fetch if we had IDs, 
-    // but in this setup selectedItems is the source of truth.
     if (!selectedItems || selectedItems.length === 0) {
       setLoading(false);
       return;
@@ -31,12 +29,12 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken }) {
         return res.json();
       })
       .then(data => {
-        // Merge the similarity_basis from selectedItems into the fetched data
         const mergedItems = data.items.map(apiItem => {
           const selectedItem = selectedItems.find(i => String(i.item_id) === String(apiItem.item_id));
           return {
             ...apiItem,
-            similarity_basis: selectedItem ? selectedItem.similarity_basis : null
+            similarity_basis: selectedItem ? selectedItem.similarity_basis : null,
+            popularity_score: selectedItem ? selectedItem.score : apiItem.popularity_score
           };
         });
         setItems(mergedItems);
@@ -46,7 +44,7 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken }) {
         setError(err.message);
         setLoading(false);
       });
-  }, [domain, selectedItems]);
+  }, [domain, selectedItems, csrfToken]);
 
   const renderDomainIcon = () => {
     if (domain === "bookcrossing") return <span className="material-symbols-outlined text-tertiary">menu_book</span>;
@@ -54,7 +52,7 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken }) {
     return <span className="material-symbols-outlined text-tertiary">shopping_bag</span>;
   };
 
-  const domainName = domain === "bookcrossing" ? "BookCrossing" : domain === "steam" ? "Steam Ecosystem" : "Retailrocket Data";
+  const domainName = domain === "bookcrossing" ? "BookCrossing" : domain === "steam" ? "Steam" : "Retailrocket";
 
   const renderCreatorLabel = () => {
     if (domain === "bookcrossing") return "Author";
@@ -70,12 +68,10 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <header className="bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center px-4 md:px-8 lg:px-[24px] w-full mx-auto h-16 sticky top-0 z-40">
-          <h1 className="text-xl md:text-2xl font-bold text-primary tracking-tight">CompareX</h1>
-        </header>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-on-surface-variant font-medium">Loading comparison data...</div>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <div className="text-tertiary font-body-md flex items-center gap-2">
+          <span className="material-symbols-outlined animate-spin">sync</span>
+          Loading comparison data...
         </div>
       </div>
     );
@@ -83,169 +79,136 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken }) {
 
   if (selectedItems.length === 0) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <header className="bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center px-4 md:px-8 lg:px-[24px] w-full mx-auto h-16 sticky top-0 z-40">
-          <h1 className="text-xl md:text-2xl font-bold text-primary tracking-tight">CompareX</h1>
-        </header>
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          <div className="text-on-surface-variant font-medium">No items selected for comparison.</div>
-          <button onClick={onBack} className="text-primary hover:underline font-medium">Go back to Browse</button>
-        </div>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <div className="text-tertiary font-body-md">No items selected for comparison.</div>
+        <button onClick={onBack} className="text-primary hover:underline font-label-md">Go back to Browse</button>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background text-on-background font-body-md flex flex-col">
-      {/* TopAppBar */}
-      <header className="bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center px-4 md:px-8 lg:px-[24px] w-full mx-auto h-16 sticky top-0 z-40">
-        <div className="flex items-center gap-8 h-full">
-          <span className="text-xl md:text-2xl font-bold text-primary tracking-tight">CompareX</span>
-        </div>
-        <div className="flex items-center gap-4">
-          {/* Mock user actions */}
-          <button className="p-2 text-primary hover:bg-surface-container-high rounded-full transition-colors"><span className="material-symbols-outlined">notifications</span></button>
-          <button className="p-2 text-primary hover:bg-surface-container-high rounded-full transition-colors"><span className="material-symbols-outlined">settings</span></button>
-        </div>
-      </header>
+  // Determine grid columns. 1 for labels + up to 3 items = max 4 cols.
+  const gridColsClass = items.length === 1 ? "md:grid-cols-2" 
+                      : items.length === 2 ? "md:grid-cols-3" 
+                      : "md:grid-cols-4";
 
-      {/* Main Canvas */}
-      <main className="flex-1 p-4 md:p-6 lg:p-[24px] max-w-[1280px] mx-auto w-full flex flex-col gap-8">
-        
-        {/* Page Header & Action */}
-        <div className="flex justify-between items-end pb-4 border-b border-surface-variant">
-          <div>
-            <h2 className="text-3xl font-semibold text-on-surface">Cross-Domain Analysis</h2>
-            <p className="text-base text-on-surface-variant mt-1">Synthesizing data points across the {domainName} ecosystem.</p>
+  return (
+    <div className="bg-background min-h-screen text-on-background font-body-md flex flex-col flex-1">
+      {/* TopNavBar */}
+      <nav className="bg-surface/80 backdrop-blur-md dark:bg-surface-dim/80 sticky top-0 w-full z-50 border-b border-secondary/10 dark:border-outline-variant shadow-sm dark:shadow-none">
+        <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 w-full max-w-container-max-width mx-auto">
+          <div className="flex items-center gap-6">
+            <a className="font-display-lg text-display-lg text-primary dark:text-primary-fixed tracking-tight" href="#" style={{fontSize: '24px', lineHeight: '32px'}}>CompareX</a>
+            <div className="hidden md:flex items-center gap-4 ml-8">
+              <button onClick={onBack} className="text-on-surface-variant font-label-md hover:text-primary transition-colors rounded-lg p-2">Browse</button>
+              <button className="text-primary font-bold border-b-2 border-primary pb-1 font-label-md">Compare</button>
+            </div>
           </div>
-          <button onClick={onBack} className="flex items-center gap-1 text-primary font-medium hover:underline py-2">
-            <span className="material-symbols-outlined text-sm">arrow_back</span> Back to Browse
+          <div className="flex items-center gap-4">
+            {user ? (
+              <div className="flex items-center gap-3">
+                <span className="font-label-md text-primary">{user.email}</span>
+                <button onClick={onLogout} className="text-on-surface-variant hover:text-primary transition-colors font-label-md">Log Out</button>
+              </div>
+            ) : (
+              <button onClick={onBack} className="bg-primary text-on-primary font-label-md px-4 py-2 rounded-[16px] hover:shadow-ambient-lvl1 transition-all hover:-translate-y-[2px]">Back to Home</button>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content Canvas */}
+      <main className="flex-grow w-full max-w-container-max-width mx-auto px-margin-mobile md:px-margin-desktop py-[40px] md:py-[64px]">
+        {/* Header */}
+        <div className="text-center mb-[48px] max-w-2xl mx-auto relative">
+          <button onClick={onBack} className="absolute left-0 top-0 mt-2 flex items-center gap-1 text-tertiary font-label-md hover:text-primary transition-colors">
+            <span className="material-symbols-outlined text-sm">arrow_back</span> Back
           </button>
+          <h1 className="font-display-lg-mobile md:font-display-lg text-on-background mb-[16px]">Compare Items</h1>
+          <p className="font-body-lg text-tertiary">Evaluate your top picks side-by-side to find your next favorite thing.</p>
         </div>
 
         {error ? (
-          <div className="p-4 bg-error-container text-on-error-container rounded-lg border border-error">
+          <div className="p-4 bg-error-container text-on-error-container rounded-[16px] border border-error">
             Error loading comparison: {error}
           </div>
         ) : (
-          /* Comparison Table Container */
-          <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden shadow-sm">
+          /* Comparison Matrix (Bento-style Grid) */
+          <div className={`grid grid-cols-1 ${gridColsClass} gap-gutter`}>
             
-            {/* Headers (Domain) */}
-            <div className={`grid grid-cols-1 md:grid-cols-${items.length} bg-surface-container-low border-b border-surface-variant`}>
-              {items.map((item, idx) => (
-                <div key={`header-${idx}`} className={`p-4 ${idx < items.length - 1 ? 'border-b md:border-b-0 md:border-r' : ''} border-surface-variant flex items-center gap-2`}>
-                  {renderDomainIcon()}
-                  <h3 className="text-sm font-semibold text-on-surface">{domainName}</h3>
-                </div>
-              ))}
+            {/* Labels Column (Hidden on mobile, visible on tablet/desktop) */}
+            <div className="hidden md:flex flex-col space-y-4 pt-[240px]">
+              <div className="h-[64px] flex items-center font-label-md text-tertiary">Domain</div>
+              <div className="h-[64px] flex items-center font-label-md text-tertiary">{renderCreatorLabel()}</div>
+              <div className="h-[64px] flex items-center font-label-md text-tertiary">Rating</div>
+              <div className="h-[64px] flex items-center font-label-md text-tertiary">Why Recommended</div>
             </div>
 
-            {/* Row 1: Adaptive Cards */}
-            <div className={`grid grid-cols-1 md:grid-cols-${items.length} border-b border-surface-variant`}>
-              {items.map((item, idx) => {
-                const coverUrl = item.image_url_l !== "not specified" ? item.image_url_l : (item.image_url_m !== "not specified" ? item.image_url_m : null);
-                return (
-                  <div key={`card-${idx}`} className={`p-4 ${idx < items.length - 1 ? 'md:border-r' : ''} border-surface-variant flex flex-col gap-2`}>
-                    {domain === "bookcrossing" && (
-                      <div className="w-full h-32 bg-surface-variant rounded-md overflow-hidden relative border border-outline-variant shrink-0 mb-2">
-                        {coverUrl ? (
-                          <img
-                            src={coverUrl}
-                            alt={item.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-on-surface-variant p-4 text-center" style={{ display: coverUrl ? 'none' : 'flex' }}>
-                          <ImageOff className="w-8 h-8 mb-2 opacity-50" />
-                          <span className="text-[10px] font-medium uppercase tracking-wider">No cover</span>
-                        </div>
-                      </div>
-                    )}
-                    <h4 className="text-lg font-bold text-on-surface line-clamp-2">{item.title !== "not specified" ? item.title : `Item #${item.item_id}`}</h4>
-                  </div>
-                );
-              })}
-            </div>
+            {items.map((item, idx) => {
+              const coverUrl = item.image_url_l !== "not specified" && item.image_url_l ? item.image_url_l : (item.image_url_m !== "not specified" ? item.image_url_m : null);
+              const title = item.title !== "not specified" && item.title ? item.title : `Item #${item.item_id}`;
+              const creatorVal = getCreatorValue(item);
+              const score = item.popularity_score > 0 ? item.popularity_score.toFixed(2) : '0';
+              const isTopPick = idx === 0;
 
-            {/* Row 2: Title (Specific) */}
-            <div className={`grid grid-cols-1 md:grid-cols-${items.length} border-b border-surface-variant bg-surface-bright`}>
-              {items.map((item, idx) => (
-                <div key={`title-${idx}`} className={`p-3 px-4 ${idx < items.length - 1 ? 'md:border-r' : ''} border-surface-variant`}>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-outline block mb-1">Title</span>
-                  <p className="text-sm font-medium text-on-surface">
-                    {item.title !== "not specified" ? item.title : <span className="text-outline-variant">— Not specified</span>}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* Row 3: Creator / Metadata */}
-            <div className={`grid grid-cols-1 md:grid-cols-${items.length} border-b border-surface-variant`}>
-              {items.map((item, idx) => {
-                const val = getCreatorValue(item);
-                return (
-                  <div key={`creator-${idx}`} className={`p-3 px-4 ${idx < items.length - 1 ? 'md:border-r' : ''} border-surface-variant`}>
-                    <span className="text-xs font-semibold uppercase tracking-wider text-outline block mb-1">{renderCreatorLabel()}</span>
-                    <p className="text-sm font-medium text-on-surface">
-                      {val !== "not specified" ? val : <span className="text-outline-variant">— Not specified</span>}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Row 4: Why Recommended (Logic Vector) */}
-            <div className={`grid grid-cols-1 md:grid-cols-${items.length} border-b border-surface-variant bg-surface-bright`}>
-              {items.map((item, idx) => (
-                <div key={`logic-${idx}`} className={`p-3 px-4 ${idx < items.length - 1 ? 'md:border-r' : ''} border-surface-variant`}>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-outline block mb-2">Logic Vector</span>
-                  {item.similarity_basis ? (
-                    <div className="inline-flex items-center gap-1 bg-secondary-fixed text-on-secondary-fixed px-2 py-1 rounded-full text-xs font-medium border border-secondary-fixed-dim">
-                      <span className="material-symbols-outlined text-[14px]">psychology</span> {item.similarity_basis}
-                    </div>
-                  ) : (
-                    <div className="inline-flex items-center gap-1 bg-surface-variant text-on-surface-variant px-2 py-1 rounded-full text-xs font-medium border border-outline-variant">
-                      <span className="material-symbols-outlined text-[14px]">help</span> Reasoning not available
+              return (
+                <div key={item.item_id} className={`bg-surface-container-lowest rounded-[16px] p-6 flex flex-col relative transition-all duration-300 ${isTopPick ? 'border-2 border-primary shadow-[0_12px_32px_-4px_hsla(260,40%,40%,0.12)] -translate-y-[2px]' : 'border border-secondary/10 shadow-[0_4px_20px_-2px_hsla(260,40%,40%,0.08)] hover:shadow-[0_12px_32px_-4px_hsla(260,40%,40%,0.12)] hover:-translate-y-[2px]'}`}>
+                  {isTopPick && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-on-primary font-label-sm px-3 py-1 rounded-full whitespace-nowrap z-10">
+                      Top Pick
                     </div>
                   )}
-                </div>
-              ))}
-            </div>
 
-            {/* Row 5: Relevance Score */}
-            <div className={`grid grid-cols-1 md:grid-cols-${items.length}`}>
-              {items.map((item, idx) => (
-                <div key={`score-${idx}`} className={`p-4 ${idx < items.length - 1 ? 'md:border-r' : ''} border-surface-variant`}>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-outline block mb-2">Relevance Score</span>
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 flex-1 bg-surface-variant rounded-full overflow-hidden">
-                      <div className="h-full bg-primary" style={{ width: `${Math.min(100, Math.max(0, item.popularity_score))}%` }}></div>
+                  <div className="h-[180px] bg-surface-container rounded-lg mb-6 overflow-hidden relative flex items-center justify-center">
+                    {coverUrl ? (
+                      <img className="object-cover max-w-full max-h-full" src={coverUrl} alt={title} />
+                    ) : (
+                      renderDomainIcon()
+                    )}
+                  </div>
+                  
+                  <h3 className="font-headline-sm text-on-background mb-1 line-clamp-2" title={title}>{title}</h3>
+                  <p className="font-body-sm text-secondary mb-6 line-clamp-1">{domainName}</p>
+                  
+                  <div className="flex flex-col space-y-4 flex-grow">
+                    
+                    {/* Domain / Category */}
+                    <div className="flex justify-between items-center h-auto md:h-[64px] border-b border-secondary/10 pb-2 md:pb-0 md:border-none">
+                      <span className="md:hidden font-label-sm text-tertiary">Domain</span>
+                      <span className="font-body-md text-on-surface">{domainName}</span>
                     </div>
-                    <span className="text-sm font-bold text-primary">
-                      {item.popularity_score > 0 ? `${item.popularity_score.toFixed(2)}` : '0'}
-                    </span>
+
+                    {/* Creator / Format */}
+                    <div className="flex justify-between items-center h-auto md:h-[64px] border-b border-secondary/10 pb-2 md:pb-0 md:border-none">
+                      <span className="md:hidden font-label-sm text-tertiary">{renderCreatorLabel()}</span>
+                      <span className="font-body-md text-on-surface line-clamp-2 text-right" title={creatorVal}>
+                        {creatorVal !== "not specified" && creatorVal ? creatorVal : "—"}
+                      </span>
+                    </div>
+
+                    {/* Rating */}
+                    <div className="flex justify-between items-center h-auto md:h-[64px] border-b border-secondary/10 pb-2 md:pb-0 md:border-none">
+                      <span className="md:hidden font-label-sm text-tertiary">Rating</span>
+                      <div className="flex items-center text-primary-container">
+                        <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+                        <span className="ml-2 font-label-md text-on-background">{score}</span>
+                      </div>
+                    </div>
+
+                    {/* Why Recommended */}
+                    <div className="flex justify-between items-center h-auto md:h-[64px]">
+                      <span className="md:hidden font-label-sm text-tertiary">Why Recommended</span>
+                      <div className="font-body-sm text-on-background bg-surface-container-low p-2 rounded max-h-[60px] overflow-y-auto text-right w-full md:w-auto">
+                         {item.similarity_basis ? item.similarity_basis : "Recommended for you"}
+                      </div>
+                    </div>
+
                   </div>
                 </div>
-              ))}
-            </div>
-
+              );
+            })}
           </div>
         )}
       </main>
-      
-      {/* Footer */}
-      <footer className="bg-surface-container-lowest border-t border-outline-variant w-full py-4 px-4 md:px-8 flex justify-between items-center mt-auto">
-        <div className="text-sm font-bold text-outline">CompareX</div>
-        <p className="hidden md:block text-xs text-on-surface-variant">© 2024 CompareX Analytical Recommendation Engine. Precise. Impartial. Efficient.</p>
-        <div className="flex gap-4">
-          <a className="text-xs text-on-surface-variant hover:text-primary hover:underline transition-all" href="#">Documentation</a>
-        </div>
-      </footer>
     </div>
   );
 }

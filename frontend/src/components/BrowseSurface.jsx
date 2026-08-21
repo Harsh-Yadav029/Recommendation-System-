@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useRecommendations } from "../hooks/useRecommendations";
 import { DomainProductCard } from "./DomainProductCard";
 import { FilterSidebar } from "./FilterSidebar";
-import { Alert } from "./Alert";
 import { ChatPanel } from "./ChatPanel";
 
 export function BrowseSurface({ 
@@ -12,17 +11,20 @@ export function BrowseSurface({
   selectedDomain, 
   setSelectedDomain, 
   onCompare,
-  onNavigate
+  onNavigate,
+  coldStartItems,
+  clearColdStartItems,
+  user,
+  onLogout
 }) {
   const [filters, setFilters] = useState({ budget_max: null, category: "", tags: [] });
-  const [chatOpen, setChatOpen] = useState(false);
 
   const { items, loading, error, isRelaxed, relaxedConstraint } = useRecommendations(selectedDomain, filters, csrfToken);
 
   const handleDomainChange = (e) => {
     setSelectedDomain(e.target.value);
-    setFilters({ budget_max: null, category: "", tags: [] }); // reset filters on domain change
-    setSelectedItems([]); // Clear selected items when domain changes
+    setFilters({ budget_max: null, category: "", tags: [] });
+    setSelectedItems([]);
   };
 
   const handleToggleSelect = (item) => {
@@ -42,32 +44,32 @@ export function BrowseSurface({
     if (selectedItems.length === 0) return null;
     
     return (
-      <div className="fixed bottom-0 left-0 right-0 bg-surface-container-lowest border-t border-outline-variant shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50 transition-transform duration-300">
-        <div className="max-w-[1280px] mx-auto px-4 md:px-6 lg:px-[24px] py-4 flex items-center justify-between">
+      <div className="fixed bottom-0 left-0 right-0 bg-surface-container-lowest border-t border-outline-variant shadow-[0_-4px_20px_-2px_hsla(260,40%,40%,0.08)] z-50 transition-transform duration-300">
+        <div className="max-w-container-max-width mx-auto px-margin-mobile md:px-margin-desktop py-4 flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <span className="text-xl font-semibold text-on-surface">Compare <span className="text-on-surface-variant font-normal">({selectedItems.length}/4)</span></span>
+            <span className="font-headline-sm text-headline-sm text-on-surface">Compare <span className="text-on-surface-variant font-normal">({selectedItems.length}/4)</span></span>
             <div className="hidden sm:flex items-center gap-2">
               {/* Selected Item Thumbnails */}
               {selectedItems.map(item => (
-                <div key={item.item_id} onClick={() => handleToggleSelect(item)} className="w-12 h-12 rounded border border-outline-variant bg-surface-container flex items-center justify-center text-on-surface-variant overflow-hidden relative group cursor-pointer">
+                <div key={item.item_id} onClick={() => handleToggleSelect(item)} className="w-12 h-12 rounded-[8px] border border-outline-variant bg-surface-container flex items-center justify-center text-on-surface-variant overflow-hidden relative group cursor-pointer hover:border-error transition-colors">
                   <span className="text-xs text-center leading-tight">Item<br/>#{item.item_id.substring(0,4)}</span>
-                  <div className="absolute inset-0 bg-error/90 hidden group-hover:flex items-center justify-center text-on-error">
+                  <div className="absolute inset-0 bg-error/90 hidden group-hover:flex items-center justify-center text-on-error transition-all">
                     <span className="material-symbols-outlined text-[20px]">close</span>
                   </div>
                 </div>
               ))}
               {/* Empty Slots */}
               {Array.from({ length: 4 - selectedItems.length }).map((_, i) => (
-                <div key={i} className="w-12 h-12 rounded border border-dashed border-outline-variant flex items-center justify-center opacity-50"></div>
+                <div key={i} className="w-12 h-12 rounded-[8px] border border-dashed border-outline-variant flex items-center justify-center opacity-50"></div>
               ))}
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={() => setSelectedItems([])} className="text-sm font-semibold text-on-surface-variant hover:text-on-surface hidden sm:block">Clear All</button>
+            <button onClick={() => setSelectedItems([])} className="font-label-md text-label-md text-on-surface-variant hover:text-on-surface hidden sm:block transition-colors">Clear All</button>
             <button 
               onClick={onCompare} 
               disabled={selectedItems.length < 2}
-              className={`px-6 py-2 font-semibold text-sm rounded-lg transition-colors flex items-center gap-2 ${selectedItems.length >= 2 ? 'bg-primary text-on-primary hover:bg-surface-tint' : 'bg-surface-variant text-on-surface-variant opacity-50 cursor-not-allowed'}`}
+              className={`px-6 py-2.5 font-label-md text-label-md rounded-[16px] transition-colors flex items-center gap-2 shadow-sm ${selectedItems.length >= 2 ? 'bg-primary text-on-primary hover:bg-primary-container' : 'bg-surface-variant text-on-surface-variant opacity-50 cursor-not-allowed'}`}
             >
               <span className="material-symbols-outlined text-[18px]">compare</span>
               Compare Now
@@ -79,65 +81,92 @@ export function BrowseSurface({
   };
 
   return (
-    <div className="min-h-screen bg-background text-on-background font-body-md antialiased flex flex-col relative overflow-x-hidden">
+    <div className="bg-surface text-on-surface font-body-md min-h-screen flex flex-col w-full">
       
-      {/* TopAppBar (CompareX) - Simplified for BrowseSurface */}
-      <header className="bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center px-4 md:px-8 lg:px-[24px] w-full mx-auto h-16 sticky top-0 z-40">
-        <div className="flex items-center gap-8 h-full">
-          <h1 className="text-xl md:text-2xl font-bold text-primary tracking-tight">CompareX</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <label className="text-sm font-medium text-on-surface-variant hidden md:block">Select Domain</label>
-          <select 
-            value={selectedDomain} 
-            onChange={handleDomainChange}
-            className="px-3 py-1.5 border border-outline-variant rounded bg-surface text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
-          >
-            <option value="retailrocket">Retailrocket (Minimal)</option>
-            <option value="steam">Steam (Medium)</option>
-            <option value="bookcrossing">BookCrossing (Rich)</option>
-          </select>
+      {/* TopNavBar */}
+      <header className="bg-surface/80 backdrop-blur-md dark:bg-surface-dim/80 sticky top-0 w-full z-40 border-b border-secondary/10 dark:border-outline-variant shadow-sm dark:shadow-none">
+        <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 w-full max-w-container-max-width mx-auto">
+          <div className="flex items-center gap-6">
+            <a className="font-display-lg text-display-lg text-primary dark:text-primary-fixed tracking-tight" href="#" style={{fontSize: '24px', lineHeight: '32px'}}>CompareX</a>
+            <div className="hidden md:flex relative ml-4 w-64">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary" style={{fontVariationSettings: "'FILL' 0"}}>search</span>
+              <input className="w-full bg-surface-container-lowest border border-surface-variant rounded-xl py-2 pl-10 pr-4 text-body-sm font-body-sm input-focus-ring transition-all outline-none" placeholder="Search products..." type="text"/>
+            </div>
+          </div>
+          <nav className="hidden md:flex items-center gap-4">
+            <div className="flex items-center gap-2 mr-4 border-r border-surface-variant pr-6">
+              <label className="text-label-sm font-label-sm text-tertiary">Domain</label>
+              <select 
+                value={selectedDomain} 
+                onChange={handleDomainChange}
+                className="bg-surface-container-lowest border border-surface-variant rounded-xl py-1.5 px-3 text-body-sm font-body-sm input-focus-ring outline-none cursor-pointer"
+              >
+                <option value="retailrocket">Retailrocket</option>
+                <option value="steam">Steam</option>
+                <option value="bookcrossing">BookCrossing</option>
+              </select>
+            </div>
+            {user && (
+              <div className="flex items-center gap-3">
+                <span className="font-label-md text-label-md text-primary">{user.email}</span>
+                <button onClick={onLogout} className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors">Log Out</button>
+              </div>
+            )}
+          </nav>
+          <button className="md:hidden p-2 text-on-surface">
+            <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>menu</span>
+          </button>
         </div>
       </header>
 
-      <div className="flex flex-1 max-w-[1280px] mx-auto w-full">
-        {/* Sidebar */}
-        <FilterSidebar filters={filters} setFilters={setFilters} domain={selectedDomain} onNavigate={onNavigate} />
+      {/* Main Content Area */}
+      <main className="flex-grow pt-8 pb-32 px-margin-mobile md:px-margin-desktop max-w-container-max-width mx-auto w-full flex flex-col xl:flex-row gap-gutter relative items-start">
+        
+        {/* Left Sidebar: Filters */}
+        <div className="w-full xl:w-64 flex-shrink-0 flex flex-col gap-6">
+          <FilterSidebar filters={filters} setFilters={setFilters} domain={selectedDomain} onNavigate={onNavigate} />
+        </div>
 
-        {/* Main Content */}
-        <main className="flex-1 w-full p-4 md:p-6 lg:p-[24px] pb-32">
-          
+        {/* Center Grid: Product Cards */}
+        <section className="flex-grow flex flex-col min-w-0">
           {isRelaxed && (
-            <div className="bg-secondary-fixed text-on-secondary-fixed p-4 rounded-lg mb-6 flex items-start gap-4 border border-secondary-fixed-dim">
+            <div className="bg-secondary-fixed text-on-secondary-fixed p-4 rounded-[16px] flex items-start gap-4 border border-secondary-fixed-dim mb-6 card-shadow">
               <span className="material-symbols-outlined text-secondary mt-0.5">info</span>
               <div>
-                <h4 className="text-sm font-semibold mb-1">Showing broader results</h4>
-                <p className="text-sm opacity-90">We relaxed the constraint on [{relaxedConstraint}] to find enough items for you.</p>
+                <h4 className="font-label-md text-label-md mb-1">Showing broader results</h4>
+                <p className="font-body-sm text-body-sm opacity-90">We relaxed the constraint on [{relaxedConstraint}] to find enough items for you.</p>
               </div>
             </div>
           )}
 
           {error && (
-            <div className="p-4 bg-error-container text-on-error-container rounded-lg border border-error mb-6">
+            <div className="p-4 bg-error-container text-on-error-container rounded-[16px] border border-error mb-6">
               Error loading recommendations: {error}
             </div>
           )}
 
-          <div className="flex justify-between items-end mb-6">
-            <h2 className="text-2xl font-semibold text-on-background">Recommended Entities</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="font-headline-md text-headline-md text-on-surface">Recommended for You</h2>
             {!loading && !error && items.length > 0 && (
-              <span className="text-sm text-on-surface-variant">Showing {items.length} results</span>
+              <div className="flex items-center gap-2 hidden sm:flex">
+                <span className="font-label-sm text-label-sm text-tertiary">Sort by:</span>
+                <select className="bg-surface-container-lowest border border-surface-variant rounded-xl py-1 px-3 text-body-sm font-body-sm input-focus-ring outline-none cursor-pointer">
+                  <option>Relevance</option>
+                  <option>Price: Low to High</option>
+                  <option>Rating</option>
+                </select>
+              </div>
             )}
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-[16px]">
-              {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="animate-pulse bg-surface-variant h-48 rounded-lg w-full border border-outline-variant"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="animate-pulse bg-surface-container-high h-[320px] rounded-[16px] w-full border border-secondary/10"></div>
               ))}
             </div>
           ) : items.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-[16px]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {items.map(item => (
                 <DomainProductCard 
                   key={item.item_id} 
@@ -150,32 +179,27 @@ export function BrowseSurface({
             </div>
           ) : (
             !error && (
-              <div className="text-center py-12 text-on-surface-variant border border-dashed border-outline-variant rounded-lg bg-surface-container-lowest">
-                No items found matching your filters.
+              <div className="text-center py-16 px-4 text-tertiary border border-dashed border-surface-variant rounded-[16px] bg-surface-container-lowest">
+                <span className="material-symbols-outlined text-4xl mb-3 opacity-50">search_off</span>
+                <p className="font-body-md text-body-md">No items found matching your filters.</p>
+                <button onClick={() => setFilters({ budget_max: null, category: "", tags: [] })} className="mt-4 text-primary font-label-md text-label-md hover:underline">Clear Filters</button>
               </div>
             )
           )}
-        </main>
-      </div>
+        </section>
+
+        {/* Right Side: Assistant Chat Panel */}
+        <div className="w-full xl:w-80 flex-shrink-0">
+          <ChatPanel
+            domain={selectedDomain}
+            csrfToken={csrfToken}
+            onToggleSelect={handleToggleSelect}
+            selectedItems={selectedItems}
+          />
+        </div>
+      </main>
+
       {renderFloatingCompareBar()}
-
-      {/* Chat FAB */}
-      <button
-        onClick={() => setChatOpen(prev => !prev)}
-        className={`fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all ${chatOpen ? 'bg-surface-variant text-on-surface-variant' : 'bg-primary text-on-primary hover:bg-surface-tint'} ${selectedItems.length > 0 ? 'bottom-24' : 'bottom-6'}`}
-      >
-        <span className="material-symbols-outlined text-[24px]">{chatOpen ? 'close' : 'smart_toy'}</span>
-      </button>
-
-      {/* Chat Panel */}
-      <ChatPanel
-        domain={selectedDomain}
-        csrfToken={csrfToken}
-        isOpen={chatOpen}
-        onClose={() => setChatOpen(false)}
-        onToggleSelect={handleToggleSelect}
-        selectedItems={selectedItems}
-      />
     </div>
   );
 }

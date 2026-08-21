@@ -58,29 +58,15 @@ function App() {
   if (!authReady) return <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">Authenticating...</div>;
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface">
-      {/* Header */}
-      <header className="bg-surface-container-low border-b border-outline-variant px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-primary">
-          <span className="material-symbols-outlined text-3xl">compare_arrows</span>
-          <h1 className="text-xl font-bold tracking-tight text-on-surface">CompareX</h1>
-        </div>
-        <div className="flex items-center gap-4 text-sm text-on-surface-variant font-medium">
-          {user && (
-            <>
-              <span className="text-primary font-semibold mr-4">Signed in as {user.email}</span>
-              <button onClick={handleLogout} className="hover:text-primary transition-colors font-semibold">Log Out</button>
-            </>
-          )}
-        </div>
-      </header>
-
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Main Content Area */}
       <main className="flex-1 relative overflow-hidden flex flex-col">
         {currentView === 'landing' && (
           <LandingSurface 
             onStart={() => setCurrentView('login')}
             onSignIn={() => setCurrentView('login')}
+            user={user}
+            onLogout={handleLogout}
           />
         )}
 
@@ -103,6 +89,8 @@ function App() {
             onNavigate={(view) => setCurrentView(view)}
             coldStartItems={coldStartItems}
             clearColdStartItems={() => setColdStartItems(null)}
+            user={user}
+            onLogout={handleLogout}
           />
         )}
 
@@ -112,6 +100,8 @@ function App() {
             domain={selectedDomain}
             onBack={() => setCurrentView('browse')}
             csrfToken={csrfToken}
+            user={user}
+            onLogout={handleLogout}
           />
         )}
 

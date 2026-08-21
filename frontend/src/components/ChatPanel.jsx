@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { DomainProductCard } from "./DomainProductCard";
 
-export function ChatPanel({ domain, csrfToken, isOpen, onClose, onToggleSelect, selectedItems }) {
+export function ChatPanel({ domain, csrfToken, onToggleSelect, selectedItems }) {
   const [messages, setMessages] = useState([
     { role: "assistant", text: "Hi! I'm the CompareX assistant. Ask me for recommendations, explanations, or comparisons." }
   ]);
@@ -75,102 +75,103 @@ export function ChatPanel({ domain, csrfToken, isOpen, onClose, onToggleSelect, 
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] bg-surface-container-lowest border-l border-outline-variant shadow-xl z-50 flex flex-col">
+    <aside className="h-[600px] sticky top-24 bg-surface-container-lowest border border-secondary/10 rounded-[16px] card-shadow flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant bg-surface-container-low">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary">smart_toy</span>
-          <h3 className="text-sm font-semibold text-on-surface">Expert Assistant</h3>
-          <span className="text-xs text-on-surface-variant">({domain})</span>
+      <div className="bg-surface-container-low border-b border-secondary/10 p-4 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+          <span className="material-symbols-outlined">smart_toy</span>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1 rounded-full hover:bg-surface-variant transition-colors text-on-surface-variant"
-        >
-          <span className="material-symbols-outlined text-[20px]">close</span>
-        </button>
+        <div>
+          <h3 className="font-label-md text-label-md text-on-surface m-0">CompareX Assistant</h3>
+          <span className="text-[10px] text-primary font-medium flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span> Online
+          </span>
+        </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-grow p-4 overflow-y-auto flex flex-col gap-4">
         {messages.map((msg, idx) => (
-          <div key={idx}>
-            {/* Message bubble */}
-            <div className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div
-                className={`max-w-[85%] rounded-xl px-4 py-2.5 text-sm leading-relaxed ${
-                  msg.role === "user"
-                    ? "bg-primary text-on-primary rounded-br-sm"
-                    : msg.llmUnavailable
-                    ? "bg-error-container text-on-error-container border border-error rounded-bl-sm"
-                    : "bg-surface-container text-on-surface border border-outline-variant rounded-bl-sm"
-                }`}
-              >
-                {msg.text}
-              </div>
-            </div>
-
-            {/* Inline recommendation cards */}
-            {msg.recommendations && msg.recommendations.length > 0 && (
-              <div className="mt-3 space-y-2">
-                <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Recommendations</span>
-                <div className="grid grid-cols-1 gap-2">
-                  {msg.recommendations.slice(0, 3).map((item) => (
-                    <DomainProductCard
-                      key={item.item_id}
-                      domain={domain}
-                      item={item}
-                      isSelected={selectedItems?.some(i => i.item_id === item.item_id)}
-                      onToggleSelect={() => onToggleSelect?.(item)}
-                    />
-                  ))}
-                </div>
-                {msg.recommendations.length > 3 && (
-                  <p className="text-xs text-on-surface-variant">
-                    + {msg.recommendations.length - 3} more results available in Browse
-                  </p>
-                )}
+          <div key={idx} className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
+            {msg.role === "assistant" && (
+              <div className="w-6 h-6 rounded-full bg-primary/10 flex-shrink-0 mt-1 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[12px] text-primary">smart_toy</span>
               </div>
             )}
+            
+            <div className={`max-w-[85%] rounded-[16px] p-3 font-body-sm text-body-sm shadow-sm ${
+              msg.role === "user"
+                ? "bg-primary text-on-primary rounded-tr-sm"
+                : msg.llmUnavailable
+                ? "bg-error-container text-on-error-container border border-error rounded-tl-sm"
+                : "bg-surface-container-low border border-surface-variant text-on-surface rounded-tl-sm"
+            }`}>
+              {msg.text}
+              
+              {/* Inline recommendation cards */}
+              {msg.recommendations && msg.recommendations.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <span className="font-label-sm text-label-sm opacity-70 uppercase tracking-wider block">Recommendations</span>
+                  <div className="grid grid-cols-1 gap-2">
+                    {msg.recommendations.slice(0, 3).map((item) => (
+                      <DomainProductCard
+                        key={item.item_id}
+                        domain={domain}
+                        item={item}
+                        isSelected={selectedItems?.some(i => i.item_id === item.item_id)}
+                        onToggleSelect={() => onToggleSelect?.(item)}
+                      />
+                    ))}
+                  </div>
+                  {msg.recommendations.length > 3 && (
+                    <p className="font-label-sm text-label-sm opacity-70 mt-2">
+                      + {msg.recommendations.length - 3} more results available in Browse
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         ))}
 
         {loading && (
-          <div className="flex justify-start">
-            <div className="bg-surface-container text-on-surface-variant border border-outline-variant rounded-xl rounded-bl-sm px-4 py-2.5 text-sm flex items-center gap-2">
-              <span className="w-4 h-4 border-2 border-outline-variant border-t-primary rounded-full animate-spin"></span>
-              Thinking...
+          <div className="flex gap-2">
+            <div className="w-6 h-6 rounded-full bg-primary/10 flex-shrink-0 mt-1 flex items-center justify-center">
+              <span className="material-symbols-outlined text-[12px] text-primary">smart_toy</span>
+            </div>
+            <div className="bg-surface-container-low border border-surface-variant rounded-[16px] rounded-tl-sm p-3 font-body-sm text-body-sm text-on-surface shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined animate-spin text-tertiary text-sm">sync</span>
+                <span className="text-tertiary">Analyzing features...</span>
+              </div>
             </div>
           </div>
         )}
-
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="border-t border-outline-variant p-3 bg-surface-container-low">
-        <div className="flex items-center gap-2">
-          <input
+      {/* Input Area */}
+      <div className="p-3 border-t border-surface-variant bg-surface-container-lowest mt-auto">
+        <div className="relative">
+          <input 
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask for recommendations, explanations..."
-            className="flex-1 px-3 py-2 text-sm border border-outline-variant rounded-lg bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary"
             disabled={loading}
+            className="w-full bg-surface-container-lowest border border-surface-variant rounded-full py-2.5 pl-4 pr-10 font-body-sm text-body-sm text-on-surface input-focus-ring outline-none shadow-sm transition-all placeholder:text-tertiary" 
+            placeholder="Ask about products..." 
           />
-          <button
+          <button 
             onClick={handleSend}
             disabled={loading || !input.trim()}
-            className="p-2 bg-primary text-on-primary rounded-lg hover:bg-surface-tint transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-primary text-on-primary hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
-            <span className="material-symbols-outlined text-[20px]">send</span>
+            <span className="material-symbols-outlined text-[16px] leading-none">send</span>
           </button>
         </div>
       </div>
-    </div>
+    </aside>
   );
 }
