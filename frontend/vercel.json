@@ -3,6 +3,10 @@
     {
       "source": "/api/(.*)",
       "destination": "https://YOUR_GATEWAY_URL.onrender.com/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

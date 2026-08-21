@@ -386,3 +386,7 @@ product itself.*
 ## 10. Phase 13 Deployment Notes (TODO)
 
 - **MongoDB Atlas Network Access**: During Phase 6, the IP whitelist was temporarily set to `0.0.0.0/0` (open access) to unblock the dynamic IP of the development environment. **For Phase 13 deployment on Render/Vercel**, this `0.0.0.0/0` setting MUST be maintained because these PaaS providers use dynamic IPs, unless you upgrade to a dedicated IP/VPC setup. Ensure it is set to `0.0.0.0/0` to prevent `ECONNREFUSED` errors during deployment.
+
+## Future Work
+
+A document-grounded RAG layer was scoped but not implemented — our current datasets (Retailrocket, Steam, BookCrossing) lack long-form text fields (descriptions/synopses) needed for meaningful chunking. A future iteration could either scope RAG to short metadata fields, or source real external text (e.g. via a book/game description API) for a subset of items. The existing Phase 12 semantic vector search (item-to-item similarity via MongoDB Atlas $vectorSearch) already provides real embedding-based retrieval and remains fully functional.
