@@ -180,6 +180,84 @@ class SteamService(BaseRecommenderService):
         return RecommendationResponse(items=results)
 
     def explain(self, item_id: str, user_profile: UserProfile) -> str:
-        if self.model is None or user_profile.user_id not in self.user_to_idx:
+        if self.model is None:
             return "matched_constraints=[], similarity_basis='popularity baseline fallback'"
-        return "matched_constraints=[], similarity_basis='collaborative filtering based on similar purchase/play patterns'"
+        return "matched_constraints=[], similarity_basis='collaborative filtering (ALS implicit feedback)'"
+
+    def search_by_title(self, title: str) -> List[Dict]:
+        from pymongo import MongoClient
+        import os
+        from dotenv import load_dotenv
+        load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
+        uri = os.environ.get("MONGODB_URI")
+        client = MongoClient(uri)
+        db = client.get_default_database()
+        if db.name == 'test' and "comparex" in uri:
+            db = client["comparex"]
+            
+        docs = list(db.items.find({
+            "domain": "steam", 
+            "title": {"$regex": title, "$options": "i"}
+        }).limit(5))
+        return docs
+
+    def find_similar_items(self, item_id: str, k: int = 5) -> RecommendationResponse:
+        from pymongo import MongoClient
+        import os
+        from dotenv import load_dotenv
+        load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
+        uri = os.environ.get("MONGODB_URI")
+        client = MongoClient(uri)
+        db = client.get_default_database()
+        if db.name == 'test' and "comparex" in uri:
+            db = client["comparex"]
+            
+        target = db.items.find_one({"domain": "steam", "item_id": str(item_id)})
+        if not target or "embedding" not in target:
+            return RecommendationResponse(items=[])
+            
+        vector = target["embedding"]
+        
+        search_pipeline = [
+            {
+                "$vectorSearch": {
+                    "index": "items_embedding_vector_index",
+                    "path": "embedding",
+                    "queryVector": vector,
+                    "numCandidates": k * 4,
+                    "limit": k + 1
+                }
+            },
+            {
+                "$match": {
+                    "item_id": {"$ne": str(item_id)} # Exclude itself
+                }
+            },
+            {"$limit": k},
+            {
+                "$project": {
+                    "item_id": 1,
+                    "title": 1,
+                    "metadata": 1,
+                    "score": {"$meta": "vectorSearchScore"}
+                }
+            }
+        ]
+        
+        results = db.items.aggregate(search_pipeline)
+        
+        ranked_items = []
+        for rank, res in enumerate(results, 1):
+            ranked_items.append(
+                RankedItem(
+                    item_id=str(res.get("item_id")),
+                    title=res.get("title", "Unknown"),
+                    score=float(res.get("score", 0.0)),
+                    rank=rank,
+                    similarity_basis="semantically similar based on title/metadata",
+                    matched_constraints=[],
+                    domain="steam"
+                )
+            )
+            
+        return RecommendationResponse(items=ranked_items)

@@ -104,6 +104,8 @@ Determine if the user wants to 'recommend' items, 'compare' items, or something 
 Extract product constraints from the user message.
 User message: "{user_message}"
 Extract budget_max, category, and tags if present.
+If the user is asking for items similar to a specific title (e.g. "similar to Decision in Normandy"), extract that exact title into `similar_to_title`.
+If the user provides a free-text semantic description (e.g. "a book about world war 2"), extract that entire phrase into `similar_to_title`.
 """
         try:
             result_json = self._call_gemini_structured(prompt, Constraints)

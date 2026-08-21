@@ -11,6 +11,8 @@ class Constraints(BaseModel):
     budget_max: Optional[float] = None
     category: Optional[str] = None
     tags: List[str] = []
+    similar_to_item: Optional[str] = None
+    similar_to_title: Optional[str] = None
 
 
 class RankedItem(BaseModel):

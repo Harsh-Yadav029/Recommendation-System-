@@ -33,7 +33,41 @@ async def chat(request: AssistantChatRequest = Body(...)):
             # Extract constraints
             constraints = llm_client.extract_constraints(request.message)
             
-            # Fetch recommendations using the deterministic ML service
+            # Semantic search handling
+            if constraints.similar_to_title and request.domain != "retailrocket":
+                matching_docs = domain_service.search_by_title(constraints.similar_to_title)
+                if not matching_docs:
+                    return AssistantChatResponse(
+                        response=f"I couldn't find any exact matches for '{constraints.similar_to_title}'. Could you try another title?",
+                        data={"error": "item_not_found"}
+                    )
+                
+                target_item = matching_docs[0]
+                target_id = target_item["item_id"]
+                
+                # Fetch similar items via vector search
+                rec_response = domain_service.find_similar_items(target_id, k=5)
+                
+                if not rec_response.items:
+                    return AssistantChatResponse(
+                        response=f"I couldn't find semantic recommendations for '{target_item.get('title', 'that item')}'.",
+                        data={"error": "no_similar_items"}
+                    )
+                
+                # Explain the top semantic recommendation
+                top_item = rec_response.items[0]
+                explanation = llm_client.explain_recommendation(top_item, request.user_profile)
+                
+                return AssistantChatResponse(
+                    response=f"I found '{target_item.get('title')}'. Based on that:\n\n{explanation}",
+                    data={
+                        "recommendations": rec_response.model_dump(), 
+                        "constraints": constraints.model_dump(),
+                        "semantic_target": target_item.get("title")
+                    }
+                )
+                
+            # Fetch standard recommendations using the deterministic ML service
             rec_response = domain_service.get_recommendations(request.user_profile, constraints)
             
             if not rec_response.items:
