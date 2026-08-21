@@ -10,11 +10,10 @@ CompareX is built with a microservices architecture:
     *   **Browse/Search**: A filterable product grid for each domain.
     *   **Compare**: A structured comparison table for selected items.
     *   **Assistant (Chat)**: A conversational layer for explanations and filtering (layered on top of the core deterministic recommender).
-    *   **Admin/Analytics**: A dashboard for system metrics and model evaluation.
 2.  **API Gateway (`/gateway`)**: An Express/Node.js service that acts as the entry point for the frontend, handling:
-    *   Authentication (JWT) and Session Management.
-    *   Security (CSRF protection via cookies, Rate Limiting, Helmet, CORS).
-    *   Proxying requests to the downstream ML Service.
+    *   **User Authentication**: JWT-based secure user registration, login, and robust session management.
+    *   **Security Policies**: Full protection suite (Helmet, CORS, rate limiting, HttpOnly cookies for JWTs).
+    *   **Routing**: Proxying authenticated requests to the downstream ML Service.
 3.  **ML Service (`/ml-service`)**: A FastAPI/Python backend that provides the core recommendation logic and LLM integrations:
     *   **Recommendation Engine**: Implements collaborative filtering (SVD via Surprise) and popularity baselines.
     *   **Constraint Relaxation**: Gracefully handles overly strict filters by relaxing constraints (category > budget > tags) rather than returning empty states.
@@ -56,6 +55,7 @@ MONGODB_URI=your_mongodb_atlas_connection_string
 GEMINI_API_KEY=your_google_gemini_api_key
 ENABLED_DOMAINS=retailrocket,steam,bookcrossing
 ```
+*Note: If you face `ECONNREFUSED` SRV errors on Windows, replace `mongodb+srv://...` with the direct node connection string format (`mongodb://...`).*
 
 ### Running the Services Locally
 
@@ -82,7 +82,15 @@ ENABLED_DOMAINS=retailrocket,steam,bookcrossing
     npm run dev
     ```
 
-The frontend will be available at `http://localhost:5173`.
+The frontend will be available at `http://localhost:5173`. Users are required to register or sign in before accessing the main product dashboard.
+
+## Deployment
+
+The project is fully configured for PaaS deployment on Vercel and Render using their free tiers:
+
+*   **Frontend (Vercel)**: Point Vercel to the `frontend/` directory. The included `vercel.json` ensures that all `/api/*` traffic is properly proxied to your deployed Gateway, circumventing CORS entirely.
+*   **Gateway & ML Service (Render)**: A single `render.yaml` Blueprint is provided in the repository root. Connect Render to the repo, and it will automatically provision both the Node.js Gateway and the Python ML Service, configuring all necessary directory scopes so the Python service can access the `models/` artifacts.
+    *   *Important*: Ensure your MongoDB Atlas Network Access is set to `0.0.0.0/0` when deploying to Render/Vercel since they utilize dynamic outbound IP addresses.
 
 ## Core Principles
 
