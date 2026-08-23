@@ -17,9 +17,12 @@ function App() {
   const [coldStartItems, setColdStartItems] = useState(null); // null = not from cold-start
 
   useEffect(() => {
+    let isMounted = true;
+    
     fetch('/api/auth/session', { method: 'POST', credentials: 'include' })
       .then(res => res.json())
       .then(data => {
+        if (!isMounted) return;
         setCsrfToken(data.csrfToken);
         if (data.user) {
           setUser(data.user);
@@ -29,7 +32,13 @@ function App() {
         }
         setAuthReady(true);
       })
-      .catch(err => console.error('Auth failed', err));
+      .catch(err => {
+        if (isMounted) console.error('Auth failed', err);
+      });
+      
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleLogout = async () => {
