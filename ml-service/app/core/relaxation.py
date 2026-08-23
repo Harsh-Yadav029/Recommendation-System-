@@ -4,7 +4,7 @@ from app.models.schemas import Constraints, RecommendationResponse
 def relax_constraints_and_retry(
     fetch_func: Callable[[Constraints], RecommendationResponse],
     original_constraints: Constraints,
-    target_count: int = 10
+    target_count: int = None
 ) -> RecommendationResponse:
     """
     Attempts to fetch recommendations. If results < target_count, systematically 
@@ -14,13 +14,16 @@ def relax_constraints_and_retry(
         fetch_func: A closure/callback that takes a Constraints object and 
                     returns a RecommendationResponse.
         original_constraints: The user's requested constraints.
-        target_count: The minimum number of results desired.
+        target_count: The minimum number of results desired (defaults to original_constraints.limit).
         
     Returns:
         RecommendationResponse containing the items and flags indicating if 
         relaxation occurred. If fully exhausted, returns the closest available 
         items (unconstrained) and flags it.
     """
+    if target_count is None:
+        target_count = original_constraints.limit
+
     # 1. Try exact constraints
     response = fetch_func(original_constraints)
     if len(response.items) >= target_count:

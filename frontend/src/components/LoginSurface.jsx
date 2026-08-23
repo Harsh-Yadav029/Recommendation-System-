@@ -32,28 +32,34 @@ export function LoginSurface({ onLoginSuccess, onSwitchToRegister, onBack }) {
   };
 
   return (
-    <div className="flex items-center justify-center font-body-md text-on-background p-margin-mobile md:p-margin-desktop min-h-screen bg-background">
-      <div className="w-full max-w-[480px] bg-surface-container-lowest rounded-[16px] shadow-ambient-lvl1 p-8 md:p-10 border border-secondary/10 relative overflow-hidden transition-all duration-300 hover:shadow-ambient-lvl2 hover:-translate-y-0.5 card-shadow hover:card-shadow-hover">
-        {/* Decorative Glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-32 bg-primary/10 blur-[50px] rounded-full pointer-events-none"></div>
+    <div className="flex items-center justify-center font-sans text-gray-900 p-6 min-h-screen relative bg-gray-50 selection:bg-emerald-500/30">
+      <button 
+        onClick={onBack}
+        className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors text-sm font-semibold z-20"
+      >
+        <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+        Back
+      </button>
+      
+      <div className="w-full max-w-[480px] bg-white rounded-2xl shadow-lg p-8 md:p-10 border border-gray-200 relative overflow-hidden transition-all duration-300">
         <div className="text-center mb-8 relative z-10">
-          <h1 className="font-display-lg-mobile md:font-display-lg text-primary tracking-tight mb-2">CompareX</h1>
-          <p className="font-body-md text-body-md text-tertiary">Welcome back. Please log in to your account.</p>
+          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">CompareX</h1>
+          <p className="text-gray-500">Welcome back. Please log in to your account.</p>
         </div>
         
         <form className="space-y-6 relative z-10" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-error-container text-on-error-container p-3 rounded text-sm">
+            <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-lg text-sm">
               {error}
             </div>
           )}
           <div className="space-y-4">
             <div>
-              <label className="block font-label-md text-label-md text-on-surface-variant mb-1.5" htmlFor="email">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="email">Email</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary">person</span>
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">person</span>
                 <input 
-                  className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-[16px] font-body-md text-body-md text-on-surface placeholder:text-tertiary focus:outline-none focus:border-primary focus:ring-4 focus:ring-secondary-container/50 transition-all input-focus-ring" 
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#0f7632] focus:ring-4 focus:ring-emerald-500/10 transition-all [&:-webkit-autofill]:[transition:background-color_9999s_ease-in-out_0s] [&:-webkit-autofill]:[-webkit-text-fill-color:#111827]" 
                   id="email" 
                   name="email" 
                   placeholder="Enter your email" 
@@ -65,11 +71,11 @@ export function LoginSurface({ onLoginSuccess, onSwitchToRegister, onBack }) {
               </div>
             </div>
             <div>
-              <label className="block font-label-md text-label-md text-on-surface-variant mb-1.5" htmlFor="password">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="password">Password</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary">lock</span>
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">lock</span>
                 <input 
-                  className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-[16px] font-body-md text-body-md text-on-surface placeholder:text-tertiary focus:outline-none focus:border-primary focus:ring-4 focus:ring-secondary-container/50 transition-all input-focus-ring" 
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#0f7632] focus:ring-4 focus:ring-emerald-500/10 transition-all [&:-webkit-autofill]:[transition:background-color_9999s_ease-in-out_0s] [&:-webkit-autofill]:[-webkit-text-fill-color:#111827]" 
                   id="password" 
                   name="password" 
                   placeholder="Enter your password" 
@@ -82,13 +88,13 @@ export function LoginSurface({ onLoginSuccess, onSwitchToRegister, onBack }) {
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <button type="button" onClick={onBack} className="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface">
+            <button type="button" onClick={onBack} className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
               Back to home
             </button>
-            <a className="font-label-sm text-label-sm text-primary hover:text-primary-container transition-colors" href="#">Forgot password?</a>
+            <a className="text-sm font-medium text-[#0f7632] hover:text-emerald-700 transition-colors" href="#">Forgot password?</a>
           </div>
           <button 
-            className="w-full bg-primary text-on-primary font-label-md text-label-md py-3.5 px-6 rounded-[16px] shadow-sm hover:bg-primary/90 hover:shadow-ambient-lvl1 active:scale-[0.98] transition-all duration-200 disabled:opacity-50" 
+            className="w-full bg-[#0f7632] text-white font-semibold py-3.5 px-6 rounded-xl shadow-md hover:bg-emerald-700 hover:shadow-lg active:scale-[0.98] transition-all duration-200 disabled:opacity-50" 
             type="submit"
             disabled={loading}
           >
@@ -96,9 +102,9 @@ export function LoginSurface({ onLoginSuccess, onSwitchToRegister, onBack }) {
           </button>
         </form>
         <div className="mt-8 text-center relative z-10">
-          <p className="font-body-sm text-body-sm text-tertiary">
+          <p className="text-sm text-gray-600">
             Don't have an account? 
-            <button onClick={onSwitchToRegister} className="font-label-md text-label-md text-primary hover:underline hover:text-primary-container ml-1 transition-colors">Register</button>
+            <button onClick={onSwitchToRegister} className="text-sm font-semibold text-[#0f7632] hover:underline hover:text-emerald-700 ml-1 transition-colors">Register</button>
           </p>
         </div>
       </div>

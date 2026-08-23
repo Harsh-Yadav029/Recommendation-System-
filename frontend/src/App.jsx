@@ -13,7 +13,7 @@ function App() {
   const [currentView, setCurrentView] = useState('landing'); // 'landing' | 'onboarding' | 'browse' | 'compare' | 'login' | 'register'
   const [user, setUser] = useState(null);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [selectedDomain, setSelectedDomain] = useState('retailrocket');
+  const [selectedDomain, setSelectedDomain] = useState('bookcrossing');
   const [coldStartItems, setColdStartItems] = useState(null); // null = not from cold-start
 
   useEffect(() => {

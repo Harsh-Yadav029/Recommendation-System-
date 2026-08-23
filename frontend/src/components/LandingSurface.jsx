@@ -2,128 +2,226 @@ import React from 'react';
 
 export function LandingSurface({ onStart, onSignIn, user, onLogout }) {
   return (
-    <div className="bg-background text-on-background min-h-screen flex flex-col font-body-md w-full">
+    <div className="min-h-screen flex flex-col font-sans w-full antialiased selection:bg-emerald-500/30 bg-gray-50 relative">
+      {/* Hero Background with Gradient Fade */}
+      <div className="absolute top-0 left-0 w-full h-[85vh] z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[url('/hero_bg.png')] bg-cover bg-center"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-gray-50"></div>
+      </div>
       {/* TopNavBar */}
-      <nav className="bg-surface/80 backdrop-blur-md dark:bg-surface-dim/80 fixed top-0 w-full z-50 border-b border-secondary/10 dark:border-outline-variant shadow-sm dark:shadow-none">
-        <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 w-full max-w-container-max-width mx-auto">
-          <div className="flex items-center gap-6">
-            <a className="font-display-lg text-display-lg text-primary dark:text-primary-fixed tracking-tight" href="#" style={{ fontSize: '24px', lineHeight: '32px' }}>CompareX</a>
-            <div className="hidden md:flex items-center gap-4 ml-8">
-              <a className="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary dark:border-primary-fixed pb-1 hover:bg-primary/5 dark:hover:bg-primary-fixed/10 rounded-lg transition-all px-3 py-2 scale-95 active:scale-90 transition-transform duration-200" href="#">Browse</a>
-              <a className="text-on-surface-variant dark:text-surface-variant font-label-md text-label-md hover:text-primary dark:hover:text-primary-fixed transition-colors hover:bg-primary/5 dark:hover:bg-primary-fixed/10 rounded-lg px-3 py-2 scale-95 active:scale-90 transition-transform duration-200" href="#">Compare</a>
-              <a className="text-on-surface-variant dark:text-surface-variant font-label-md text-label-md hover:text-primary dark:hover:text-primary-fixed transition-colors hover:bg-primary/5 dark:hover:bg-primary-fixed/10 rounded-lg px-3 py-2 scale-95 active:scale-90 transition-transform duration-200" href="#">Offers</a>
-              <a className="text-on-surface-variant dark:text-surface-variant font-label-md text-label-md hover:text-primary dark:hover:text-primary-fixed transition-colors hover:bg-primary/5 dark:hover:bg-primary-fixed/10 rounded-lg px-3 py-2 scale-95 active:scale-90 transition-transform duration-200" href="#">History</a>
-            </div>
+      <nav className="bg-black/20 backdrop-blur-md fixed top-0 w-full z-50 border-b border-white/10 shadow-sm">
+        <div className="flex justify-between items-center px-6 h-16 w-full max-w-7xl mx-auto">
+          {/* Logo - Left */}
+          <div className="flex items-center w-1/3">
+            <a className="font-bold text-2xl text-emerald-400 tracking-tight drop-shadow-md" href="#">CompareX</a>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center bg-surface-container rounded-full px-4 py-2 border border-secondary/10 focus-within:border-primary focus-within:shadow-[0_0_0_4px_hsla(260,40%,40%,0.1)] transition-all">
-              <span className="material-symbols-outlined text-tertiary mr-2 text-xl">search</span>
-              <input className="bg-transparent border-none focus:ring-0 text-body-sm p-0 w-48 text-on-surface outline-none" placeholder="Search..." type="text"/>
-            </div>
+          
+          {/* Nav Links - Center */}
+          <div className="hidden md:flex items-center justify-center gap-8 w-1/3">
+            <a className="text-emerald-300 font-semibold border-b-2 border-emerald-400 pb-1" href="#">Home</a>
+            <a className="text-white/70 font-medium hover:text-white transition-colors" href="#">About</a>
+            <a className="text-white/70 font-medium hover:text-white transition-colors" href="#">Features</a>
+          </div>
+
+          {/* Profile / Actions - Right */}
+          <div className="flex items-center justify-end gap-5 w-1/3">
             {user ? (
-              <div className="flex items-center gap-4">
-                <span className="text-primary font-label-md">{user.email}</span>
-                <button onClick={onLogout} className="text-on-surface-variant hover:text-primary transition-colors font-label-md">Log Out</button>
-              </div>
+              <>
+                <button className="text-white/60 hover:text-white transition-colors">
+                  <span className="material-symbols-outlined text-[22px]">notifications</span>
+                </button>
+                <button className="text-white/60 hover:text-white transition-colors">
+                  <span className="material-symbols-outlined text-[22px]">settings</span>
+                </button>
+                <div className="flex items-center gap-3">
+                  <button onClick={onLogout} className="text-white/70 hover:text-red-400 transition-colors font-medium text-sm">Sign Out</button>
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-300 font-bold flex items-center justify-center uppercase text-sm border border-emerald-500/30">
+                    {user.email[0]}
+                  </div>
+                </div>
+              </>
             ) : (
-              <button onClick={onSignIn} className="bg-primary text-on-primary font-label-md text-label-md px-6 py-3 rounded-[16px] hover:bg-primary/90 transition-colors shadow-level-1 hover-elevate">
+              <div className="flex items-center gap-3">
+                <button onClick={onSignIn} className="text-white/80 hover:text-white font-medium px-4 py-2 transition-colors">
                   Sign In
-              </button>
+                </button>
+                <button onClick={onSignIn} className="bg-emerald-500 hover:bg-emerald-400 text-white font-medium px-5 py-2 rounded-md transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]">
+                  Sign Up
+                </button>
+              </div>
             )}
           </div>
         </div>
       </nav>
 
-      {/* Main Content Canvas */}
-      <main className="flex-grow pt-28 pb-24 px-margin-mobile md:px-margin-desktop max-w-container-max-width mx-auto w-full">
-        {/* Hero Section */}
-        <section className="text-center py-16 md:py-24 max-w-4xl mx-auto flex flex-col items-center">
-          <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface mb-6">
-              Discover Your Next Favorite Thing
+      {/* Hero Section */}
+      <section className="relative pt-40 pb-24 px-6 overflow-hidden z-10">
+        <div className="max-w-3xl mx-auto text-center relative z-10">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 leading-tight tracking-tight drop-shadow-xl">
+            Heterogeneous Data, Unified Insights.
           </h1>
-          <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl">
-              Personalized recommendations across books, gaming, and retail, all in one seamless experience.
+          <p className="text-base md:text-lg text-white/90 mb-8 max-w-xl mx-auto leading-relaxed drop-shadow-md font-medium">
+            The analytical bridge for sparse datasets. Browse and compare items seamlessly across Retailrocket, Steam, and BookCrossing.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button onClick={onStart} className="bg-primary text-on-primary font-label-md text-label-md px-8 py-4 rounded-[16px] hover:bg-primary/90 transition-colors shadow-level-1 hover-elevate text-lg">
-                Get Started
-            </button>
-            <button onClick={onStart} className="bg-secondary-container/20 text-secondary font-label-md text-label-md px-8 py-4 rounded-[16px] hover:bg-secondary-container/30 transition-colors text-lg border border-secondary-container">
-                Learn More
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <button onClick={onStart} className="bg-[#0f7632] text-white font-bold text-sm px-6 py-3 rounded-md hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg">
+              Start Your Analysis <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
             </button>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Bento Grid Feature Section */}
-        <section className="mt-8">
+      {/* Features Cards */}
+      <section className="pb-16 px-6 relative z-10 -mt-10">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-md flex items-center justify-center mb-5">
+              <span className="material-symbols-outlined text-sm">dataset</span>
+            </div>
+            <h3 className="text-base font-bold text-gray-900 mb-2">Data Honesty</h3>
+            <p className="text-gray-600 leading-relaxed text-xs">
+              Clear visibility into missing data points. We never mask sparsity, ensuring your analysis is grounded in reality with prominent "Not Specified" states.
+            </p>
+          </div>
+
+          <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-md flex items-center justify-center mb-5">
+              <span className="material-symbols-outlined text-sm">account_tree</span>
+            </div>
+            <h3 className="text-base font-bold text-gray-900 mb-2">Cross-Domain Analysis</h3>
+            <p className="text-gray-600 leading-relaxed text-xs">
+              Normalize metrics across vastly different datasets. Compare a game's playtime engagement directly against a book's rating metadata.
+            </p>
+          </div>
+
+          <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-md flex items-center justify-center mb-5">
+              <span className="material-symbols-outlined text-sm">visibility</span>
+            </div>
+            <h3 className="text-base font-bold text-gray-900 mb-2">Relevance Transparency</h3>
+            <p className="text-gray-600 leading-relaxed text-xs">
+              Understand exactly why an item is recommended. Our reasoning chips break down complex algorithmic decisions into digestible insights.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Mastering Domains Section */}
+      <section className="py-24 px-6 relative z-10">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Mastering Heterogeneous Domains</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              CompareX is built to handle the unique structural challenges of vastly different datasets.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* BookCrossing Card */}
-            <div className="bg-surface-container-lowest border border-secondary/10 rounded-[16px] p-6 shadow-level-1 hover-elevate flex flex-col h-full">
-              <div className="w-full aspect-[4/3] rounded-lg overflow-hidden mb-6 bg-surface-container flex items-center justify-center">
-                <img alt="BookCrossing Illustration" className="w-full h-full object-contain" src="/book_illustration.png"/>
+            {/* BookCrossing */}
+            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow group">
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-[11px] font-bold tracking-wider text-gray-500">DOMAIN</span>
+                <span className="text-[11px] font-bold px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md">Rich Metadata</span>
               </div>
-              <div className="flex items-center gap-3 mb-3">
-                <span className="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-full">menu_book</span>
-                <h3 className="font-headline-sm text-headline-sm text-on-surface">BookCrossing</h3>
+              <div className="flex items-center gap-3 mb-6">
+                <span className="material-symbols-outlined text-gray-400 group-hover:text-emerald-500 transition-colors">menu_book</span>
+                <h3 className="text-lg font-bold text-gray-900">BookCrossing</h3>
               </div>
-              <p className="font-body-md text-body-md text-on-surface-variant flex-grow">
-                  Discover hidden literary gems and track physical books as they travel the globe. Connect with fellow readers.
-              </p>
-              <button onClick={onStart} className="mt-6 text-primary font-label-md text-label-md flex items-center gap-1 hover:underline w-fit">
-                  Explore Books <span className="material-symbols-outlined text-sm">arrow_forward</span>
-              </button>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                  <span className="text-sm text-gray-500">Author</span>
+                  <span className="text-sm font-medium text-gray-900">Various</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                  <span className="text-sm text-gray-500">Year</span>
+                  <span className="text-sm font-medium text-gray-900">1998-2004</span>
+                </div>
+                <div className="flex justify-between items-center pb-1">
+                  <span className="text-sm text-gray-500">Sparsity</span>
+                  <span className="text-sm font-bold text-red-500">High</span>
+                </div>
+              </div>
             </div>
 
-            {/* Steam Gaming Card */}
-            <div className="bg-surface-container-lowest border border-secondary/10 rounded-[16px] p-6 shadow-level-1 hover-elevate flex flex-col h-full md:-translate-y-4">
-              <div className="w-full aspect-[4/3] rounded-lg overflow-hidden mb-6 bg-surface-container flex items-center justify-center">
-                <img alt="Steam Gaming Illustration" className="w-full h-full object-contain" src="/controller_illustration.png"/>
+            {/* Steam */}
+            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow group">
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-[11px] font-bold tracking-wider text-gray-500">DOMAIN</span>
+                <span className="text-[11px] font-bold px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md">Engagement Metrics</span>
               </div>
-              <div className="flex items-center gap-3 mb-3">
-                <span className="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-full">sports_esports</span>
-                <h3 className="font-headline-sm text-headline-sm text-on-surface">Gaming Hub</h3>
+              <div className="flex items-center gap-3 mb-6">
+                <span className="material-symbols-outlined text-gray-400 group-hover:text-emerald-500 transition-colors">sports_esports</span>
+                <h3 className="text-lg font-bold text-gray-900">Steam</h3>
               </div>
-              <p className="font-body-md text-body-md text-on-surface-variant flex-grow">
-                  Find your next adventure. Tailored game recommendations based on your unique playstyle and library.
-              </p>
-              <button onClick={onStart} className="mt-6 text-primary font-label-md text-label-md flex items-center gap-1 hover:underline w-fit">
-                  Find Games <span className="material-symbols-outlined text-sm">arrow_forward</span>
-              </button>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                  <span className="text-sm text-gray-500">Playtime</span>
+                  <span className="text-sm font-medium text-gray-900">Avg 45h</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                  <span className="text-sm text-gray-500">Reviews</span>
+                  <span className="text-sm font-medium text-gray-900">Overwhelmingly Positive</span>
+                </div>
+                <div className="flex justify-between items-center pb-1">
+                  <span className="text-sm text-gray-500">Sparsity</span>
+                  <span className="text-sm font-bold text-emerald-500">Low</span>
+                </div>
+              </div>
             </div>
 
-            {/* RetailRocket Card */}
-            <div className="bg-surface-container-lowest border border-secondary/10 rounded-[16px] p-6 shadow-level-1 hover-elevate flex flex-col h-full">
-              <div className="w-full aspect-[4/3] rounded-lg overflow-hidden mb-6 bg-surface-container flex items-center justify-center">
-                <img alt="Retail Shopping Illustration" className="w-full h-full object-contain" src="/cart_illustration.png"/>
+            {/* Retailrocket */}
+            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow group">
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-[11px] font-bold tracking-wider text-gray-500">DOMAIN</span>
+                <span className="text-[11px] font-bold px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md">ID-Based</span>
               </div>
-              <div className="flex items-center gap-3 mb-3">
-                <span className="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-full">shopping_bag</span>
-                <h3 className="font-headline-sm text-headline-sm text-on-surface">RetailRocket</h3>
+              <div className="flex items-center gap-3 mb-6">
+                <span className="material-symbols-outlined text-gray-400 group-hover:text-emerald-500 transition-colors">shopping_cart</span>
+                <h3 className="text-lg font-bold text-gray-900">Retailrocket</h3>
               </div>
-              <p className="font-body-md text-body-md text-on-surface-variant flex-grow">
-                  Smart shopping assistant that learns your preferences to suggest the perfect products at the best prices.
-              </p>
-              <button onClick={onStart} className="mt-6 text-primary font-label-md text-label-md flex items-center gap-1 hover:underline w-fit">
-                  Start Shopping <span className="material-symbols-outlined text-sm">arrow_forward</span>
-              </button>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                  <span className="text-sm text-gray-500">Events</span>
+                  <span className="text-sm font-medium text-gray-900">View, Cart, Transaction</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                  <span className="text-sm text-gray-500">Structure</span>
+                  <span className="text-sm font-medium text-gray-900">Anonymized Trees</span>
+                </div>
+                <div className="flex justify-between items-center pb-1">
+                  <span className="text-sm text-gray-500">Sparsity</span>
+                  <span className="text-sm font-bold text-red-500">Extreme</span>
+                </div>
+              </div>
             </div>
           </div>
-        </section>
-      </main>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-24 px-6 bg-white border-y border-gray-200 relative z-10">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">Ready to unify your analytical view?</h2>
+          <p className="text-lg text-gray-600 mb-10 leading-relaxed">
+            Experience the functionalist approach to data comparison. Clean interfaces, honest missing data representation, and powerful insights.
+          </p>
+          <button onClick={onStart} className="bg-[#0f7632] text-white font-bold text-sm px-8 py-3.5 rounded-md hover:bg-emerald-700 transition-colors shadow-lg flex items-center gap-2 mx-auto">
+            Start Your Analysis 
+            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
+        </div>
+      </section>
 
       {/* Footer */}
-      <footer className="bg-surface-container-lowest dark:bg-surface-container-low border-t border-secondary/10 dark:border-outline-variant w-full py-12 mt-auto">
-        <div className="flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-margin-desktop max-w-container-max-width mx-auto gap-4">
-          <div className="font-headline-sm text-headline-sm text-on-surface dark:text-inverse-on-surface">
-              CompareX
+      <footer className="bg-transparent py-8 relative z-10 border-t border-gray-200 mt-12">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="text-sm text-gray-500 font-medium">
+            © 2026 CompareX. Functionalist Analytical Suite.
           </div>
-          <div className="flex flex-wrap justify-center gap-6">
-            <a className="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm hover:underline transition-all opacity-80 hover:opacity-100 transition-opacity" href="#">Privacy Policy</a>
-            <a className="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm hover:underline transition-all opacity-80 hover:opacity-100 transition-opacity" href="#">Terms of Service</a>
-            <a className="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm hover:underline transition-all opacity-80 hover:opacity-100 transition-opacity" href="#">Cookie Policy</a>
-          </div>
-          <div className="font-body-sm text-body-sm text-primary dark:text-primary-fixed-dim">
-              © 2024 CompareX. All rights reserved.
+          <div className="flex gap-6">
+            <a href="#" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">Privacy</a>
+            <a href="#" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">Terms</a>
+            <a href="#" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">API Documentation</a>
           </div>
         </div>
       </footer>

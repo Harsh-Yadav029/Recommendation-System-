@@ -11,8 +11,15 @@ class Constraints(BaseModel):
     budget_max: Optional[float] = None
     category: Optional[str] = None
     tags: List[str] = []
+    author: Optional[str] = None
+    year: Optional[str] = None
+    genre: Optional[str] = None
+    rating: Optional[str] = None
+    platform: Optional[str] = None
     similar_to_item: Optional[str] = None
     similar_to_title: Optional[str] = None
+    limit: int = 24
+    offset: int = 0
 
 
 class RankedItem(BaseModel):

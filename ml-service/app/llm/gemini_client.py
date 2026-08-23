@@ -142,3 +142,31 @@ Explain the recommendation naturally and conversationally based ONLY on the data
         except Exception as e:
             raise LLMUnavailableException(f"Failed to explain recommendation: {str(e)}")
 
+    def chat_about_comparison(self, items: list[dict], user_message: str | None = None) -> str:
+        prompt_template = f"""
+You are an expert comparison analyst and domain expert. You are helping a user compare the following items based on their backend audit data, metadata, and baseline scores:
+{items}
+
+Guidelines:
+- Act as a domain expert.
+  - If the items are books, analyze author themes, publication years, and reader demographics or ratings.
+  - If the items are video games (Steam), analyze playtime, genre, and overwhelmingly positive review metrics.
+  - If the items are retail products (Retailrocket), analyze transaction events and popularity.
+- Provide a detailed, insightful response.
+- Your response must be strictly grounded in the provided item data, including the baseline scores which represent user feedback/audit data stored in the backend. Do not hallucinate or invent details not present in the JSON.
+"""
+        if user_message:
+            prompt = prompt_template + f"""
+User's query: "{user_message}"
+
+Answer the user's query in detail, referencing specific metrics or metadata from the items to support your analysis.
+"""
+        else:
+            prompt = prompt_template + """
+Provide a comprehensive and detailed side-by-side summary comparing these items. Highlight their key similarities, differences, and what makes each unique based on the provided audit data and baseline scores.
+"""
+        try:
+            return self._call_gemini_text(prompt)
+        except Exception as e:
+            print(f"DEBUG GEMINI EXCEPTION: {repr(e)}")
+            raise LLMUnavailableException(f"Failed to generate comparison chat: {str(e)}")

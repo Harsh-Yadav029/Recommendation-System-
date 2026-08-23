@@ -29,7 +29,7 @@ const getRecommendationsSchema = z.object({
 });
 
 const compareSchema = z.object({
-  item_ids: z.array(z.string()).min(2).max(4),
+  item_ids: z.array(z.string()).min(2),
 });
 
 const logInteractionSchema = z.object({
@@ -126,5 +126,14 @@ router.post('/assistant/chat', async (req, res) => {
   }
 });
 
+// POST /api/assistant/compare_chat -> POST to ML service
+router.post('/assistant/compare_chat', async (req, res) => {
+  try {
+    const response = await api.post('/api/assistant/compare_chat', req.body);
+    return res.json(response.data);
+  } catch (err) {
+    return handleProxyError(err, res);
+  }
+});
 
 module.exports = router;

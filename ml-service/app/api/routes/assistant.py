@@ -20,6 +20,11 @@ class AssistantChatResponse(BaseModel):
     response: str
     data: Optional[Dict[str, Any]] = None
 
+class CompareChatRequest(BaseModel):
+    domain: str
+    item_ids: List[str]
+    user_message: Optional[str] = None
+
 @router.post("/chat", response_model=AssistantChatResponse)
 async def chat(request: AssistantChatRequest = Body(...)):
     domain_service = get_service(request.domain)
@@ -103,3 +108,28 @@ async def chat(request: AssistantChatRequest = Body(...)):
             response="The assistant is currently overloaded or unavailable. Please use the Browse/Compare features directly.",
             data={"error": "llm_unavailable"}
         )
+
+@router.post("/compare_chat", response_model=AssistantChatResponse)
+async def compare_chat(request: CompareChatRequest = Body(...)):
+    domain_service = get_service(request.domain)
+    
+    try:
+        comparison_table = domain_service.compare(request.item_ids)
+        # Convert items to list of dicts for the prompt
+        items = comparison_table.items
+        
+        response_text = llm_client.chat_about_comparison(items, request.user_message)
+        
+        return AssistantChatResponse(
+            response=response_text,
+            data={"items_compared": request.item_ids}
+        )
+    except LLMUnavailableException as e:
+        print(f"LLM Unavailable: {e}")
+        return AssistantChatResponse(
+            response="The AI assistant is currently unavailable.",
+            data={"error": "llm_unavailable"}
+        )
+    except Exception as e:
+        print(f"Error in compare_chat: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
