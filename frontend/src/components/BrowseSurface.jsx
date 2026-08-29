@@ -163,8 +163,19 @@ export function BrowseSurface({
 
       <div className="flex flex-1 overflow-hidden">
         {/* SideNavBar */}
-        <aside className="hidden md:flex bg-surface-bright dark:bg-surface-dim border-r border-outline-variant dark:border-outline h-screen w-64 flex-col gap-unit py-gutter overflow-y-auto shrink-0">
-          <FilterSidebar filters={filters} setFilters={setFilters} domain={selectedDomain} onNavigate={onNavigate} />
+        <aside className="hidden md:flex bg-surface-bright dark:bg-surface-dim border-r border-outline-variant dark:border-outline h-full w-64 flex-col py-gutter shrink-0">
+          <div className="flex-1 overflow-y-auto">
+            <FilterSidebar filters={filters} setFilters={setFilters} domain={selectedDomain} onNavigate={onNavigate} />
+          </div>
+          <div className="px-4 mt-auto pt-4 border-t border-outline-variant/50">
+            <button 
+              onClick={onLogout}
+              className="w-full py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-label-lg rounded-lg flex items-center justify-center gap-2 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[20px]">logout</span>
+              Sign Out
+            </button>
+          </div>
         </aside>
 
         {/* Main Content Canvas */}

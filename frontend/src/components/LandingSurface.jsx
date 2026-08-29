@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function LandingSurface({ onStart, onSignIn, user, onLogout }) {
+export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout }) {
   return (
     <div className="min-h-screen flex flex-col font-sans w-full antialiased selection:bg-emerald-500/30 bg-gray-50 relative">
       {/* Hero Background with Gradient Fade */}
@@ -19,8 +19,8 @@ export function LandingSurface({ onStart, onSignIn, user, onLogout }) {
           {/* Nav Links - Center */}
           <div className="hidden md:flex items-center justify-center gap-8 w-1/3">
             <a className="text-emerald-300 font-semibold border-b-2 border-emerald-400 pb-1" href="#">Home</a>
-            <a className="text-white/70 font-medium hover:text-white transition-colors" href="#">About</a>
-            <a className="text-white/70 font-medium hover:text-white transition-colors" href="#">Features</a>
+            <a className="text-white/70 font-medium hover:text-white transition-colors" href="#about">About</a>
+            <a className="text-white/70 font-medium hover:text-white transition-colors" href="#features">Features</a>
           </div>
 
           {/* Profile / Actions - Right */}
@@ -45,7 +45,7 @@ export function LandingSurface({ onStart, onSignIn, user, onLogout }) {
                 <button onClick={onSignIn} className="text-white/80 hover:text-white font-medium px-4 py-2 transition-colors">
                   Sign In
                 </button>
-                <button onClick={onSignIn} className="bg-emerald-500 hover:bg-emerald-400 text-white font-medium px-5 py-2 rounded-md transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]">
+                <button onClick={onSignUp} className="bg-emerald-500 hover:bg-emerald-400 text-white font-medium px-5 py-2 rounded-md transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]">
                   Sign Up
                 </button>
               </div>
@@ -72,7 +72,7 @@ export function LandingSurface({ onStart, onSignIn, user, onLogout }) {
       </section>
 
       {/* Features Cards */}
-      <section className="pb-16 px-6 relative z-10 -mt-10">
+      <section id="features" className="pb-16 px-6 relative z-10 -mt-10">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
             <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-md flex items-center justify-center mb-5">
@@ -107,7 +107,7 @@ export function LandingSurface({ onStart, onSignIn, user, onLogout }) {
       </section>
 
       {/* Mastering Domains Section */}
-      <section className="py-24 px-6 relative z-10">
+      <section id="about" className="py-24 px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Mastering Heterogeneous Domains</h2>

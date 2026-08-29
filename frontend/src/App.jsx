@@ -74,6 +74,7 @@ function App() {
           <LandingSurface 
             onStart={() => setCurrentView('login')}
             onSignIn={() => setCurrentView('login')}
+            onSignUp={() => setCurrentView('register')}
             user={user}
             onLogout={handleLogout}
           />
