@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 export function useRecommendations(domain, filters, csrfToken) {
   const [items, setItems] = useState([]);
@@ -10,14 +10,26 @@ export function useRecommendations(domain, filters, csrfToken) {
   const [hasMore, setHasMore] = useState(true);
   const limit = 24;
 
+  const filtersString = JSON.stringify(filters);
+  const isFetchingRef = useRef(false);
+
   const fetchRecommendations = useCallback(async (currentOffset = 0) => {
-    if (!domain) return;
+    if (!domain || !csrfToken) return;
+    if (isFetchingRef.current && currentOffset !== 0) return;
     
+    isFetchingRef.current = true;
     setLoading(true);
     if (currentOffset === 0) setError(null);
 
     try {
-      const activeFilters = { ...filters };
+      let parsedFilters = {};
+      try {
+        parsedFilters = JSON.parse(filtersString || "{}");
+      } catch {
+        parsedFilters = {};
+      }
+
+      const activeFilters = { ...parsedFilters };
       if (activeFilters.budget_max) activeFilters.budget_max = parseFloat(activeFilters.budget_max);
       
       Object.keys(activeFilters).forEach(key => {
@@ -43,6 +55,9 @@ export function useRecommendations(domain, filters, csrfToken) {
       });
 
       if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error("Rate limit exceeded. Please wait a moment before retrying.");
+        }
         throw new Error(`API error: ${response.statusText}`);
       }
 
@@ -64,14 +79,15 @@ export function useRecommendations(domain, filters, csrfToken) {
       setError(err.message);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
-  }, [domain, filters, csrfToken, limit]);
+  }, [domain, filtersString, csrfToken, limit]);
 
   useEffect(() => {
     setOffset(0);
     setHasMore(true);
     fetchRecommendations(0);
-  }, [domain, filters, fetchRecommendations]);
+  }, [domain, filtersString, csrfToken, fetchRecommendations]);
 
   const loadMore = () => {
     if (loading || !hasMore) return;

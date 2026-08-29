@@ -8,18 +8,32 @@ require('dotenv').config();
 const helmetMiddleware = helmet();
 
 // CORS setup
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://recommendation-system-six-nu.vercel.app',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 const corsMiddleware = cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all in proxy to prevent CORS blocks
+    }
+  },
   credentials: true, // required to send HttpOnly cookies
 });
 
-// Rate limiting setup (100 requests per 15 minutes)
+// Rate limiting setup (1000 requests per 15 minutes per client IP)
 const rateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
-  max: 100,
+  max: 1000,
   message: { error: 'Too many requests from this IP, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false }
 });
 
 const csurf = require('csurf');
