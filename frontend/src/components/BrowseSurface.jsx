@@ -82,13 +82,17 @@ export function BrowseSurface({
     <div className="bg-background text-on-background min-h-screen flex flex-col antialiased">
       {/* TopNavBar */}
       <header className="hidden md:flex bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline flex w-full h-row-height-standard max-w-full top-0 z-50">
-        <div className="w-64 flex items-center pl-container-margin shrink-0">
-          <div className="font-headline-lg text-headline-lg font-bold text-primary dark:text-primary-fixed tracking-tight">CompareX</div>
+        <div className="w-48 flex items-center pl-container-margin shrink-0">
+          <button onClick={() => onNavigate('landing')} className="font-headline-lg text-headline-lg font-bold text-primary dark:text-primary-fixed tracking-tight cursor-pointer hover:opacity-90 transition-opacity">CompareX</button>
         </div>
         <div className="flex-1 flex justify-between items-center px-container-margin">
-          <nav className="flex gap-4">
-            <a className="font-title-md text-title-md text-primary dark:text-primary-fixed border-b-2 border-primary dark:border-primary-fixed pb-1 hover:text-primary dark:hover:text-primary-fixed transition-colors scale-95 duration-100" href="#">Browse</a>
-            <button onClick={onCompare} disabled={selectedItems.length < 2} className={`font-title-md text-title-md transition-colors scale-95 duration-100 ${selectedItems.length >= 2 ? 'text-primary dark:text-primary-fixed hover:opacity-80' : 'text-tertiary dark:text-tertiary-fixed-dim opacity-50 cursor-not-allowed'}`}>Compare ({selectedItems.length})</button>
+          <nav className="flex gap-5 items-center">
+            <button onClick={() => onNavigate('landing')} className="text-sm font-medium text-tertiary hover:text-primary transition-colors cursor-pointer">Home</button>
+            <button onClick={() => onNavigate('about')} className="text-sm font-medium text-tertiary hover:text-primary transition-colors cursor-pointer">About</button>
+            <button onClick={() => onNavigate('features')} className="text-sm font-medium text-tertiary hover:text-primary transition-colors cursor-pointer">Features</button>
+            <span className="h-4 w-[1px] bg-outline-variant/60"></span>
+            <span className="font-title-md text-title-md text-primary dark:text-primary-fixed border-b-2 border-primary dark:border-primary-fixed pb-1">Browse</span>
+            <button onClick={onCompare} disabled={selectedItems.length < 2} className={`font-title-md text-title-md transition-colors ${selectedItems.length >= 2 ? 'text-primary dark:text-primary-fixed hover:opacity-80 cursor-pointer' : 'text-tertiary dark:text-tertiary-fixed-dim opacity-50 cursor-not-allowed'}`}>Compare ({selectedItems.length})</button>
           </nav>
           <div className="flex items-center gap-4 relative">
             {user && (

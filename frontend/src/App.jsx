@@ -5,12 +5,14 @@ import { ColdStartSurface } from './components/ColdStartSurface';
 import { LoginSurface } from './components/LoginSurface';
 import { RegisterSurface } from './components/RegisterSurface';
 import { LandingSurface } from './components/LandingSurface';
+import { AboutSurface } from './components/AboutSurface';
+import { FeaturesSurface } from './components/FeaturesSurface';
 
 function App() {
   const [authReady, setAuthReady] = useState(false);
   const [csrfToken, setCsrfToken] = useState(null);
   
-  const [currentView, setCurrentView] = useState('landing'); // 'landing' | 'onboarding' | 'browse' | 'compare' | 'login' | 'register'
+  const [currentView, setCurrentView] = useState('landing'); // 'landing' | 'about' | 'features' | 'onboarding' | 'browse' | 'compare' | 'login' | 'register'
   const [user, setUser] = useState(null);
   const [selectedItems, setSelectedItems] = useState([]);
   const [selectedDomain, setSelectedDomain] = useState('bookcrossing');
@@ -72,11 +74,34 @@ function App() {
       <main className="flex-1 relative overflow-hidden flex flex-col">
         {currentView === 'landing' && (
           <LandingSurface 
-            onStart={() => setCurrentView('login')}
+            onStart={() => setCurrentView(user ? 'browse' : 'login')}
             onSignIn={() => setCurrentView('login')}
             onSignUp={() => setCurrentView('register')}
             user={user}
             onLogout={handleLogout}
+            onNavigate={setCurrentView}
+          />
+        )}
+
+        {currentView === 'about' && (
+          <AboutSurface 
+            onStart={() => setCurrentView(user ? 'browse' : 'login')}
+            onSignIn={() => setCurrentView('login')}
+            onSignUp={() => setCurrentView('register')}
+            user={user}
+            onLogout={handleLogout}
+            onNavigate={setCurrentView}
+          />
+        )}
+
+        {currentView === 'features' && (
+          <FeaturesSurface 
+            onStart={() => setCurrentView(user ? 'browse' : 'login')}
+            onSignIn={() => setCurrentView('login')}
+            onSignUp={() => setCurrentView('register')}
+            user={user}
+            onLogout={handleLogout}
+            onNavigate={setCurrentView}
           />
         )}
 

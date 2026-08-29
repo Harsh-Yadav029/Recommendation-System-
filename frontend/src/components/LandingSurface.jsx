@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout }) {
+export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout, onNavigate }) {
   return (
     <div className="min-h-screen flex flex-col font-sans w-full antialiased selection:bg-emerald-500/30 bg-gray-50 relative">
       {/* Hero Background with Gradient Fade */}
@@ -13,28 +13,48 @@ export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout }) 
         <div className="flex justify-between items-center px-6 h-16 w-full max-w-7xl mx-auto">
           {/* Logo - Left */}
           <div className="flex items-center w-1/3">
-            <a className="font-bold text-2xl text-emerald-400 tracking-tight drop-shadow-md" href="#">CompareX</a>
+            <button 
+              onClick={() => onNavigate ? onNavigate('landing') : null} 
+              className="font-bold text-2xl text-emerald-400 tracking-tight drop-shadow-md text-left cursor-pointer transition-transform hover:scale-105"
+            >
+              CompareX
+            </button>
           </div>
           
           {/* Nav Links - Center */}
           <div className="hidden md:flex items-center justify-center gap-8 w-1/3">
-            <a className="text-emerald-300 font-semibold border-b-2 border-emerald-400 pb-1" href="#">Home</a>
-            <a className="text-white/70 font-medium hover:text-white transition-colors" href="#about">About</a>
-            <a className="text-white/70 font-medium hover:text-white transition-colors" href="#features">Features</a>
+            <button 
+              onClick={() => onNavigate ? onNavigate('landing') : null}
+              className="text-emerald-300 font-semibold border-b-2 border-emerald-400 pb-1 cursor-pointer"
+            >
+              Home
+            </button>
+            <button 
+              onClick={() => onNavigate ? onNavigate('about') : null}
+              className="text-white/70 font-medium hover:text-white transition-colors cursor-pointer"
+            >
+              About
+            </button>
+            <button 
+              onClick={() => onNavigate ? onNavigate('features') : null}
+              className="text-white/70 font-medium hover:text-white transition-colors cursor-pointer"
+            >
+              Features
+            </button>
           </div>
 
           {/* Profile / Actions - Right */}
           <div className="flex items-center justify-end gap-5 w-1/3">
             {user ? (
               <>
-                <button className="text-white/60 hover:text-white transition-colors">
-                  <span className="material-symbols-outlined text-[22px]">notifications</span>
-                </button>
-                <button className="text-white/60 hover:text-white transition-colors">
-                  <span className="material-symbols-outlined text-[22px]">settings</span>
+                <button 
+                  onClick={() => onNavigate ? onNavigate('browse') : null}
+                  className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors"
+                >
+                  Go to App
                 </button>
                 <div className="flex items-center gap-3">
-                  <button onClick={onLogout} className="text-white/70 hover:text-red-400 transition-colors font-medium text-sm">Sign Out</button>
+                  <button onClick={onLogout} className="text-white/70 hover:text-red-400 transition-colors font-medium text-sm cursor-pointer">Sign Out</button>
                   <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-300 font-bold flex items-center justify-center uppercase text-sm border border-emerald-500/30">
                     {user.email[0]}
                   </div>
@@ -42,10 +62,10 @@ export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout }) 
               </>
             ) : (
               <div className="flex items-center gap-3">
-                <button onClick={onSignIn} className="text-white/80 hover:text-white font-medium px-4 py-2 transition-colors">
+                <button onClick={onSignIn} className="text-white/80 hover:text-white font-medium px-4 py-2 transition-colors cursor-pointer">
                   Sign In
                 </button>
-                <button onClick={onSignUp} className="bg-emerald-500 hover:bg-emerald-400 text-white font-medium px-5 py-2 rounded-md transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]">
+                <button onClick={onSignUp} className="bg-emerald-500 hover:bg-emerald-400 text-white font-medium px-5 py-2 rounded-md transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] cursor-pointer">
                   Sign Up
                 </button>
               </div>
@@ -219,9 +239,9 @@ export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout }) 
             © 2026 CompareX. Functionalist Analytical Suite.
           </div>
           <div className="flex gap-6">
-            <a href="#" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">Privacy</a>
-            <a href="#" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">Terms</a>
-            <a href="#" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">API Documentation</a>
+            <button onClick={() => onNavigate ? onNavigate('landing') : null} className="text-sm text-gray-500 hover:text-gray-800 transition-colors cursor-pointer">Home</button>
+            <button onClick={() => onNavigate ? onNavigate('about') : null} className="text-sm text-gray-500 hover:text-gray-800 transition-colors cursor-pointer">About</button>
+            <button onClick={() => onNavigate ? onNavigate('features') : null} className="text-sm text-gray-500 hover:text-gray-800 transition-colors cursor-pointer">Features</button>
           </div>
         </div>
       </footer>
