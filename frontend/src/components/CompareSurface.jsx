@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { ImageOff, Loader2, Send } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 
 export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user, onLogout }) {
   const [items, setItems] = useState([]);
@@ -8,7 +8,7 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
   
   // AI Chat states
   const [aiLoading, setAiLoading] = useState(false);
-  const [chatHistory, setChatHistory] = useState([]); // {role: 'ai'|'user', content: string}
+  const [chatHistory, setChatHistory] = useState([]);
   const [userMessage, setUserMessage] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
   const chatEndRef = useRef(null);
@@ -22,7 +22,6 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
     const itemIds = selectedItems.map(i => i.item_id);
 
     setLoading(true);
-    // Fetch comparison data from DB
     fetch(`/api/compare/${domain}`, {
       method: "POST",
       credentials: "include",
@@ -37,7 +36,7 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
         return res.json();
       })
       .then(data => {
-        const mergedItems = data.items.map(apiItem => {
+        const mergedItems = (data.items || []).map(apiItem => {
           const selectedItem = selectedItems.find(i => String(i.item_id) === String(apiItem.item_id));
           return {
             ...apiItem,
@@ -100,265 +99,269 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
     fetchAiResponse(itemIds, msg);
   };
 
-  const domainName = domain === "bookcrossing" ? "BookCrossing" : domain === "steam" ? "Steam" : "Retailrocket";
-
   const renderCreatorLabel = () => {
     if (domain === "bookcrossing") return "Author";
-    if (domain === "steam") return "Category";
+    if (domain === "steam") return "Genre / Category";
     return "Price";
   };
 
   const getCreatorValue = (item) => {
-    if (domain === "bookcrossing") return item.metadata?.author;
-    if (domain === "steam") return item.category;
-    return item.price;
+    if (domain === "bookcrossing") return item.metadata?.author || item.author;
+    if (domain === "steam") return item.category || item.metadata?.genre;
+    return item.price || item.metadata?.price;
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-        <div className="text-tertiary font-body-md flex items-center gap-2">
-          <Loader2 className="animate-spin" />
-          Loading comparison data...
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center animate-spin">
+          <span className="material-symbols-outlined text-2xl">sync</span>
         </div>
+        <p className="text-xs text-slate-400 font-medium">Building comparison matrix...</p>
       </div>
     );
   }
 
   if (selectedItems.length === 0) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <div className="text-tertiary font-body-md">No items selected for comparison.</div>
-        <button onClick={onBack} className="text-primary hover:underline font-label-md">Go back to Browse</button>
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center gap-4 px-4">
+        <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400">
+          <span className="material-symbols-outlined text-3xl">compare_arrows</span>
+        </div>
+        <h2 className="text-base font-bold">No items selected for comparison</h2>
+        <p className="text-xs text-slate-400 max-w-sm text-center">Select at least 2 items from the browse catalog to generate a side-by-side audit.</p>
+        <button 
+          onClick={onBack} 
+          className="mt-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs transition-all"
+        >
+          Return to Browse
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="bg-background min-h-screen text-on-background font-body-md flex flex-col flex-1">
-      {/* TopNavBar */}
-      <header className="hidden md:flex bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline flex w-full h-row-height-standard max-w-full top-0 z-50">
-        <div className="w-64 flex items-center pl-container-margin shrink-0">
-          <div className="font-headline-lg text-headline-lg font-bold text-primary dark:text-primary-fixed tracking-tight">CompareX</div>
-        </div>
-        <div className="flex-1 flex justify-between items-center px-container-margin">
-          <nav className="flex gap-4">
-            <button onClick={onBack} className="font-title-md text-title-md text-tertiary dark:text-tertiary-fixed-dim hover:opacity-80 transition-colors scale-95 duration-100">Browse</button>
-            <span className="font-title-md text-title-md text-primary dark:text-primary-fixed border-b-2 border-primary dark:border-primary-fixed pb-1 scale-95 duration-100">Compare ({selectedItems.length})</span>
-          </nav>
-          <div className="flex items-center gap-4 relative">
-            {user ? (
-              <div className="relative">
-                <button 
-                  onClick={() => setProfileOpen(!profileOpen)}
-                  className="w-8 h-8 rounded-full border border-outline-variant bg-primary text-on-primary flex items-center justify-center font-bold text-xs uppercase cursor-pointer hover:opacity-90 transition-opacity"
-                >
-                  {user.email[0]}
-                </button>
-                
-                {profileOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)}></div>
-                    <div className="absolute right-0 mt-2 w-80 bg-surface border border-outline-variant rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                      {/* Banner */}
-                      <div className="h-24 bg-purple-200 dark:bg-purple-900/30 w-full relative">
-                        {/* Avatar */}
-                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2">
-                          <div className="w-16 h-16 rounded-2xl border-4 border-surface bg-primary text-on-primary flex items-center justify-center font-bold text-3xl uppercase shadow-sm">
-                            {user.email[0]}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="pt-10 pb-4 px-4 text-center border-b border-outline-variant/60">
-                        <h3 className="font-title-lg text-title-lg font-bold text-on-surface capitalize">
-                          {user.email.split('@')[0].replace(/[._-]/g, ' ')}
-                        </h3>
-                        <p className="font-body-sm text-body-sm text-tertiary mt-1">
-                          {user.email}
-                        </p>
-                      </div>
-
-                      <div className="px-6 py-4">
-                        <h4 className="font-title-md text-title-md text-on-surface font-bold mb-4">Personal Info</h4>
-                        
-                        <div className="flex justify-between items-center py-2 border-b border-outline-variant/40">
-                          <div>
-                            <p className="font-body-sm text-body-sm font-medium text-on-surface mb-0.5">Full Name</p>
-                            <p className="font-body-sm text-body-sm text-tertiary capitalize">{user.email.split('@')[0].replace(/[._-]/g, ' ')}</p>
-                          </div>
-                          <span className="material-symbols-outlined text-tertiary text-[20px]">chevron_right</span>
-                        </div>
-
-                        <div className="flex justify-between items-center py-2 mt-2">
-                          <div>
-                            <p className="font-body-sm text-body-sm font-medium text-on-surface mb-0.5">Email Address</p>
-                            <p className="font-body-sm text-body-sm text-tertiary">{user.email}</p>
-                          </div>
-                          <span className="material-symbols-outlined text-tertiary text-[20px]">chevron_right</span>
-                        </div>
-                      </div>
-
-                      <div className="bg-surface-container-low px-6 py-4 border-t border-outline-variant/60">
-                        <button 
-                          onClick={onLogout}
-                          className="w-full flex items-center justify-center gap-2 bg-error-container text-on-error-container hover:bg-error hover:text-on-error py-2.5 rounded-lg transition-colors font-label-lg font-bold"
-                        >
-                          <span className="material-symbols-outlined text-[20px]">logout</span>
-                          Log Out
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
+    <div className="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
+      {/* Top Navbar */}
+      <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <button 
+              onClick={onBack} 
+              className="flex items-center gap-2 text-xl font-black tracking-tight text-white hover:opacity-90 transition-opacity"
+            >
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-md shadow-emerald-500/20">
+                <span className="material-symbols-outlined text-slate-950 font-bold text-[20px]">swap_horiz</span>
               </div>
-            ) : (
-              <button onClick={onBack} className="bg-primary text-on-primary font-label-md px-4 py-2 rounded-[16px] hover:bg-primary-container hover:text-on-primary-container transition-all">Back to Home</button>
+              <span className="bg-gradient-to-r from-white via-slate-100 to-emerald-400 bg-clip-text text-transparent">CompareX</span>
+            </button>
+
+            <div className="h-4 w-[1px] bg-slate-800 hidden sm:block" />
+
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={onBack}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                <span>Back to Catalog</span>
+              </button>
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                Comparing {selectedItems.length} items
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {user && (
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-bold text-xs uppercase">
+                {user.email[0]}
+              </div>
             )}
           </div>
         </div>
       </header>
 
-      {/* Main Content Canvas */}
-      <main className="flex-grow w-full max-w-container-max-width mx-auto px-4 md:px-8 py-8 flex flex-col">
-        {/* Header (Back button + Title) */}
-        <div className="flex items-center gap-4 mb-6">
-          <button onClick={onBack} className="flex items-center gap-1 text-tertiary hover:text-primary transition-colors">
-            <span className="material-symbols-outlined text-sm">arrow_back</span>
-          </button>
-          <h1 className="font-display-sm text-on-background">Comparison Audit</h1>
-        </div>
+      {/* Main Container */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
         
-        <div className="flex flex-col xl:flex-row gap-8">
-          {/* Left Side: Comparison Grid */}
-          <div className="flex-1 w-full xl:w-2/3">
-
-          {error ? (
-            <div className="p-4 bg-error-container text-on-error-container rounded-lg border border-error">
-              Error loading comparison: {error}
+        {/* Title & Domain Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-black text-white">Side-by-Side Comparison Matrix</h1>
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 capitalize">
+                {domain}
+              </span>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 gap-4">
-              {items.map((item, idx) => {
-                const title = item.title && item.title !== "not specified" ? item.title : (item.metadata?.title || `Item #${item.item_id}`);
-                const creatorVal = getCreatorValue(item);
-                const score = item.popularity_score > 0 ? (item.popularity_score <= 1 ? Math.round(item.popularity_score * 100) : Math.min(100, Math.round((item.popularity_score / 5) * 100))) : 50;
-                
-                return (
-                  <div key={item.item_id} className="bg-surface-container-lowest border border-outline-variant p-6 rounded-lg flex flex-col gap-4 relative">
-                    {/* Left border stroke */}
-                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary scale-y-100 origin-top"></div>
-                    
-                    <div>
-                      {item.image_url_l && item.image_url_l !== "not specified" && (
-                        <div className="mb-4">
-                          <img src={item.image_url_l} alt={title || "Cover"} className="w-full h-48 object-contain bg-surface-bright rounded border border-outline-variant/30" />
-                        </div>
-                      )}
-                      <div className="font-label-caps text-label-caps text-tertiary mb-1 uppercase">
-                        {domain === 'steam' ? 'Game' : domain === 'bookcrossing' ? 'Book' : 'Product'} ID: {item.item_id}
-                      </div>
-                      <div className="font-data-mono text-data-mono text-on-surface text-lg mb-2 line-clamp-2" title={title}>
-                        {title}
-                      </div>
-                      <div className="font-body-sm text-tertiary line-clamp-1">
-                        <span className="font-semibold text-on-surface-variant">{renderCreatorLabel()}:</span> {creatorVal || "—"}
-                      </div>
-                    </div>
+            <p className="text-xs text-slate-400 mt-1">
+              Deterministic feature extraction with grounded AI comparative analysis.
+            </p>
+          </div>
 
-                    <div className="w-full mt-2">
-                      <div className="flex justify-between items-end mb-1">
-                        <span className="font-label-caps text-label-caps text-tertiary">Relevance / Score</span>
-                        <span className="font-data-mono text-data-mono text-primary">{score}%</span>
-                      </div>
-                      <div className="h-1.5 w-full bg-surface-bright rounded-full overflow-hidden border border-outline-variant/30">
-                        <div className="h-full bg-primary" style={{ width: `${score}%` }}></div>
-                      </div>
-                    </div>
-
-                    <div className="mt-auto">
-                      {item.user_feedback && Object.keys(item.user_feedback).length > 0 && (
-                        <div className="mt-4">
-                          <div className="font-label-caps text-tertiary mb-2 uppercase text-[10px]">Metadata / Feedback</div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {Object.entries(item.user_feedback).map(([key, value]) => (
-                              <div key={key} className="bg-surface-bright p-2 rounded border border-outline-variant/30 flex flex-col">
-                                <span className="font-label-sm text-tertiary text-[10px] uppercase">{key}</span>
-                                <span className="font-data-mono text-on-surface font-semibold text-sm">{value}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="mt-4 pt-4 border-t border-outline-variant/50">
-                        <div className="font-label-caps text-tertiary mb-2 uppercase text-[10px]">Why Recommended</div>
-                        <div className="font-body-sm text-on-surface bg-surface-container-low p-3 rounded-md border border-outline-variant/30">
-                          {item.similarity_basis || "General recommendation based on your profile."}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-all self-start sm:self-auto"
+          >
+            <span className="material-symbols-outlined text-[16px]">add_circle</span>
+            <span>Modify Selection</span>
+          </button>
         </div>
 
-        {/* Right Side: AI Assistant Chat */}
-        <div className="w-full xl:w-1/3 flex flex-col bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm h-[600px] xl:h-[calc(100vh-120px)] sticky top-24">
-          <div className="p-4 border-b border-outline-variant bg-surface-bright flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">smart_toy</span>
-            <h2 className="font-title-md text-on-surface font-bold">AI Comparison Insights</h2>
+        {/* 2-Column Layout: Cards Matrix on Left + AI Chat on Right */}
+        <div className="flex flex-col xl:flex-row gap-8 items-start">
+          
+          {/* Left Column: Product Spec Cards */}
+          <div className="flex-1 w-full min-w-0">
+            {error ? (
+              <div className="p-4 rounded-2xl bg-red-950/40 border border-red-800 text-red-300 text-xs flex items-center gap-2">
+                <span className="material-symbols-outlined">error</span>
+                <span>Error loading comparison: {error}</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {items.map((item) => {
+                  const title = item.title && item.title !== "not specified" ? item.title : (item.metadata?.title || `Item #${item.item_id}`);
+                  const creatorVal = getCreatorValue(item);
+                  const score = item.popularity_score > 0 
+                    ? (item.popularity_score <= 1 ? Math.round(item.popularity_score * 100) : Math.min(100, Math.round((item.popularity_score / 10) * 100))) 
+                    : 75;
+                  
+                  return (
+                    <div 
+                      key={item.item_id} 
+                      className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xl relative overflow-hidden group hover:border-slate-700 transition-all"
+                    >
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400" />
+                      
+                      <div>
+                        {/* Cover image or fallback */}
+                        {item.image_url_l && item.image_url_l !== "not specified" ? (
+                          <div className="mb-4 h-48 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center">
+                            <img src={item.image_url_l} alt={title} className="w-full h-full object-contain" />
+                          </div>
+                        ) : (
+                          <div className="mb-4 h-32 rounded-xl bg-slate-950/80 border border-slate-800/80 flex flex-col items-center justify-center text-slate-500">
+                            <span className="material-symbols-outlined text-3xl text-emerald-400 mb-1">menu_book</span>
+                            <span className="text-xs font-mono">#{item.item_id}</span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 uppercase">
+                            ID: {item.item_id}
+                          </span>
+                          <span className="text-xs font-mono font-bold text-emerald-400">{score}% match</span>
+                        </div>
+
+                        <h3 className="text-base font-bold text-white leading-snug line-clamp-2" title={title}>
+                          {title}
+                        </h3>
+
+                        <div className="mt-3 p-3 rounded-xl bg-slate-950/60 border border-slate-800/60 space-y-1.5 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">{renderCreatorLabel()}</span>
+                            <span className="font-semibold text-slate-200 truncate max-w-[180px]">{creatorVal || "—"}</span>
+                          </div>
+                          {item.year && item.year !== "not specified" && (
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Year</span>
+                              <span className="font-semibold text-slate-200">{item.year}</span>
+                            </div>
+                          )}
+                          {item.publisher && item.publisher !== "not specified" && (
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Publisher</span>
+                              <span className="font-semibold text-slate-200 truncate max-w-[180px]">{item.publisher}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Footer Insight */}
+                      <div className="mt-4 pt-3 border-t border-slate-800">
+                        <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-semibold mb-1">
+                          <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                          <span>Recommendation Basis</span>
+                        </div>
+                        <p className="text-xs text-slate-300 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60">
+                          {item.similarity_basis || "Popularity baseline recommendation."}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: AI Assistant Chat */}
+          <div className="w-full xl:w-[420px] shrink-0 bg-slate-900/90 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[600px] xl:sticky xl:top-24">
+            <div className="p-4 border-b border-slate-800 bg-slate-900 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold">
+                  <span className="material-symbols-outlined text-[18px]">smart_toy</span>
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-white">AI Comparative Analyst</h3>
+                  <p className="text-[10px] text-emerald-400">Gemini 2.5 Flash grounded evaluation</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-950/50">
+              {chatHistory.length === 0 && !aiLoading && (
+                <div className="text-center text-slate-500 text-xs py-10">
+                  <span className="material-symbols-outlined text-3xl mb-2 text-slate-600">forum</span>
+                  <p>Comparing selected items...</p>
+                </div>
+              )}
+              
+              {chatHistory.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed ${
+                    msg.role === 'user' 
+                      ? 'bg-emerald-500 text-slate-950 font-medium rounded-tr-sm' 
+                      : 'bg-slate-800 text-slate-200 rounded-tl-sm border border-slate-700/60'
+                  }`}>
+                    <div className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: msg.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                  </div>
+                </div>
+              ))}
+              
+              {aiLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-slate-800/80 text-emerald-400 rounded-2xl px-3.5 py-2.5 rounded-tl-sm border border-slate-700/60 flex items-center gap-2 text-xs">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Analyzing comparison matrix...</span>
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+
+            <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-800 bg-slate-900 flex gap-2">
+              <input 
+                type="text" 
+                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-500"
+                placeholder="Ask a question about these items..."
+                value={userMessage}
+                onChange={e => setUserMessage(e.target.value)}
+                disabled={aiLoading}
+              />
+              <button 
+                type="submit" 
+                disabled={!userMessage.trim() || aiLoading}
+                className="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center shrink-0"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </form>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-surface/50">
-            {chatHistory.length === 0 && !aiLoading && (
-              <div className="text-center text-tertiary font-body-sm py-8">
-                No insights available. Send a message to start analyzing!
-              </div>
-            )}
-            
-            {chatHistory.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-lg p-3 font-body-sm ${msg.role === 'user' ? 'bg-primary text-on-primary rounded-tr-sm' : 'bg-surface-container-highest text-on-surface rounded-tl-sm border border-outline-variant/30'}`}>
-                  <div className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: msg.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
-                </div>
-              </div>
-            ))}
-            
-            {aiLoading && (
-              <div className="flex justify-start">
-                <div className="bg-surface-container text-tertiary rounded-lg p-3 rounded-tl-sm border border-outline-variant/30 flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="font-body-sm">Analyzing items...</span>
-                </div>
-              </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
-
-          <form onSubmit={handleSendMessage} className="p-3 border-t border-outline-variant bg-surface-bright flex gap-2">
-            <input 
-              type="text" 
-              className="flex-1 bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 font-body-sm text-on-surface focus:outline-none focus:border-primary transition-colors placeholder:text-tertiary"
-              placeholder="Ask about these items..."
-              value={userMessage}
-              onChange={e => setUserMessage(e.target.value)}
-              disabled={aiLoading}
-            />
-            <button 
-              type="submit" 
-              disabled={!userMessage.trim() || aiLoading}
-              className="bg-primary text-on-primary p-2 rounded-lg hover:bg-primary-container hover:text-on-primary-container transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </form>
-        </div>
-        
         </div>
       </main>
     </div>
   );
 }
+

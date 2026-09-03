@@ -1,25 +1,26 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
-export function useRecommendations(domain, filters, csrfToken) {
+export function useRecommendations(domain, filters, csrfToken, initialPageSize = 24) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isRelaxed, setIsRelaxed] = useState(false);
   const [relaxedConstraint, setRelaxedConstraint] = useState(null);
-  const [offset, setOffset] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const limit = 24;
+  
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(initialPageSize);
+  const [hasNextPage, setHasNextPage] = useState(true);
 
   const filtersString = JSON.stringify(filters);
   const isFetchingRef = useRef(false);
 
-  const fetchRecommendations = useCallback(async (currentOffset = 0) => {
+  const fetchPage = useCallback(async (targetPage = 1, currentSize = pageSize) => {
     if (!domain || !csrfToken) return;
-    if (isFetchingRef.current && currentOffset !== 0) return;
+    if (isFetchingRef.current) return;
     
     isFetchingRef.current = true;
     setLoading(true);
-    if (currentOffset === 0) setError(null);
+    setError(null);
 
     try {
       let parsedFilters = {};
@@ -38,7 +39,8 @@ export function useRecommendations(domain, filters, csrfToken) {
         }
       });
       
-      activeFilters.limit = limit;
+      const currentOffset = (targetPage - 1) * currentSize;
+      activeFilters.limit = currentSize;
       activeFilters.offset = currentOffset;
 
       const response = await fetch(`/api/recommend/${domain}`, {
@@ -64,16 +66,12 @@ export function useRecommendations(domain, filters, csrfToken) {
       const data = await response.json();
       const newItems = data.items || [];
       
-      if (currentOffset === 0) {
-        setItems(newItems);
-        setIsRelaxed(data.relaxed || false);
-        setRelaxedConstraint(data.relaxed_constraint || null);
-      } else {
-        setItems(prev => [...prev, ...newItems]);
-      }
+      setItems(newItems);
+      setIsRelaxed(data.relaxed || false);
+      setRelaxedConstraint(data.relaxed_constraint || null);
       
-      // If we got fewer items than the limit, there are no more pages
-      setHasMore(newItems.length >= limit);
+      // If we got as many items as requested, there is likely a next page
+      setHasNextPage(newItems.length >= currentSize);
       
     } catch (err) {
       setError(err.message);
@@ -81,20 +79,52 @@ export function useRecommendations(domain, filters, csrfToken) {
       setLoading(false);
       isFetchingRef.current = false;
     }
-  }, [domain, filtersString, csrfToken, limit]);
+  }, [domain, filtersString, csrfToken, pageSize]);
 
+  // Reset to page 1 whenever domain or filters change
   useEffect(() => {
-    setOffset(0);
-    setHasMore(true);
-    fetchRecommendations(0);
-  }, [domain, filtersString, csrfToken, fetchRecommendations]);
+    setPage(1);
+    fetchPage(1, pageSize);
+  }, [domain, filtersString, csrfToken]);
 
-  const loadMore = () => {
-    if (loading || !hasMore) return;
-    const nextOffset = offset + limit;
-    setOffset(nextOffset);
-    fetchRecommendations(nextOffset);
+  const goToPage = (newPage) => {
+    if (newPage < 1 || loading) return;
+    setPage(newPage);
+    fetchPage(newPage, pageSize);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  return { items, loading, error, isRelaxed, relaxedConstraint, loadMore, hasMore };
+  const nextPage = () => {
+    if (!hasNextPage || loading) return;
+    goToPage(page + 1);
+  };
+
+  const prevPage = () => {
+    if (page <= 1 || loading) return;
+    goToPage(page - 1);
+  };
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setPage(1);
+    fetchPage(1, newSize);
+  };
+
+  return { 
+    items, 
+    loading, 
+    error, 
+    isRelaxed, 
+    relaxedConstraint, 
+    page, 
+    pageSize,
+    hasNextPage,
+    hasPrevPage: page > 1,
+    goToPage,
+    nextPage,
+    prevPage,
+    setPageSize: handlePageSizeChange,
+    refresh: () => fetchPage(page, pageSize)
+  };
 }
+
