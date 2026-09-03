@@ -217,7 +217,7 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#2D7D7D] to-[#E8935C]" />
                 
                 <div>
-                  <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center justify-between gap-2 mb-4">
                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white text-[#2D7D7D] border border-[#2D7D7D]/15 shadow-2xs">
                       ID: {item.item_id}
                     </span>
@@ -227,6 +227,12 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
                       </span>
                     )}
                   </div>
+
+                  <img 
+                    src={item.image_url_l || item.image_url_m || item.header_image || item.image_url || 'https://via.placeholder.com/300x400?text=No+Image'} 
+                    alt={item.title || item.name}
+                    className="w-full h-40 object-contain rounded-xl bg-white border border-[#2D7D7D]/10 mb-4 shadow-sm p-1"
+                  />
 
                   <h3 className="text-sm font-extrabold text-[#192A2A] line-clamp-2 mb-1" title={item.title || item.name}>
                     {item.title || item.name || `Item #${item.item_id}`}
@@ -309,27 +315,85 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
               </div>
             )}
 
-            {chatHistory.map((msg, idx) => (
-              <div 
-                key={idx} 
-                className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                {msg.role === 'ai' && (
-                  <div className="w-7 h-7 rounded-xl bg-[#2D7D7D] text-white flex items-center justify-center shrink-0 shadow-2xs">
-                    <span className="material-symbols-outlined text-[16px]">smart_toy</span>
+            {chatHistory.map((msg, idx) => {
+              if (msg.role === 'ai' && msg.content.includes('## Expert Analysis') && msg.content.includes('## Conclusion')) {
+                const parts1 = msg.content.split('## Expert Analysis');
+                const parts2 = parts1[1].split('## Conclusion');
+                const analytics = parts2[0].trim();
+                const conclusion = parts2[1].trim();
+
+                return (
+                  <div key={idx} className="flex gap-3 justify-start w-full">
+                    <div className="w-7 h-7 rounded-xl bg-[#2D7D7D] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                      <span className="material-symbols-outlined text-[16px]">smart_toy</span>
+                    </div>
+                    <div className="flex flex-col gap-4 w-full max-w-2xl">
+                      {/* Visual Roster */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {items.map(i => (
+                          <div key={i.item_id} className="bg-white p-2.5 rounded-xl border border-[#2D7D7D]/15 shadow-2xs flex flex-col gap-2 items-center text-center">
+                            <img 
+                              src={i.image_url_l || i.image_url_m || i.header_image || i.image_url || 'https://via.placeholder.com/300x400?text=No+Image'} 
+                              alt={i.title || i.name}
+                              className="w-full h-28 object-contain rounded-lg bg-white p-1"
+                            />
+                            <div>
+                              <div className="font-bold text-[10px] text-[#192A2A] line-clamp-2 leading-tight">{i.title || i.name}</div>
+                              <div className="text-[9px] text-[#586666] mt-0.5 truncate w-full px-1">{getCreatorValue(i) || 'Not specified'}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Analytics Box */}
+                      <div className="bg-[#E7F2F2] border border-[#2D7D7D]/20 p-4 rounded-2xl shadow-2xs rounded-tl-none">
+                        <h4 className="font-bold text-[#2D7D7D] mb-2 text-xs flex items-center gap-1.5 uppercase tracking-wide">
+                          <span className="material-symbols-outlined text-[16px]">analytics</span>
+                          Expert Analytics
+                        </h4>
+                        <div className="text-xs text-[#192A2A] whitespace-pre-wrap leading-relaxed font-medium">
+                          {analytics}
+                        </div>
+                      </div>
+
+                      {/* Verdict Box */}
+                      <div className="bg-[#FFF4ED] border border-[#E8935C]/20 p-4 rounded-2xl shadow-2xs">
+                        <h4 className="font-bold text-[#E8935C] mb-2 text-xs flex items-center gap-1.5 uppercase tracking-wide">
+                          <span className="material-symbols-outlined text-[16px]">gavel</span>
+                          Summary & Conclusion
+                        </h4>
+                        <div className="text-xs text-[#192A2A] whitespace-pre-wrap leading-relaxed font-medium">
+                          {conclusion}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                )}
+                );
+              }
+
+              // Standard Bubble
+              return (
                 <div 
-                  className={`p-4 rounded-2xl text-xs max-w-xl leading-relaxed whitespace-pre-wrap ${
-                    msg.role === 'user'
-                      ? 'bg-[#2D7D7D] text-white shadow-xs rounded-tr-none'
-                      : 'bg-white border border-[#2D7D7D]/15 text-[#192A2A] shadow-2xs rounded-tl-none font-medium'
-                  }`}
+                  key={idx} 
+                  className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  {msg.content}
+                  {msg.role === 'ai' && (
+                    <div className="w-7 h-7 rounded-xl bg-[#2D7D7D] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                      <span className="material-symbols-outlined text-[16px]">smart_toy</span>
+                    </div>
+                  )}
+                  <div 
+                    className={`p-4 rounded-2xl text-xs max-w-xl leading-relaxed whitespace-pre-wrap ${
+                      msg.role === 'user'
+                        ? 'bg-[#2D7D7D] text-white shadow-xs rounded-tr-none'
+                        : 'bg-white border border-[#2D7D7D]/15 text-[#192A2A] shadow-2xs rounded-tl-none font-medium'
+                    }`}
+                  >
+                    {msg.content}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {aiLoading && (
               <div className="flex gap-3 items-center text-xs text-[#586666] font-medium">

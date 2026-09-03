@@ -133,14 +133,8 @@ export function BrowseSurface({
         
         {/* Left segment: Logo & Brand (Matching sidebar width with clear separation border) */}
         <div className="w-72 xl:w-80 h-full px-6 flex items-center justify-between border-r border-[#2D7D7D]/15 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#2D7D7D] text-white flex items-center justify-center shadow-md shadow-[#2D7D7D]/25">
-              <span className="material-symbols-outlined text-2xl font-bold">swap_horiz</span>
-            </div>
-            <div>
-              <h1 className="text-base font-black tracking-tight text-[#192A2A]">CompareX</h1>
-              <p className="text-[10px] font-semibold text-[#8A8680]">Collaborative Recommender</p>
-            </div>
+          <div className="flex items-center">
+            <img src="/logo.png" alt="Compare X" className="h-14 scale-[1.35] origin-left object-contain drop-shadow-sm" />
           </div>
 
           {/* Mobile hamburger button */}
@@ -526,11 +520,8 @@ export function BrowseSurface({
           />
           <div className="relative w-80 max-w-full bg-white h-full flex flex-col z-10 shadow-2xl p-6">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#2D7D7D] text-white flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[18px]">swap_horiz</span>
-                </div>
-                <span className="font-extrabold text-sm">CompareX</span>
+              <div className="flex items-center">
+                <img src="/logo.png" alt="Compare X" className="h-12 scale-[1.25] origin-left object-contain drop-shadow-sm" />
               </div>
               <button 
                 onClick={() => setSidebarMobileOpen(false)}

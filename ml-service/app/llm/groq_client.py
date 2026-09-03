@@ -27,7 +27,7 @@ class GroqClient:
     def __init__(self):
         self.api_key = os.environ.get("GROQ_API_KEY")
         self.client = Groq(api_key=self.api_key) if self.api_key else None
-        self.model_name = "llama3-8b-8192"
+        self.model_name = "openai/gpt-oss-20b"
 
     @retry(
         retry=retry_if_exception_type(groq.APIError),
@@ -89,7 +89,7 @@ Explain the recommendation naturally and conversationally based ONLY on the data
             raise LLMUnavailableException(f"Failed to explain recommendation: {str(e)}")
 
     def chat_about_comparison(self, items: list[dict], user_message: str | None = None) -> str:
-        prompt_template = f"""
+        base_prompt = f"""
 You are an expert comparison analyst and domain expert. You are helping a user compare the following items based on their backend audit data, metadata, and baseline scores:
 {items}
 
@@ -97,22 +97,22 @@ Guidelines:
 - Act as a domain expert.
   - If the items are books, analyze author themes, publication years, and reader demographics or ratings.
   - If the items are video games (Steam), analyze playtime, genre, and overwhelmingly positive review metrics.
-- Your response must be strictly grounded in the provided item data. Do not hallucinate or invent details not present in the JSON.
+- Your response must be strictly grounded in the provided item data unless the user explicitly asks for external suggestions. Do not hallucinate or invent details for the provided items.
+"""
+        if user_message:
+            prompt = base_prompt + f"""
+User's query: "{user_message}"
 
+Answer the user's query directly, naturally, and in a highly detailed, comprehensive manner. Expand on your reasoning, provide deep insights, and take the time to thoroughly explain your thought process. If the user asks for a recommendation outside of the provided items, you may suggest new items based on your general knowledge and provide detailed reasons why they fit.
+"""
+        else:
+            prompt = base_prompt + """
 REQUIRED STRUCTURE:
-Regardless of the user's query, you MUST format your response using the following three sections in Markdown:
+You MUST format your initial summary using the following three sections in Markdown:
 1. **Individual Item Breakdown**: Describe each item in its own subsection (e.g. `### [Item Title]`), highlighting its specific metrics, genre, and themes.
 2. **Expert Analytics**: A `## Expert Analysis` section comparing the items directly against each other, highlighting trade-offs, similarities, and differences based on the data.
 3. **Summary & Conclusion**: A `## Conclusion` section that summarizes everything into a definitive takeaway.
-"""
-        if user_message:
-            prompt = prompt_template + f"""
-User's query: "{user_message}"
 
-Answer the user's query in detail, referencing specific metrics or metadata from the items to support your analysis.
-"""
-        else:
-            prompt = prompt_template + """
 Provide a comprehensive and detailed side-by-side summary comparing these items. Highlight their key similarities, differences, and what makes each unique based on the provided audit data and baseline scores.
 """
         try:
