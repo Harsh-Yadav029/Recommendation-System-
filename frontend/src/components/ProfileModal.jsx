@@ -50,19 +50,6 @@ export function ProfileModal({ isOpen, onClose, user, onLogout, selectedDomain, 
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-col gap-2.5">
-          <button
-            onClick={() => {
-              onClose();
-              onLogout();
-            }}
-            className="w-full py-3 px-4 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 border border-red-200 text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
-          >
-            <span className="material-symbols-outlined text-[18px]">logout</span>
-            <span>Sign Out</span>
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -19,13 +19,10 @@ export function FeaturesSurface({ onNavigate, onSignIn, onSignUp, user, onLogout
           {/* Logo */}
           <div className="flex items-center w-1/3">
             <button 
-              onClick={() => onNavigate('landing')} 
-              className="flex items-center gap-2.5 text-xl font-black tracking-tight text-white hover:opacity-95 transition-opacity cursor-pointer group"
+              onClick={() => onNavigate ? onNavigate('landing') : null} 
+              className="flex items-center hover:opacity-95 transition-opacity cursor-pointer group"
             >
-              <div className="w-9 h-9 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
-                <span className="material-symbols-outlined text-white font-bold text-[20px]">swap_horiz</span>
-              </div>
-              <span className="font-extrabold tracking-tight text-white">CompareX</span>
+              <img src="/logo.png" alt="Compare X" className="h-10 scale-[1.35] object-contain drop-shadow-sm" />
             </button>
           </div>
           

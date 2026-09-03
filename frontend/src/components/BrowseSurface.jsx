@@ -207,15 +207,11 @@ export function BrowseSurface({
                 type="button"
                 onClick={() => setProfileModalOpen(true)}
                 title="View Profile"
-                className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-white hover:bg-[#E7F2F2] border border-[#2D7D7D]/20 transition-all shadow-2xs cursor-pointer group"
+                className="rounded-xl border border-[#2D7D7D]/20 transition-all shadow-2xs cursor-pointer hover:scale-105 active:scale-95 hover:shadow-md overflow-hidden"
               >
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#2D7D7D] to-[#6B9B7A] text-white flex items-center justify-center font-extrabold text-xs uppercase shadow-2xs">
-                  {user.email[0]}
+                <div className="w-9 h-9 bg-gradient-to-tr from-[#2D7D7D] to-[#6B9B7A] text-white flex items-center justify-center font-extrabold text-sm uppercase">
+                  {user.fullName ? user.fullName[0] : user.email[0]}
                 </div>
-                <span className="hidden md:inline text-xs font-bold text-[#192A2A] group-hover:text-[#2D7D7D] max-w-[120px] truncate">
-                  {user.fullName || user.email.split('@')[0]}
-                </span>
-                <span className="material-symbols-outlined text-[16px] text-[#8A8680] group-hover:text-[#2D7D7D]">account_circle</span>
               </button>
             )}
           </div>

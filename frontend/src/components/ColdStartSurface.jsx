@@ -83,10 +83,9 @@ export function ColdStartSurface({ csrfToken, onComplete, onSkip }) {
         
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="w-12 h-12 mx-auto rounded-2xl bg-[#2D7D7D] text-white flex items-center justify-center mb-3 shadow-md shadow-[#2D7D7D]/25">
-            <span className="material-symbols-outlined text-2xl text-white">swap_horiz</span>
+          <div className="flex items-center justify-center mb-6 animate-slide-down">
+            <img src="/logo.png" alt="Compare X" className="h-14 scale-[1.35] object-contain drop-shadow-sm" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#192A2A] tracking-tight">CompareX</h1>
           <p className="text-xs text-[#586666] font-semibold mt-1">Personalized Recommendation Calibration</p>
         </div>
 
