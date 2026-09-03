@@ -1,6 +1,5 @@
 import pytest
 from app.models.schemas import UserProfile, Constraints, RecommendationResponse, ComparisonTable
-from app.domains.retailrocket_service import RetailrocketService
 from app.domains.steam_service import SteamService
 from app.domains.bookcrossing_service import BookCrossingService
 from app.contracts.recommender import BaseRecommenderService
@@ -8,7 +7,6 @@ from app.contracts.recommender import BaseRecommenderService
 @pytest.fixture
 def services():
     return {
-        "retailrocket": RetailrocketService(),
         "steam": SteamService(),
         "bookcrossing": BookCrossingService()
     }

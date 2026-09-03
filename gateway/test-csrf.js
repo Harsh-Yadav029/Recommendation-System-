@@ -15,7 +15,7 @@ async function test() {
     console.log("Cookies received:", cookies);
 
     // 2. Make request with CSRF token
-    const res2 = await api.post('/api/recommend/retailrocket', 
+    const res2 = await api.post('/api/recommend/bookcrossing', 
       {
         user_profile: { user_id: "anonymous", history: [] },
         constraints: {}

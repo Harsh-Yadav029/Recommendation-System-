@@ -34,5 +34,5 @@ async def validate_domain(domain: str):
 
 if __name__ == "__main__":
     import sys
-    domain = sys.argv[1] if len(sys.argv) > 1 else "retailrocket"
+    domain = sys.argv[1] if len(sys.argv) > 1 else "bookcrossing"
     asyncio.run(validate_domain(domain))

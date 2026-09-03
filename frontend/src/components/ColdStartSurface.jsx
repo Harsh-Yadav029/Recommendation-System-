@@ -2,17 +2,17 @@ import React, { useState } from "react";
 
 const DOMAIN_OPTIONS = [
   { 
-    id: "retailrocket", 
-    label: "Shopping & Retail", 
-    icon: "shopping_bag", 
-    description: "Product recommendations based on browsing and purchase patterns.",
+    id: "bookcrossing", 
+    label: "Books & Reading", 
+    icon: "menu_book", 
+    description: "Book recommendations powered by community ratings and reading patterns.",
     interests: [
-      { label: "Electronics", icon: "devices" },
-      { label: "Home & Garden", icon: "home" },
-      { label: "Fashion", icon: "checkroom" },
-      { label: "Sports & Outdoor", icon: "fitness_center" },
-      { label: "Toys & Games", icon: "smart_toy" },
-      { label: "Office Supplies", icon: "business_center" },
+      { label: "Fiction", icon: "auto_stories" },
+      { label: "Non-Fiction", icon: "school" },
+      { label: "Mystery / Thriller", icon: "search" },
+      { label: "Sci-Fi / Fantasy", icon: "rocket_launch" },
+      { label: "Romance", icon: "favorite" },
+      { label: "Biography", icon: "person" },
     ]
   },
   { 
@@ -27,20 +27,6 @@ const DOMAIN_OPTIONS = [
       { label: "Simulation", icon: "flight" },
       { label: "Puzzle / Casual", icon: "extension" },
       { label: "Multiplayer", icon: "groups" },
-    ]
-  },
-  { 
-    id: "bookcrossing", 
-    label: "Books & Reading", 
-    icon: "menu_book", 
-    description: "Book recommendations powered by community ratings and reading patterns.",
-    interests: [
-      { label: "Fiction", icon: "auto_stories" },
-      { label: "Non-Fiction", icon: "school" },
-      { label: "Mystery / Thriller", icon: "search" },
-      { label: "Sci-Fi / Fantasy", icon: "rocket_launch" },
-      { label: "Romance", icon: "favorite" },
-      { label: "Biography", icon: "person" },
     ]
   },
 ];

@@ -31,7 +31,7 @@ describe('Gateway Security & Auth', () => {
       .set('Cookie', cookies)
       .send({
         item_id: '123',
-        domain: 'retailrocket',
+        domain: 'bookcrossing',
         event_type: 'view'
       });
       
@@ -47,7 +47,7 @@ describe('Gateway Security & Auth', () => {
       .set('x-csrf-token', csrfToken)
       .send({
         // missing item_id
-        domain: 'retailrocket',
+        domain: 'bookcrossing',
         event_type: 'view'
       });
       
@@ -63,7 +63,7 @@ describe('Gateway Security & Auth', () => {
       .set('x-csrf-token', csrfToken)
       .send({
         item_id: '123',
-        domain: 'retailrocket',
+        domain: 'bookcrossing',
         event_type: 'view'
       });
       

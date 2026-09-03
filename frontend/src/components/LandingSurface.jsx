@@ -132,33 +132,34 @@ export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout, on
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Mastering Heterogeneous Domains</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              CompareX is built to handle the unique structural challenges of vastly different datasets.
+              The analytical bridge for sparse datasets. Browse and compare items seamlessly across BookCrossing and Steam.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* 2-Domain Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* BookCrossing */}
             <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow group">
               <div className="flex justify-between items-center mb-6">
                 <span className="text-[11px] font-bold tracking-wider text-gray-500">DOMAIN</span>
-                <span className="text-[11px] font-bold px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md">Rich Metadata</span>
+                <span className="text-[11px] font-bold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-md">Rich Meta</span>
               </div>
               <div className="flex items-center gap-3 mb-6">
-                <span className="material-symbols-outlined text-gray-400 group-hover:text-emerald-500 transition-colors">menu_book</span>
+                <span className="material-symbols-outlined text-gray-400 group-hover:text-emerald-500 transition-colors">book</span>
                 <h3 className="text-lg font-bold text-gray-900">BookCrossing</h3>
               </div>
               <div className="space-y-4">
                 <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                  <span className="text-sm text-gray-500">Author</span>
-                  <span className="text-sm font-medium text-gray-900">Various</span>
+                  <span className="text-sm text-gray-500">Ratings</span>
+                  <span className="text-sm font-medium text-gray-900">Explicit (1-10)</span>
                 </div>
                 <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                  <span className="text-sm text-gray-500">Year</span>
-                  <span className="text-sm font-medium text-gray-900">1998-2004</span>
+                  <span className="text-sm text-gray-500">Metadata</span>
+                  <span className="text-sm font-medium text-gray-900">Author, Year, Publisher</span>
                 </div>
                 <div className="flex justify-between items-center pb-1">
-                  <span className="text-sm text-gray-500">Sparsity</span>
-                  <span className="text-sm font-bold text-red-500">High</span>
+                  <span className="text-sm text-gray-500">Visuals</span>
+                  <span className="text-sm font-medium text-gray-900">Cover Art</span>
                 </div>
               </div>
             </div>
@@ -167,7 +168,7 @@ export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout, on
             <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow group">
               <div className="flex justify-between items-center mb-6">
                 <span className="text-[11px] font-bold tracking-wider text-gray-500">DOMAIN</span>
-                <span className="text-[11px] font-bold px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md">Engagement Metrics</span>
+                <span className="text-[11px] font-bold px-2.5 py-1 bg-cyan-50 text-cyan-700 rounded-md">Hybrid</span>
               </div>
               <div className="flex items-center gap-3 mb-6">
                 <span className="material-symbols-outlined text-gray-400 group-hover:text-emerald-500 transition-colors">sports_esports</span>
@@ -175,8 +176,8 @@ export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout, on
               </div>
               <div className="space-y-4">
                 <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                  <span className="text-sm text-gray-500">Playtime</span>
-                  <span className="text-sm font-medium text-gray-900">Avg 45h</span>
+                  <span className="text-sm text-gray-500">Feedback</span>
+                  <span className="text-sm font-medium text-gray-900">Implicit Playtime Hours</span>
                 </div>
                 <div className="flex justify-between items-center border-b border-gray-100 pb-3">
                   <span className="text-sm text-gray-500">Reviews</span>
@@ -185,32 +186,6 @@ export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout, on
                 <div className="flex justify-between items-center pb-1">
                   <span className="text-sm text-gray-500">Sparsity</span>
                   <span className="text-sm font-bold text-emerald-500">Low</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Retailrocket */}
-            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow group">
-              <div className="flex justify-between items-center mb-6">
-                <span className="text-[11px] font-bold tracking-wider text-gray-500">DOMAIN</span>
-                <span className="text-[11px] font-bold px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md">ID-Based</span>
-              </div>
-              <div className="flex items-center gap-3 mb-6">
-                <span className="material-symbols-outlined text-gray-400 group-hover:text-emerald-500 transition-colors">shopping_cart</span>
-                <h3 className="text-lg font-bold text-gray-900">Retailrocket</h3>
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                  <span className="text-sm text-gray-500">Events</span>
-                  <span className="text-sm font-medium text-gray-900">View, Cart, Transaction</span>
-                </div>
-                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                  <span className="text-sm text-gray-500">Structure</span>
-                  <span className="text-sm font-medium text-gray-900">Anonymized Trees</span>
-                </div>
-                <div className="flex justify-between items-center pb-1">
-                  <span className="text-sm text-gray-500">Sparsity</span>
-                  <span className="text-sm font-bold text-red-500">Extreme</span>
                 </div>
               </div>
             </div>

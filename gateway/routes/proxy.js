@@ -6,7 +6,7 @@ const router = express.Router();
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:8000';
 
 // Pull enabled domains from env, falling back to the defaults
-const rawDomains = process.env.ENABLED_DOMAINS || 'retailrocket,steam,bookcrossing';
+const rawDomains = process.env.ENABLED_DOMAINS || 'steam,bookcrossing';
 const ENABLED_DOMAINS = rawDomains.split(',').map(d => d.trim());
 
 // Validation schemas

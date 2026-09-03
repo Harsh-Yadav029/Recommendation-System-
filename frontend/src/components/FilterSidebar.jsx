@@ -12,8 +12,7 @@ export function FilterSidebar({ domain, filters, setFilters, onNavigate }) {
       genre: ['Action', 'Adventure', 'RPG', 'Strategy', 'Sports', 'Multiplayer'],
       rating: ['80-89', '90-100'],
       platform: ['PC', 'Console', 'Mobile']
-    },
-    retailrocket: {}
+    }
   };
 
   const activeFilters = FILTER_OPTIONS[domain] || {};
@@ -26,7 +25,6 @@ export function FilterSidebar({ domain, filters, setFilters, onNavigate }) {
   const getDomainIcon = () => {
     switch (domain) {
       case 'steam': return 'sports_esports';
-      case 'retailrocket': return 'shopping_bag';
       case 'bookcrossing':
       default: return 'menu_book';
     }

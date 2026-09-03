@@ -238,11 +238,10 @@ export function BrowseSurface({
         <main className="flex-1 min-w-0 flex flex-col">
           
           {/* Top Domain Switcher Tabs */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-2 gap-4 mb-6">
             {[
               { id: 'bookcrossing', name: 'BookCrossing', icon: 'menu_book', subtitle: 'Books, Authors & Years' },
               { id: 'steam', name: 'Steam Games', icon: 'sports_esports', subtitle: 'Playtime, Genres & Reviews' },
-              { id: 'retailrocket', name: 'Retailrocket', icon: 'shopping_bag', subtitle: 'E-commerce Behavioral ALS' },
             ].map((d) => {
               const active = selectedDomain === d.id;
               return (
@@ -250,7 +249,7 @@ export function BrowseSurface({
                   key={d.id}
                   type="button"
                   onClick={() => handleDomainChange(d.id)}
-                  className={`flex flex-col sm:flex-row items-center sm:items-start gap-3 p-3.5 rounded-2xl border transition-all duration-200 text-left ${
+                  className={`flex flex-col sm:flex-row items-center sm:items-start gap-3.5 p-4 rounded-2xl border transition-all duration-200 text-left ${
                     active 
                       ? 'bg-white border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm' 
                       : 'bg-white/80 border-slate-200/80 hover:border-slate-300 hover:bg-white shadow-xs'
@@ -264,10 +263,10 @@ export function BrowseSurface({
                     <span className="material-symbols-outlined text-[20px]">{d.icon}</span>
                   </div>
                   <div className="min-w-0 hidden sm:block">
-                    <p className={`text-xs font-bold truncate ${active ? 'text-emerald-600' : 'text-slate-800'}`}>
+                    <p className={`text-sm font-bold truncate ${active ? 'text-emerald-600' : 'text-slate-800'}`}>
                       {d.name}
                     </p>
-                    <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                    <p className="text-xs text-slate-500 truncate mt-0.5">
                       {d.subtitle}
                     </p>
                   </div>

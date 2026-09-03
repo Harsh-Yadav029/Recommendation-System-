@@ -6,8 +6,8 @@ export function FeaturesSurface({ onNavigate, onSignIn, onSignUp, user, onLogout
       icon: "hub",
       color: "bg-emerald-100 text-emerald-700",
       tag: "CORE ALGORITHM",
-      title: "Tri-Domain Collaborative Filtering",
-      description: "Customized models per data structure: Implicit ALS for gaming playtime (Steam) and e-commerce event streams (RetailRocket), plus SVD matrix factorization for explicit ratings (BookCrossing)."
+      title: "Dual-Domain Collaborative Filtering",
+      description: "Customized models per data structure: Implicit ALS for gaming playtime (Steam) plus SVD matrix factorization for explicit ratings (BookCrossing)."
     },
     {
       icon: "compare_arrows",
@@ -174,7 +174,7 @@ export function FeaturesSurface({ onNavigate, onSignIn, onSignUp, user, onLogout
               <div className="w-10 h-10 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center mx-auto mb-4 shadow-md">1</div>
               <h4 className="text-lg font-bold text-gray-900 mb-2">Browse & Select</h4>
               <p className="text-gray-600 text-xs leading-relaxed">
-                Filter by budget, category, or tags across BookCrossing, Steam, or RetailRocket. Click to pin candidates to the comparison tray.
+                Filter by category, author, or genres across BookCrossing and Steam. Click to pin candidates to the comparison tray.
               </p>
             </div>
 

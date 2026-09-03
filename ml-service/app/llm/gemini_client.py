@@ -151,7 +151,6 @@ Guidelines:
 - Act as a domain expert.
   - If the items are books, analyze author themes, publication years, and reader demographics or ratings.
   - If the items are video games (Steam), analyze playtime, genre, and overwhelmingly positive review metrics.
-  - If the items are retail products (Retailrocket), analyze transaction events and popularity.
 - Provide a detailed, insightful response.
 - Your response must be strictly grounded in the provided item data, including the baseline scores which represent user feedback/audit data stored in the backend. Do not hallucinate or invent details not present in the JSON.
 """

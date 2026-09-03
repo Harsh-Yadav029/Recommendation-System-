@@ -23,14 +23,6 @@ export function DomainProductCard({ domain, item, isSelected, onToggleSelect }) 
           accent: 'from-cyan-500 to-blue-600',
           badgeBg: 'bg-cyan-50 text-cyan-700 border-cyan-200'
         };
-      case 'retailrocket':
-        return {
-          icon: 'shopping_bag',
-          label: 'E-Commerce Item',
-          scoreLabel: 'Popularity Index',
-          accent: 'from-amber-500 to-orange-600',
-          badgeBg: 'bg-amber-50 text-amber-700 border-amber-200'
-        };
       case 'bookcrossing':
       default:
         return {

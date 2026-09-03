@@ -1,7 +1,6 @@
 import os
 from fastapi import APIRouter, HTTPException, Depends, Query, Body
 from app.models.schemas import UserProfile, Constraints, RecommendationResponse, ComparisonTable
-from app.domains.retailrocket_service import RetailrocketService
 from app.domains.steam_service import SteamService
 from app.domains.bookcrossing_service import BookCrossingService
 from typing import List
@@ -11,16 +10,14 @@ router = APIRouter()
 _services = {}
 
 def get_enabled_domains() -> List[str]:
-    return [d.strip() for d in os.environ.get("ENABLED_DOMAINS", "retailrocket,steam,bookcrossing").split(",")]
+    return [d.strip() for d in os.environ.get("ENABLED_DOMAINS", "steam,bookcrossing").split(",")]
 
 def get_service(domain: str):
     if domain not in get_enabled_domains():
         raise HTTPException(status_code=400, detail=f"Domain '{domain}' is not supported or not enabled.")
     
     if domain not in _services:
-        if domain == "retailrocket":
-            _services[domain] = RetailrocketService()
-        elif domain == "steam":
+        if domain == "steam":
             _services[domain] = SteamService()
         elif domain == "bookcrossing":
             _services[domain] = BookCrossingService()

@@ -16,7 +16,7 @@ Unlike simple "AI Wrappers" that rely on LLM hallucinations to guess products, C
 
 ## ✨ Key Features
 
-- **Multi-Domain Recommendations**: Seamlessly switch between BookCrossing (Books), Steam (Games), and Retailrocket (E-commerce).
+- **Multi-Domain Recommendations**: Seamlessly switch between BookCrossing (Books) and Steam (Games).
 - **Secure Authentication**: JWT-based secure user registration, login, and HttpOnly session management.
 - **Dynamic Constraint Relaxation**: If your filters are too strict, the engine intelligently relaxes them (e.g., drops tags before budget) instead of returning a frustrating empty screen.
 - **AI-Powered Explanations**: Gemini evaluates the deterministic `similarity_basis` scores returned by the Recommender, translating complex math into natural language for the user.
@@ -58,7 +58,6 @@ CompareX relies on real-world datasets from [caserec/Datasets-for-Recommender-Sy
 | :--- | :--- | :--- | :--- |
 | **BookCrossing** | Rich Metadata | Explicit (1-10) | UI Showcase. Includes titles, authors, years, and Amazon cover images. |
 | **Steam** | Medium | Implicit | Combines user playtime data with basic titles and item IDs. |
-| **Retailrocket** | Minimal | Implicit | Pure collaborative filtering proof. Fully anonymized IDs with no metadata. |
 
 ---
 
@@ -87,7 +86,7 @@ ML_SERVICE_URL=http://localhost:8000
 ```env
 MONGODB_URI=mongodb+srv://<user>:<password>@cluster...
 GEMINI_API_KEY=your_google_gemini_api_key
-ENABLED_DOMAINS=retailrocket,steam,bookcrossing
+ENABLED_DOMAINS=steam,bookcrossing
 ```
 
 ### 2. Booting the Services

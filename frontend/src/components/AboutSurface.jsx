@@ -106,7 +106,7 @@ export function AboutSurface({ onNavigate, onSignIn, onSignUp, user, onLogout, o
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-3">Multi-Domain Harmonization</h3>
             <p className="text-gray-600 text-sm leading-relaxed">
-              Whether handling anonymous clickstream trees (RetailRocket), implicit playtime engagement (Steam), or sparse explicit review matrices (BookCrossing), CompareX applies domain-tailored collaborative filtering models.
+              Whether handling implicit playtime engagement (Steam) or sparse explicit review matrices (BookCrossing), CompareX applies domain-tailored collaborative filtering models.
             </p>
           </div>
 
@@ -132,39 +132,39 @@ export function AboutSurface({ onNavigate, onSignIn, onSignUp, user, onLogout, o
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 max-w-4xl mx-auto gap-8">
             {/* Domain 1: BookCrossing */}
             <div className="bg-gray-50 rounded-2xl p-7 border border-gray-200 flex flex-col justify-between hover:border-emerald-500/50 transition-colors">
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700">Explicit Ratings</span>
-                  <span className="text-xs text-gray-500 font-medium">Surprise SVD</span>
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">Explicit Feedback</span>
+                  <span className="text-xs text-gray-500 font-medium">SVD Matrix Factorization</span>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-purple-600">menu_book</span>
+                  <span className="material-symbols-outlined text-emerald-600">menu_book</span>
                   BookCrossing
                 </h3>
                 <p className="text-gray-600 text-sm mb-6 leading-relaxed">
-                  Contains over 1.1M explicit ratings (1-10) and implicit interactions across 270,000+ books. Models user preferences using Matrix Factorization (SVD) with Bayesian popularity fallback.
+                  Real-world book rating ecosystem with rich metadata (titles, authors, publication years, ISBNs, and cover imagery). Models reader preferences across high sparsity.
                 </p>
               </div>
               <div className="bg-white rounded-xl p-4 border border-gray-200 space-y-2 text-xs">
-                <div className="flex justify-between text-gray-600"><span className="font-medium">Interaction Type:</span><span>1-10 Ratings & Reads</span></div>
-                <div className="flex justify-between text-gray-600"><span className="font-medium">Sparsity Index:</span><span className="text-red-600 font-semibold">&gt; 99.8% (Extreme)</span></div>
-                <div className="flex justify-between text-gray-600"><span className="font-medium">Primary Recommender:</span><span>Collaborative SVD</span></div>
+                <div className="flex justify-between text-gray-600"><span className="font-medium">Interaction Type:</span><span>1–10 Explicit Ratings</span></div>
+                <div className="flex justify-between text-gray-600"><span className="font-medium">Sparsity Index:</span><span className="text-emerald-600 font-semibold">99.8%</span></div>
+                <div className="flex justify-between text-gray-600"><span className="font-medium">Primary Recommender:</span><span>Surprise SVD / Popularity</span></div>
               </div>
             </div>
 
-            {/* Domain 2: Steam */}
+            {/* Domain 2: Steam Games */}
             <div className="bg-gray-50 rounded-2xl p-7 border border-gray-200 flex flex-col justify-between hover:border-emerald-500/50 transition-colors">
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">Playtime Dynamics</span>
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-cyan-100 text-cyan-700">Playtime Dynamics</span>
                   <span className="text-xs text-gray-500 font-medium">Implicit ALS</span>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-blue-600">sports_esports</span>
-                  Steam Gaming
+                  <span className="material-symbols-outlined text-cyan-600">sports_esports</span>
+                  Steam Games
                 </h3>
                 <p className="text-gray-600 text-sm mb-6 leading-relaxed">
                   Analyzes game purchases and accumulated play hours as implicit confidence signals. Features rich categorical metadata including tags, genres, reviews, and developer trees.
@@ -174,28 +174,6 @@ export function AboutSurface({ onNavigate, onSignIn, onSignUp, user, onLogout, o
                 <div className="flex justify-between text-gray-600"><span className="font-medium">Interaction Type:</span><span>Purchases & Hours Played</span></div>
                 <div className="flex justify-between text-gray-600"><span className="font-medium">Sparsity Index:</span><span className="text-emerald-600 font-semibold">Moderate</span></div>
                 <div className="flex justify-between text-gray-600"><span className="font-medium">Primary Recommender:</span><span>Implicit Matrix Factorization</span></div>
-              </div>
-            </div>
-
-            {/* Domain 3: RetailRocket */}
-            <div className="bg-gray-50 rounded-2xl p-7 border border-gray-200 flex flex-col justify-between hover:border-emerald-500/50 transition-colors">
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">Clickstream Funnels</span>
-                  <span className="text-xs text-gray-500 font-medium">Weighted ALS</span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-emerald-600">shopping_cart</span>
-                  RetailRocket
-                </h3>
-                <p className="text-gray-600 text-sm mb-6 leading-relaxed">
-                  Real-world e-commerce clickstream behavioral data consisting of view, add-to-cart, and transaction event weights mapped against anonymized category hierarchies.
-                </p>
-              </div>
-              <div className="bg-white rounded-xl p-4 border border-gray-200 space-y-2 text-xs">
-                <div className="flex justify-between text-gray-600"><span className="font-medium">Interaction Type:</span><span>Multi-stage Event Funnels</span></div>
-                <div className="flex justify-between text-gray-600"><span className="font-medium">Sparsity Index:</span><span className="text-amber-600 font-semibold">High</span></div>
-                <div className="flex justify-between text-gray-600"><span className="font-medium">Primary Recommender:</span><span>Event-Weighted ALS</span></div>
               </div>
             </div>
           </div>

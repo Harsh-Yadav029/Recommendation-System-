@@ -39,7 +39,7 @@ async def chat(request: AssistantChatRequest = Body(...)):
             constraints = llm_client.extract_constraints(request.message)
             
             # Semantic search handling
-            if constraints.similar_to_title and request.domain != "retailrocket":
+            if constraints.similar_to_title:
                 matching_docs = domain_service.search_by_title(constraints.similar_to_title)
                 if not matching_docs:
                     return AssistantChatResponse(

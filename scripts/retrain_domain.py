@@ -6,7 +6,6 @@ import subprocess
 
 def retrain_domain(domain: str):
     scripts = {
-        "retailrocket": "scripts/train_retailrocket_als.py",
         "steam": "scripts/train_steam_als.py",
         "bookcrossing": "scripts/train_bookcrossing_svd.py"
     }
@@ -30,7 +29,6 @@ def retrain_domain(domain: str):
     
     # Run evaluation
     eval_scripts = {
-        "retailrocket": "scripts/evaluate_retailrocket.py",
         "steam": "scripts/evaluate_steam.py",
         "bookcrossing": "scripts/evaluate_bookcrossing.py"
     }
@@ -45,7 +43,7 @@ def retrain_domain(domain: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Retrain a domain's model using latest interactions")
-    parser.add_argument("domain", help="Domain to retrain (e.g. retailrocket)")
+    parser.add_argument("domain", help="Domain to retrain (e.g. steam, bookcrossing)")
     args = parser.parse_args()
     
     retrain_domain(args.domain)
