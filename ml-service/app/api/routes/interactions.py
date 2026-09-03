@@ -10,7 +10,7 @@ async def log_interaction(interaction: Interaction):
     if not interaction.user_id and not interaction.session_id:
         raise HTTPException(status_code=400, detail="Must provide either user_id or session_id")
         
-    interactions_coll = db.client.get_default_database()["interactions"]
+    interactions_coll = db.get_collection("interactions")
     
     # Upsert logic matching Phase 2
     key = {

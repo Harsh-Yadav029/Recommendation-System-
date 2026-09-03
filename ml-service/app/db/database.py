@@ -8,6 +8,20 @@ from typing import Optional
 class Database:
     client: Optional[AsyncIOMotorClient] = None
 
+    def get_database(self):
+        if self.client is None:
+            raise RuntimeError("MongoDB client is not connected. Call connect_to_mongo() first.")
+        try:
+            database = self.client.get_default_database()
+            if database.name == "test":
+                return self.client["comparex"]
+            return database
+        except Exception:
+            return self.client["comparex"]
+
+    def get_collection(self, name: str):
+        return self.get_database()[name]
+
 
 db = Database()
 
@@ -17,10 +31,7 @@ async def connect_to_mongo():
     db.client = AsyncIOMotorClient(uri, serverSelectionTimeoutMS=2000)
 
     # Initialize indexes
-    database = db.client.get_default_database()
-    if database.name == "test" and "comparex" in uri:
-        # motor fallback if uri doesn't specify db properly
-        database = db.client["comparex"]
+    database = db.get_database()
 
     interactions = database["interactions"]
     items = database["items"]

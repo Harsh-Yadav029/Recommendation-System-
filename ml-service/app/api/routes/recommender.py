@@ -1,18 +1,19 @@
 import os
-from fastapi import APIRouter, HTTPException, Depends, Query, Body
+from typing import List, Dict
+from fastapi import APIRouter, HTTPException, Body
 from app.models.schemas import UserProfile, Constraints, RecommendationResponse, ComparisonTable
+from app.contracts.recommender import BaseRecommenderService
 from app.domains.steam_service import SteamService
 from app.domains.bookcrossing_service import BookCrossingService
-from typing import List
 
 router = APIRouter()
 
-_services = {}
+_services: Dict[str, BaseRecommenderService] = {}
 
 def get_enabled_domains() -> List[str]:
     return [d.strip() for d in os.environ.get("ENABLED_DOMAINS", "steam,bookcrossing").split(",")]
 
-def get_service(domain: str):
+def get_service(domain: str) -> BaseRecommenderService:
     if domain not in get_enabled_domains():
         raise HTTPException(status_code=400, detail=f"Domain '{domain}' is not supported or not enabled.")
     
