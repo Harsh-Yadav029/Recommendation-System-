@@ -229,7 +229,7 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
                   </div>
 
                   <img 
-                    src={item.image_url_l || item.image_url_m || item.header_image || item.image_url || 'https://via.placeholder.com/300x400?text=No+Image'} 
+                    src={(item.image_url_l || item.image_url_m || item.header_image || item.image_url || 'https://via.placeholder.com/300x400?text=No+Image').replace(/^http:\/\//i, 'https://')} 
                     alt={item.title || item.name}
                     className="w-full h-40 object-contain rounded-xl bg-white border border-[#2D7D7D]/10 mb-4 shadow-sm p-1"
                   />
@@ -333,7 +333,7 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
                         {items.map(i => (
                           <div key={i.item_id} className="bg-white p-2.5 rounded-xl border border-[#2D7D7D]/15 shadow-2xs flex flex-col gap-2 items-center text-center">
                             <img 
-                              src={i.image_url_l || i.image_url_m || i.header_image || i.image_url || 'https://via.placeholder.com/300x400?text=No+Image'} 
+                              src={(i.image_url_l || i.image_url_m || i.header_image || i.image_url || 'https://via.placeholder.com/300x400?text=No+Image').replace(/^http:\/\//i, 'https://')} 
                               alt={i.title || i.name}
                               className="w-full h-28 object-contain rounded-lg bg-white p-1"
                             />

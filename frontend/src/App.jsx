@@ -66,7 +66,6 @@ function App() {
     setCurrentView('browse');
   };
 
-  if (!authReady) return <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">Authenticating...</div>;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

@@ -110,7 +110,7 @@ export function DomainProductCard({ domain, item, isSelected, onToggleSelect }) 
           {item.metadata?.image_url_m ? (
             <div className="w-16 h-22 shrink-0 rounded-xl overflow-hidden shadow-2xs border border-[#2D7D7D]/15 bg-[#F7F5F0] relative">
               <img 
-                src={item.metadata.image_url_m} 
+                src={item.metadata.image_url_m.replace(/^http:\/\//i, 'https://')} 
                 alt={title} 
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 relative z-10"
                 onError={(e) => { 
