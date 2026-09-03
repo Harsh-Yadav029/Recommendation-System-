@@ -12,3 +12,4 @@ pytest-asyncio
 google-genai
 tenacity
 scikit-surprise==1.1.5
+groq

@@ -3,7 +3,7 @@ import { DomainProductCard } from "./DomainProductCard";
 
 export function ChatPanel({ domain, csrfToken, onToggleSelect, selectedItems }) {
   const [messages, setMessages] = useState([
-    { role: "assistant", text: "Hi! I'm the CompareX assistant. Ask me for recommendations, explanations, or comparisons." }
+    { role: "assistant", text: "Hi! I'm the CompareX assistant. Ask me for recommendations, explanations, or comparisons across the dataset." }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -76,43 +76,32 @@ export function ChatPanel({ domain, csrfToken, onToggleSelect, selectedItems }) 
   };
 
   return (
-    <aside className="h-[600px] sticky top-24 bg-surface-container-lowest border border-secondary/10 rounded-[16px] card-shadow flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="bg-surface-container-low border-b border-secondary/10 p-4 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-          <span className="material-symbols-outlined">smart_toy</span>
-        </div>
-        <div>
-          <h3 className="font-label-md text-label-md text-on-surface m-0">CompareX Assistant</h3>
-          <span className="text-[10px] text-primary font-medium flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span> Online
-          </span>
-        </div>
-      </div>
-
+    <div className="h-full flex flex-col justify-between bg-white">
       {/* Messages */}
-      <div className="flex-grow p-4 overflow-y-auto flex flex-col gap-4">
+      <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-3.5">
         {messages.map((msg, idx) => (
-          <div key={idx} className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
+          <div key={idx} className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
             {msg.role === "assistant" && (
-              <div className="w-6 h-6 rounded-full bg-primary/10 flex-shrink-0 mt-1 flex items-center justify-center">
-                <span className="material-symbols-outlined text-[12px] text-primary">smart_toy</span>
+              <div className="w-7 h-7 rounded-xl bg-[#E7F2F2] text-[#2D7D7D] flex-shrink-0 mt-0.5 flex items-center justify-center border border-[#2D7D7D]/20 shadow-2xs">
+                <span className="material-symbols-outlined text-[15px]">smart_toy</span>
               </div>
             )}
             
-            <div className={`max-w-[85%] rounded-[16px] p-3 font-body-sm text-body-sm shadow-sm ${
+            <div className={`max-w-[85%] rounded-2xl p-3.5 text-xs leading-relaxed shadow-2xs ${
               msg.role === "user"
-                ? "bg-primary text-on-primary rounded-tr-sm"
+                ? "bg-[#2D7D7D] text-white rounded-tr-none font-medium"
                 : msg.llmUnavailable
-                ? "bg-error-container text-on-error-container border border-error rounded-tl-sm"
-                : "bg-surface-container-low border border-surface-variant text-on-surface rounded-tl-sm"
+                ? "bg-amber-50 text-amber-900 border border-amber-200 rounded-tl-none font-medium"
+                : "bg-[#F7F5F0] border border-[#2D7D7D]/10 text-[#192A2A] rounded-tl-none font-medium"
             }`}>
               {msg.text}
               
               {/* Inline recommendation cards */}
               {msg.recommendations && msg.recommendations.length > 0 && (
                 <div className="mt-3 space-y-2">
-                  <span className="font-label-sm text-label-sm opacity-70 uppercase tracking-wider block">Recommendations</span>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#2D7D7D] block">
+                    Grounded Recommendations
+                  </span>
                   <div className="grid grid-cols-1 gap-2">
                     {msg.recommendations.slice(0, 3).map((item) => (
                       <DomainProductCard
@@ -125,8 +114,8 @@ export function ChatPanel({ domain, csrfToken, onToggleSelect, selectedItems }) 
                     ))}
                   </div>
                   {msg.recommendations.length > 3 && (
-                    <p className="font-label-sm text-label-sm opacity-70 mt-2">
-                      + {msg.recommendations.length - 3} more results available in Browse
+                    <p className="text-[10px] text-[#8A8680] mt-1 font-semibold">
+                      + {msg.recommendations.length - 3} more results in catalog
                     </p>
                   )}
                 </div>
@@ -136,15 +125,13 @@ export function ChatPanel({ domain, csrfToken, onToggleSelect, selectedItems }) 
         ))}
 
         {loading && (
-          <div className="flex gap-2">
-            <div className="w-6 h-6 rounded-full bg-primary/10 flex-shrink-0 mt-1 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[12px] text-primary">smart_toy</span>
+          <div className="flex gap-2.5">
+            <div className="w-7 h-7 rounded-xl bg-[#E7F2F2] text-[#2D7D7D] flex-shrink-0 mt-0.5 flex items-center justify-center border border-[#2D7D7D]/20 shadow-2xs">
+              <span className="material-symbols-outlined text-[15px]">smart_toy</span>
             </div>
-            <div className="bg-surface-container-low border border-surface-variant rounded-[16px] rounded-tl-sm p-3 font-body-sm text-body-sm text-on-surface shadow-sm">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined animate-spin text-tertiary text-sm">sync</span>
-                <span className="text-tertiary">Analyzing features...</span>
-              </div>
+            <div className="bg-[#F7F5F0] border border-[#2D7D7D]/10 rounded-2xl rounded-tl-none p-3 text-xs text-[#586666] shadow-2xs flex items-center gap-2">
+              <span className="material-symbols-outlined animate-spin text-sm text-[#2D7D7D]">sync</span>
+              <span>Synthesizing recommendations...</span>
             </div>
           </div>
         )}
@@ -152,7 +139,7 @@ export function ChatPanel({ domain, csrfToken, onToggleSelect, selectedItems }) 
       </div>
 
       {/* Input Area */}
-      <div className="p-3 border-t border-surface-variant bg-surface-container-lowest mt-auto">
+      <div className="p-3 border-t border-[#2D7D7D]/10 bg-[#FAF8F5]">
         <div className="relative">
           <input 
             type="text"
@@ -160,18 +147,18 @@ export function ChatPanel({ domain, csrfToken, onToggleSelect, selectedItems }) 
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={loading}
-            className="w-full bg-surface-container-lowest border border-surface-variant rounded-full py-2.5 pl-4 pr-10 font-body-sm text-body-sm text-on-surface input-focus-ring outline-none shadow-sm transition-all placeholder:text-tertiary" 
-            placeholder="Ask about products..." 
+            className="w-full bg-white border border-[#2D7D7D]/20 rounded-xl py-2.5 pl-4 pr-10 text-xs text-[#192A2A] focus:outline-none focus:ring-2 focus:ring-[#2D7D7D]/20 shadow-2xs placeholder:text-[#8A8680]" 
+            placeholder="Ask about products, authors, genres..." 
           />
           <button 
             onClick={handleSend}
             disabled={loading || !input.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-primary text-on-primary hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg bg-[#2D7D7D] text-white hover:bg-[#1E5C5C] transition-colors disabled:opacity-40 cursor-pointer shadow-2xs"
           >
-            <span className="material-symbols-outlined text-[16px] leading-none">send</span>
+            <span className="material-symbols-outlined text-[15px]">send</span>
           </button>
         </div>
       </div>
-    </aside>
+    </div>
   );
 }

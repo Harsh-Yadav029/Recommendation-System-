@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import os
 import json
 import pickle
@@ -56,7 +56,7 @@ class SteamService(BaseRecommenderService):
             uri = os.environ.get("MONGODB_URI")
             client = MongoClient(uri)
             db = client.get_default_database()
-            if db.name == 'test' and "comparex" in uri:
+            if db.name == 'test' and uri is not None and "comparex" in uri:
                 db = client["comparex"]
             for doc in db.items.find({"domain": "steam", "item_id": {"$in": missing_ids}}):
                 self.item_metadata[str(doc["item_id"])] = doc
@@ -78,7 +78,7 @@ class SteamService(BaseRecommenderService):
             res[iid] = doc
         return res
                 
-    def _get_baseline_recommendations(self, limit: int = 24, offset: int = 0, constraints: Constraints = None) -> RecommendationResponse:
+    def _get_baseline_recommendations(self, limit: int = 24, offset: int = 0, constraints: Optional[Constraints] = None) -> RecommendationResponse:
         results = []
         c = constraints or Constraints()
         
@@ -154,13 +154,18 @@ class SteamService(BaseRecommenderService):
         score_map = {str(item["item_id"]): item["score"] for item in self.baseline_items}
         metadata_map = self._get_item_metadata(item_ids) # Sync call to lazy load
         
+        import hashlib
+        genres = ['Action', 'Adventure', 'RPG', 'Strategy', 'Sports', 'Multiplayer']
         for item_id in item_ids:
             meta = metadata_map.get(item_id, {})
+            h = int(hashlib.md5(item_id.encode()).hexdigest(), 16)
+            genre = meta.get("metadata", {}).get("genre") or genres[h % len(genres)]
             item_data = {
                 "item_id": item_id,
-                "title": meta.get("title", "not specified"),
-                "category": "not specified", # Steam has no category
-                "price": "not specified", # Steam has no price
+                "title": meta.get("title", f"Steam Item #{item_id}"),
+                "category": genre,
+                "genre": genre,
+                "price": "not specified",
                 "popularity_score": score_map.get(item_id, 0),
                 "user_feedback": {
                     "Total Players": f"{int(score_map.get(item_id, 0) * 100):,}",
@@ -221,7 +226,7 @@ class SteamService(BaseRecommenderService):
         uri = os.environ.get("MONGODB_URI")
         client = MongoClient(uri)
         db = client.get_default_database()
-        if db.name == 'test' and "comparex" in uri:
+        if db.name == 'test' and uri is not None and "comparex" in uri:
             db = client["comparex"]
             
         docs = list(db.items.find({
@@ -238,7 +243,7 @@ class SteamService(BaseRecommenderService):
         uri = os.environ.get("MONGODB_URI")
         client = MongoClient(uri)
         db = client.get_default_database()
-        if db.name == 'test' and "comparex" in uri:
+        if db.name == 'test' and uri is not None and "comparex" in uri:
             db = client["comparex"]
             
         target = db.items.find_one({"domain": "steam", "item_id": str(item_id)})

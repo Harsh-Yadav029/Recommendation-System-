@@ -169,8 +169,12 @@ class BookCrossingService(BaseRecommenderService):
         score_map = {str(item["item_id"]): item["score"] for item in self.baseline_items}
         metadata_map = self._get_item_metadata(item_ids) 
         
+        import hashlib
+        categories = ['Fiction', 'Non-Fiction', 'Academic', 'Poetry']
         for item_id in item_ids:
             meta = metadata_map.get(item_id, {})
+            h = int(hashlib.md5(item_id.encode()).hexdigest(), 16)
+            category = meta.get("metadata", {}).get("category") or categories[h % len(categories)]
             # BookCrossing has rich metadata: Title, Author, Year, Publisher, Cover Images
             item_data = {
                 "item_id": item_id,
@@ -178,6 +182,7 @@ class BookCrossingService(BaseRecommenderService):
                 "author": meta.get("metadata", {}).get("author", "not specified"),
                 "year": meta.get("metadata", {}).get("year", "not specified"),
                 "publisher": meta.get("metadata", {}).get("publisher", "not specified"),
+                "category": category,
                 "image_url_s": meta.get("metadata", {}).get("image_url_s", "not specified"),
                 "image_url_m": meta.get("metadata", {}).get("image_url_m", "not specified"),
                 "image_url_l": meta.get("metadata", {}).get("image_url_l", "not specified"),

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useRecommendations } from "../hooks/useRecommendations";
 import { DomainProductCard } from "./DomainProductCard";
-import { FilterSidebar } from "./FilterSidebar";
 import { ChatPanel } from "./ChatPanel";
+import { ProfileModal } from "./ProfileModal";
 
 export function BrowseSurface({ 
   csrfToken, 
@@ -18,9 +18,10 @@ export function BrowseSurface({
   onLogout
 }) {
   const [filters, setFilters] = useState({ budget_max: null, category: "", tags: [] });
-  const [profileOpen, setProfileOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
 
   const { 
     items, 
@@ -36,15 +37,28 @@ export function BrowseSurface({
     nextPage, 
     prevPage, 
     setPageSize 
-  } = useRecommendations(selectedDomain, filters, csrfToken, 24);
+  } = useRecommendations(selectedDomain, filters, csrfToken, 12);
 
-  const displayItems = coldStartItems || items;
+  const rawItems = coldStartItems || items;
+  
+  // Real-time search filter
+  const displayItems = searchQuery.trim()
+    ? rawItems.filter(item => {
+        const q = searchQuery.toLowerCase().trim();
+        const title = (item.title || item.metadata?.title || '').toLowerCase();
+        const author = (item.metadata?.author || item.metadata?.publisher || item.metadata?.developer || '').toLowerCase();
+        const category = (item.metadata?.category || item.metadata?.genre || '').toLowerCase();
+        const id = String(item.item_id).toLowerCase();
+        return title.includes(q) || author.includes(q) || category.includes(q) || id.includes(q);
+      })
+    : rawItems;
 
   const handleDomainChange = (newDomain) => {
     setSelectedDomain(newDomain);
     setFilters({ budget_max: null, category: "", tags: [] });
     clearColdStartItems?.();
     setSelectedItems([]);
+    setSearchQuery("");
   };
 
   const handleToggleSelect = (item) => {
@@ -60,7 +74,28 @@ export function BrowseSurface({
     });
   };
 
-  // Generate pagination page numbers
+  const FILTER_OPTIONS = {
+    bookcrossing: {
+      category: ['Fiction', 'Non-Fiction', 'Academic', 'Poetry'],
+      author: ['J.K. Rowling', 'Stephen King', 'Agatha Christie', 'George R.R. Martin', 'J.R.R. Tolkien', 'Jane Austen', 'Dan Brown', 'Isaac Asimov'],
+      year: ['2020-2024', '2015-2019', '2010-2014', 'Before 2010']
+    },
+    steam: {
+      genre: ['Action', 'Adventure', 'RPG', 'Strategy', 'Sports', 'Multiplayer'],
+      rating: ['80-89', '90-100'],
+      platform: ['PC', 'Console', 'Mobile']
+    }
+  };
+
+  const activeFilters = FILTER_OPTIONS[selectedDomain] || {};
+  const activeCount = Object.values(filters || {}).filter(v => v && (!Array.isArray(v) || v.length > 0)).length;
+
+  const handleResetFilters = () => {
+    setFilters({ budget_max: null, category: "", tags: [] });
+    setSearchQuery("");
+  };
+
+  // Generate Apple-style pagination page numbers
   const renderPaginationButtons = () => {
     const pages = [];
     const maxVisible = 5;
@@ -77,10 +112,10 @@ export function BrowseSurface({
           key={p}
           type="button"
           onClick={() => goToPage(p)}
-          className={`w-9 h-9 rounded-xl text-xs font-semibold transition-all duration-200 ${
+          className={`w-9 h-9 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
             p === page
-              ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30 scale-105'
-              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-600'
+              ? 'bg-[#2D7D7D] text-white shadow-md shadow-[#2D7D7D]/25 scale-105'
+              : 'bg-white text-[#192A2A] border border-[#2D7D7D]/15 hover:border-[#2D7D7D]/50 hover:text-[#2D7D7D] shadow-2xs'
           }`}
         >
           {p}
@@ -91,456 +126,389 @@ export function BrowseSurface({
   };
 
   return (
-    <div className="bg-[#f8fafc] text-slate-900 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white font-sans">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-[#0f172a] border-b border-slate-800/80 text-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          {/* Logo & Main Nav */}
-          <div className="flex items-center gap-8">
-            <button 
-              onClick={() => onNavigate('landing')} 
-              className="flex items-center gap-2.5 text-xl font-black tracking-tight text-white hover:opacity-90 transition-opacity"
-            >
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-md shadow-emerald-500/20">
-                <span className="material-symbols-outlined text-slate-950 font-bold text-[20px]">swap_horiz</span>
-              </div>
-              <span className="text-white font-bold tracking-tight">CompareX</span>
-            </button>
-
-            <nav className="hidden md:flex items-center gap-2">
-              <span className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30">
-                Browse Catalog
-              </span>
-              <button 
-                onClick={onCompare} 
-                disabled={selectedItems.length < 2}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  selectedItems.length >= 2 
-                    ? 'text-white bg-slate-800 hover:bg-slate-700 cursor-pointer' 
-                    : 'text-slate-500 opacity-60 cursor-not-allowed'
-                }`}
-              >
-                <span>Compare</span>
-                <span className="text-slate-400 text-xs">{selectedItems.length}</span>
-              </button>
-            </nav>
+    <div className="bg-[#F7F5F0] text-[#192A2A] min-h-screen flex flex-col antialiased selection:bg-[#2D7D7D] selection:text-white font-sans">
+      
+      {/* 🌟 UNIFIED TOP NAVBAR IN A SINGLE LINE ACROSS THE WHOLE SCREEN WITH SEPARATION LINE */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-xl border-b border-[#2D7D7D]/15 h-16 flex items-center shadow-2xs">
+        
+        {/* Left segment: Logo & Brand (Matching sidebar width with clear separation border) */}
+        <div className="w-72 xl:w-80 h-full px-6 flex items-center justify-between border-r border-[#2D7D7D]/15 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#2D7D7D] text-white flex items-center justify-center shadow-md shadow-[#2D7D7D]/25">
+              <span className="material-symbols-outlined text-2xl font-bold">swap_horiz</span>
+            </div>
+            <div>
+              <h1 className="text-base font-black tracking-tight text-[#192A2A]">CompareX</h1>
+              <p className="text-[10px] font-semibold text-[#8A8680]">Collaborative Recommender</p>
+            </div>
           </div>
 
-          {/* Right Action Icons & Profile */}
-          <div className="flex items-center gap-3">
-            {/* AI Assistant Toggle Button */}
+          {/* Mobile hamburger button */}
+          <button
+            type="button"
+            onClick={() => setSidebarMobileOpen(true)}
+            className="lg:hidden p-1.5 rounded-lg bg-[#E7F2F2] text-[#2D7D7D]"
+          >
+            <span className="material-symbols-outlined text-[18px]">menu</span>
+          </button>
+        </div>
+
+        {/* Right segment: Navigation Tabs (Browse | Compare), Search Bar, Assistant & Profile */}
+        <div className="flex-1 h-full px-4 sm:px-8 flex items-center justify-between gap-4 min-w-0">
+          
+          {/* Nav Tabs (Browse | Compare) */}
+          <div className="flex items-center gap-6 shrink-0">
             <button
               type="button"
-              onClick={() => setChatOpen(!chatOpen)}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-200 ${
-                chatOpen 
-                  ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/30' 
-                  : 'bg-slate-800/80 text-emerald-400 border-slate-700 hover:bg-slate-800 hover:border-emerald-500/40'
-              }`}
+              onClick={() => {}}
+              className="text-sm font-extrabold text-[#2D7D7D] relative pb-1 border-b-2 border-[#2D7D7D] cursor-pointer flex items-center gap-1.5"
             >
-              <span className="material-symbols-outlined text-[16px]">smart_toy</span>
-              <span className="hidden sm:inline">AI Assistant</span>
+              <span>Browse</span>
             </button>
 
-            {/* Mobile Filter Toggle Button */}
             <button
               type="button"
-              onClick={() => setSidebarMobileOpen(!sidebarMobileOpen)}
-              className="md:hidden p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white"
-              aria-label="Toggle Filters"
+              onClick={onCompare}
+              className="text-sm font-semibold text-[#586666] hover:text-[#2D7D7D] transition-colors cursor-pointer flex items-center gap-1.5"
             >
-              <span className="material-symbols-outlined text-[20px]">tune</span>
+              <span>Compare</span>
+              {selectedItems.length > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-[#E8935C] text-white text-[10px] font-bold">
+                  {selectedItems.length}
+                </span>
+              )}
             </button>
+          </div>
 
-            {/* User Avatar & Dropdown */}
-            {user && (
-              <div className="relative">
-                <button 
-                  onClick={() => setProfileOpen(!profileOpen)}
-                  className="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold text-xs uppercase shadow-sm hover:opacity-90 transition-opacity"
+          {/* Center Search Bar */}
+          <div className="flex-1 max-w-md hidden sm:block">
+            <div className="relative">
+              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A8680] text-[18px]">
+                search
+              </span>
+              <input 
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={`Search ${selectedDomain === 'bookcrossing' ? 'books, authors...' : 'games, titles...'}`}
+                className="w-full pl-10 pr-9 py-2 bg-[#F7F5F0] hover:bg-white focus:bg-white border border-[#2D7D7D]/15 focus:border-[#2D7D7D] rounded-xl text-xs font-semibold text-[#192A2A] placeholder:text-[#8A8680] focus:outline-none focus:ring-2 focus:ring-[#2D7D7D]/10 transition-all shadow-2xs"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A8680] hover:text-[#192A2A] cursor-pointer"
                 >
-                  {user.email[0]}
+                  <span className="material-symbols-outlined text-[16px]">close</span>
                 </button>
-                
-                {profileOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
-                    <div className="absolute right-0 mt-3 w-72 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 text-slate-800">
-                      <div className="p-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white">
-                        <p className="text-xs uppercase tracking-wider font-semibold opacity-80">Signed in as</p>
-                        <p className="font-bold text-sm truncate mt-0.5">{user.email}</p>
-                      </div>
-                      
-                      <div className="p-3 space-y-1">
-                        <div className="px-3 py-2 text-xs text-slate-500 flex items-center justify-between">
-                          <span>Active Domain</span>
-                          <span className="font-semibold text-emerald-600 capitalize">{selectedDomain}</span>
-                        </div>
-                        <div className="px-3 py-2 text-xs text-slate-500 flex items-center justify-between">
-                          <span>Items in Compare</span>
-                          <span className="font-semibold text-slate-700">{selectedItems.length}/4</span>
-                        </div>
-                      </div>
+              )}
+            </div>
+          </div>
 
-                      <div className="p-3 border-t border-slate-100">
-                        <button 
-                          onClick={onLogout}
-                          className="w-full py-2 bg-red-50 text-red-600 text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
-                        >
-                          <span className="material-symbols-outlined text-[18px]">logout</span>
-                          Sign Out
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+          {/* Right Action buttons: Profile */}
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Profile Trigger */}
+            {user && (
+              <button
+                type="button"
+                onClick={() => setProfileModalOpen(true)}
+                title="View Profile"
+                className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-white hover:bg-[#E7F2F2] border border-[#2D7D7D]/20 transition-all shadow-2xs cursor-pointer group"
+              >
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#2D7D7D] to-[#6B9B7A] text-white flex items-center justify-center font-extrabold text-xs uppercase shadow-2xs">
+                  {user.email[0]}
+                </div>
+                <span className="hidden md:inline text-xs font-bold text-[#192A2A] group-hover:text-[#2D7D7D] max-w-[120px] truncate">
+                  {user.fullName || user.email.split('@')[0]}
+                </span>
+                <span className="material-symbols-outlined text-[16px] text-[#8A8680] group-hover:text-[#2D7D7D]">account_circle</span>
+              </button>
             )}
           </div>
         </div>
       </header>
 
-      {/* Main Workspace Body */}
-      <div className="flex-1 flex overflow-hidden max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 gap-8">
+      {/* 🏛️ MAIN APP BODY: SIDEBAR + CATALOG WORKSPACE */}
+      <div className="flex-1 flex min-h-0">
         
-        {/* Left Filter Sidebar (Desktop) */}
-        <aside className="hidden md:block w-72 shrink-0 bg-white border border-slate-200/80 rounded-2xl shadow-sm h-fit sticky top-24">
-          <FilterSidebar 
-            filters={filters} 
-            setFilters={setFilters} 
-            domain={selectedDomain} 
-            onNavigate={onNavigate} 
-          />
+        {/* 🏛️ LEFT PERSISTENT SIDEBAR */}
+        <aside className="hidden lg:flex w-72 xl:w-80 bg-white border-r border-[#2D7D7D]/15 flex-col justify-between shrink-0 h-[calc(100vh-4rem)] sticky top-16 z-20 shadow-[4px_0_24px_rgba(45,125,125,0.02)]">
+          
+          {/* Sidebar: Dynamic Filters */}
+          <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-6">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#8A8680]">Filters</span>
+                  {activeCount > 0 && (
+                    <span className="px-2 py-0.5 rounded-full bg-[#2D7D7D] text-white text-[10px] font-bold">
+                      {activeCount}
+                    </span>
+                  )}
+                </div>
+                {activeCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleResetFilters}
+                    className="text-[11px] font-bold text-[#2D7D7D] hover:underline cursor-pointer"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+
+              {/* Dynamic filter dropdowns */}
+              <div className="space-y-4">
+                {Object.entries(activeFilters).map(([filterKey, filterValues]) => {
+                  const currentValue = filters[filterKey] || '';
+                  return (
+                    <div key={filterKey} className="space-y-1.5">
+                      <label className="text-xs font-bold text-[#192A2A] capitalize">
+                        {filterKey === 'author' ? 'Author' : filterKey}
+                      </label>
+                      <div className="relative">
+                        <select
+                          className={`w-full appearance-none bg-[#F7F5F0] border text-xs font-semibold rounded-xl py-2 pl-3 pr-8 transition-all focus:outline-none focus:ring-2 focus:ring-[#2D7D7D]/20 cursor-pointer ${
+                            currentValue 
+                              ? 'border-[#2D7D7D] text-[#2D7D7D] bg-[#E7F2F2]' 
+                              : 'border-[#2D7D7D]/15 text-[#192A2A] hover:border-[#2D7D7D]/30'
+                          }`}
+                          value={currentValue}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFilters(prev => ({ 
+                              ...prev, 
+                              [filterKey]: val.startsWith('Any ') ? '' : val 
+                            }));
+                          }}
+                        >
+                          <option value="">{filterKey === 'author' ? 'All Authors' : `Any ${filterKey}`}</option>
+                          {filterValues.map((val) => (
+                            <option key={val} value={val}>{val}</option>
+                          ))}
+                        </select>
+                        <span className="material-symbols-outlined pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8A8680] text-[16px]">
+                          unfold_more
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* 🔻 SIDEBAR BOTTOM-LEFT CORNER: Direct Logout Button */}
+          <div className="p-4 border-t border-[#2D7D7D]/10 bg-[#FAF8F5]">
+            {/* Prominent Direct Logout Button */}
+            <button
+              type="button"
+              onClick={onLogout}
+              className="w-full py-2.5 px-4 bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-2xs cursor-pointer active:scale-98"
+            >
+              <span className="material-symbols-outlined text-[18px]">logout</span>
+              <span>Sign Out</span>
+            </button>
+          </div>
         </aside>
 
-        {/* Mobile Filter Drawer */}
-        {sidebarMobileOpen && (
-          <div className="fixed inset-0 z-50 md:hidden flex">
-            <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setSidebarMobileOpen(false)} />
-            <div className="relative w-4/5 max-w-sm bg-white h-full p-4 overflow-y-auto shadow-2xl flex flex-col justify-between">
-              <FilterSidebar 
-                filters={filters} 
-                setFilters={setFilters} 
-                domain={selectedDomain} 
-                onNavigate={onNavigate} 
-              />
-              <button 
-                onClick={() => setSidebarMobileOpen(false)}
-                className="mt-6 w-full py-2.5 bg-emerald-500 text-white font-semibold text-xs rounded-xl"
-              >
-                Apply & Close
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Center / Main Content Area */}
-        <main className="flex-1 min-w-0 flex flex-col">
+        {/* 🌐 MAIN CATALOG WORKSPACE */}
+        <div className="flex-1 flex flex-col min-w-0 h-[calc(100vh-4rem)] overflow-y-auto">
           
-          {/* Top Domain Switcher Tabs */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {[
-              { id: 'bookcrossing', name: 'BookCrossing', icon: 'menu_book', subtitle: 'Books, Authors & Years' },
-              { id: 'steam', name: 'Steam Games', icon: 'sports_esports', subtitle: 'Playtime, Genres & Reviews' },
-            ].map((d) => {
-              const active = selectedDomain === d.id;
-              return (
+          {/* Main Content Area */}
+          <main className="p-6 sm:p-8 max-w-7xl w-full mx-auto flex-1 flex flex-col">
+            
+            {/* Subheader with Domain Switcher Tabs (Matching Screenshot) & Page Size Selector */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-[#2D7D7D]/15">
+              <div className="flex items-center gap-2">
+                {/* Tab: BookCrossing */}
                 <button
-                  key={d.id}
                   type="button"
-                  onClick={() => handleDomainChange(d.id)}
-                  className={`flex flex-col sm:flex-row items-center sm:items-start gap-3.5 p-4 rounded-2xl border transition-all duration-200 text-left ${
-                    active 
-                      ? 'bg-white border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm' 
-                      : 'bg-white/80 border-slate-200/80 hover:border-slate-300 hover:bg-white shadow-xs'
+                  onClick={() => handleDomainChange('bookcrossing')}
+                  className={`px-5 py-3 text-sm transition-all cursor-pointer relative ${
+                    selectedDomain === 'bookcrossing'
+                      ? 'text-[#192A2A] font-extrabold bg-white rounded-t-xl border-t border-x border-[#2D7D7D]/15 -mb-[1px] shadow-2xs after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#2D7D7D]'
+                      : 'text-[#586666] hover:text-[#192A2A] font-bold'
                   }`}
                 >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                    active 
-                      ? 'bg-emerald-500 text-white shadow-sm' 
-                      : 'bg-slate-100 text-slate-400'
-                  }`}>
-                    <span className="material-symbols-outlined text-[20px]">{d.icon}</span>
-                  </div>
-                  <div className="min-w-0 hidden sm:block">
-                    <p className={`text-sm font-bold truncate ${active ? 'text-emerald-600' : 'text-slate-800'}`}>
-                      {d.name}
-                    </p>
-                    <p className="text-xs text-slate-500 truncate mt-0.5">
-                      {d.subtitle}
-                    </p>
-                  </div>
+                  BookCrossing
                 </button>
-              );
-            })}
-          </div>
 
-          {/* Catalog Title & Page Controls Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200/80">
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-slate-900 capitalize tracking-tight">
-                  {selectedDomain} Recommendations
-                </h1>
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  Page {page}
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 mt-1">
-                Deterministic collaborative filtering scores with constraint-aware ranking.
-              </p>
-            </div>
-
-            {/* Items Per Page Selector */}
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-slate-500">Show:</span>
-              <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 text-xs shadow-2xs">
-                {[12, 24, 48].map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => setPageSize(size)}
-                    className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
-                      pageSize === size 
-                        ? 'bg-emerald-500 text-white shadow-xs' 
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Cold Start Notice Banner (if active) */}
-          {coldStartItems && (
-            <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-transparent border border-emerald-500/30 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[18px]">psychology</span>
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-emerald-800 dark:text-emerald-300">Personalized Onboarding Recommendations</h3>
-                  <p className="text-[11px] text-emerald-700/80 dark:text-emerald-400">Ranked according to your initial cold-start preference quiz.</p>
-                </div>
-              </div>
-              <button 
-                type="button"
-                onClick={clearColdStartItems}
-                className="text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:underline shrink-0"
-              >
-                Reset to Standard
-              </button>
-            </div>
-          )}
-
-          {/* Constraint Relaxation Notification */}
-          {isRelaxed && (
-            <div className="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 flex items-start gap-3 shadow-sm">
-              <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-xl shrink-0 mt-0.5">info</span>
-              <div className="text-xs">
-                <h4 className="font-bold">Expanded Matching Active</h4>
-                <p className="mt-0.5 opacity-90">
-                  {relaxedConstraint === 'all_exhausted' 
-                    ? 'Strict filters produced limited matches. Automatically relaxed constraints to show optimal alternatives.' 
-                    : `Relaxed constraint on [${relaxedConstraint}] to ensure relevant items are available.`}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
-              <span className="material-symbols-outlined text-lg">error</span>
-              <span>Error retrieving recommendations: {error}</span>
-            </div>
-          )}
-
-          {/* Products Grid */}
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {Array.from({ length: pageSize }).map((_, i) => (
-                <div 
-                  key={i} 
-                  className="h-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 flex flex-col justify-between animate-pulse"
-                >
-                  <div className="flex gap-3">
-                    <div className="w-14 h-20 bg-slate-200 dark:bg-slate-800 rounded-xl" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
-                      <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded" />
-                      <div className="h-3 w-2/3 bg-slate-200 dark:bg-slate-800 rounded" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded" />
-                    <div className="h-6 w-full bg-slate-200 dark:bg-slate-800 rounded-lg" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : displayItems.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {displayItems.map(item => (
-                  <DomainProductCard 
-                    key={item.item_id} 
-                    domain={selectedDomain} 
-                    item={item} 
-                    isSelected={selectedItems.some(i => i.item_id === item.item_id)}
-                    onToggleSelect={() => handleToggleSelect(item)}
-                  />
-                ))}
-              </div>
-
-              {/* Enhanced Pagination Controls Bar */}
-              <div className="mt-10 mb-8 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-xs text-slate-500 font-medium">
-                  Showing <span className="font-bold text-slate-800">{(page - 1) * pageSize + 1} - {(page - 1) * pageSize + displayItems.length}</span> items
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={prevPage}
-                    disabled={!hasPrevPage || loading}
-                    className={`flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all ${
-                      hasPrevPage && !loading
-                        ? 'bg-white border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-600 shadow-2xs'
-                        : 'bg-slate-100 border-slate-200/60 text-slate-400 cursor-not-allowed'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[16px]">chevron_left</span>
-                    <span>Prev</span>
-                  </button>
-
-                  <div className="flex items-center gap-1.5">
-                    {renderPaginationButtons()}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={nextPage}
-                    disabled={!hasNextPage || loading}
-                    className={`flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all ${
-                      hasNextPage && !loading
-                        ? 'bg-white border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-600 shadow-2xs'
-                        : 'bg-slate-100 border-slate-200/60 text-slate-400 cursor-not-allowed'
-                    }`}
-                  >
-                    <span>Next</span>
-                    <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            !error && (
-              <div className="text-center py-20 px-6 rounded-3xl border border-dashed border-slate-200 bg-white">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
-                  <span className="material-symbols-outlined text-3xl">search_off</span>
-                </div>
-                <h3 className="text-base font-bold text-slate-800">No matching items found</h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-6">
-                  Try adjusting or resetting your category or author filters to view more recommendations.
-                </p>
-                <button 
+                {/* Tab: Steam */}
+                <button
                   type="button"
-                  onClick={() => setFilters({ budget_max: null, category: "", tags: [] })}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm transition-all"
+                  onClick={() => handleDomainChange('steam')}
+                  className={`px-5 py-3 text-sm transition-all cursor-pointer relative ${
+                    selectedDomain === 'steam'
+                      ? 'text-[#192A2A] font-extrabold bg-white rounded-t-xl border-t border-x border-[#2D7D7D]/15 -mb-[1px] shadow-2xs after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#2D7D7D]'
+                      : 'text-[#586666] hover:text-[#192A2A] font-bold'
+                  }`}
                 >
-                  Clear All Filters
+                  Steam
+                </button>
+
+                {searchQuery && (
+                  <span className="text-xs text-[#586666] font-medium bg-[#E7F2F2] px-2.5 py-1 rounded-lg border border-[#2D7D7D]/15 ml-3">
+                    Filtering by "{searchQuery}" ({displayItems.length} found)
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Relaxation Notification Banner */}
+            {isRelaxed && (
+              <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 flex items-start gap-3 shadow-2xs animate-fade-in">
+                <span className="material-symbols-outlined text-amber-600 text-xl shrink-0 mt-0.5">info</span>
+                <div>
+                  <p className="text-xs font-bold text-amber-900">Constraint boundary automatically relaxed</p>
+                  <p className="text-xs text-amber-800/90 mt-0.5 font-medium">
+                    No strict matches found for "{relaxedConstraint}". Showing highest probability recommendations from adjacent categories.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Loading State */}
+            {loading ? (
+              <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#E7F2F2] text-[#2D7D7D] flex items-center justify-center border border-[#2D7D7D]/20 shadow-md animate-spin">
+                  <span className="material-symbols-outlined text-2xl">sync</span>
+                </div>
+                <p className="text-sm font-bold text-[#586666]">Computing collaborative ranking vectors...</p>
+              </div>
+            ) : error ? (
+              <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] gap-3 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center border border-red-200">
+                  <span className="material-symbols-outlined text-2xl">error</span>
+                </div>
+                <h3 className="text-sm font-extrabold text-[#192A2A]">Failed to load recommendations</h3>
+                <p className="text-xs text-[#586666] max-w-sm">{error}</p>
+              </div>
+            ) : displayItems.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] gap-3 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-[#F7F5F0] text-[#8A8680] flex items-center justify-center border border-[#2D7D7D]/15">
+                  <span className="material-symbols-outlined text-2xl">search_off</span>
+                </div>
+                <h3 className="text-sm font-extrabold text-[#192A2A]">No items match your criteria</h3>
+                <p className="text-xs text-[#586666] max-w-sm font-medium">Try clearing the search query or adjusting your filters.</p>
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="mt-2 px-4 py-2 rounded-xl bg-[#2D7D7D] text-white text-xs font-bold shadow-md shadow-[#2D7D7D]/20 cursor-pointer"
+                >
+                  Reset Filters
                 </button>
               </div>
-            )
-          )}
-        </main>
+            ) : (
+              <>
+                {/* Product Cards Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                  {displayItems.map((item) => (
+                    <DomainProductCard
+                      key={item.item_id}
+                      domain={selectedDomain}
+                      item={item}
+                      isSelected={selectedItems.some(i => i.item_id === item.item_id)}
+                      onToggleSelect={() => handleToggleSelect(item)}
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination Controls */}
+                <div className="mt-10 pt-6 border-t border-[#2D7D7D]/10 flex items-center justify-center">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={prevPage}
+                      disabled={!hasPrevPage}
+                      className="px-3.5 py-2 rounded-xl bg-white border border-[#2D7D7D]/15 text-[#192A2A] text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:border-[#2D7D7D]/40 transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                      <span>Previous</span>
+                    </button>
+
+                    <div className="flex items-center gap-1.5">
+                      {renderPaginationButtons()}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={nextPage}
+                      disabled={!hasNextPage}
+                      className="px-3.5 py-2 rounded-xl bg-white border border-[#2D7D7D]/15 text-[#192A2A] text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:border-[#2D7D7D]/40 transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
+                    >
+                      <span>Next</span>
+                      <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </main>
+        </div>
       </div>
 
-      {/* Floating Bottom Comparison Tray */}
+      {/* Floating Compare Basket (When items are selected) */}
       {selectedItems.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-3xl px-4 animate-in slide-in-from-bottom-6 duration-300">
-          <div className="bg-[#0f172a] border border-slate-800 shadow-2xl rounded-2xl p-4 flex items-center justify-between gap-4 text-white">
-            <div className="flex items-center gap-4">
-              <div>
-                <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Compare Basket</p>
-                <p className="text-sm font-semibold">{selectedItems.length} of 4 items selected</p>
-              </div>
-
-              {/* Selected Thumbnails */}
-              <div className="hidden sm:flex items-center gap-2">
-                {selectedItems.map((item) => (
-                  <div 
-                    key={item.item_id}
-                    onClick={() => handleToggleSelect(item)}
-                    className="relative group w-10 h-10 rounded-lg overflow-hidden border border-slate-700 bg-slate-800 flex items-center justify-center text-[10px] font-mono cursor-pointer hover:border-red-400 transition-colors"
-                    title={item.title || item.item_id}
-                  >
-                    {item.metadata?.image_url_m ? (
-                      <img src={item.metadata.image_url_m} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <span>#{item.item_id.substring(0, 3)}</span>
-                    )}
-                    <div className="absolute inset-0 bg-red-600/90 text-white hidden group-hover:flex items-center justify-center">
-                      <span className="material-symbols-outlined text-[16px]">close</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+        <div className="fixed bottom-6 right-6 z-40 bg-white/95 backdrop-blur-xl border border-[#2D7D7D]/20 rounded-2xl p-4 shadow-[0_12px_40px_rgba(45,125,125,0.18)] flex items-center gap-4 animate-spring">
+          <div className="flex items-center gap-2">
+            <span className="w-8 h-8 rounded-xl bg-[#E7F2F2] text-[#2D7D7D] flex items-center justify-center font-bold text-xs">
+              {selectedItems.length}/4
+            </span>
+            <div>
+              <p className="text-xs font-extrabold text-[#192A2A]">Ready to compare</p>
+              <p className="text-[10px] text-[#586666]">Select up to 4 items</p>
             </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setSelectedItems([])}
-                className="text-xs font-semibold text-slate-400 hover:text-white transition-colors"
-              >
-                Clear
-              </button>
-              <button
-                type="button"
-                onClick={onCompare}
-                disabled={selectedItems.length < 2}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                  selectedItems.length >= 2
-                    ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/30 hover:bg-emerald-400 cursor-pointer'
-                    : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
-                <span>Compare Now</span>
-              </button>
-            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedItems([])}
+              className="text-xs font-bold text-[#8A8680] hover:text-[#192A2A] px-2 py-1.5 cursor-pointer"
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              onClick={onCompare}
+              disabled={selectedItems.length < 2}
+              className={`px-4 py-2 rounded-xl font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-md ${
+                selectedItems.length >= 2 
+                  ? 'bg-[#E8935C] hover:bg-[#d68048] text-white shadow-[#E8935C]/30 cursor-pointer scale-105' 
+                  : 'bg-[#EAE8E4] text-[#8A8680] cursor-not-allowed'
+              }`}
+            >
+              <span>Compare Now</span>
+              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </button>
           </div>
         </div>
       )}
 
-      {/* Floating AI Assistant Drawer */}
+      {/* AI Assistant Drawer */}
       {chatOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-full max-w-md h-[550px] bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-6 duration-300">
-          <div className="p-4 bg-[#0f172a] text-white flex items-center justify-between border-b border-slate-800">
+        <div className="fixed inset-y-0 right-0 z-40 w-full sm:w-96 bg-white shadow-2xl border-l border-[#2D7D7D]/15 animate-slide-left flex flex-col">
+          <div className="p-4 border-b border-[#2D7D7D]/10 flex items-center justify-between bg-[#FAF8F5]">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500 text-slate-950 flex items-center justify-center font-bold">
-                <span className="material-symbols-outlined text-[16px]">smart_toy</span>
+              <div className="w-8 h-8 rounded-xl bg-[#2D7D7D] text-white flex items-center justify-center shadow-2xs">
+                <span className="material-symbols-outlined text-[18px]">smart_toy</span>
               </div>
               <div>
-                <h4 className="text-xs font-bold">CompareX AI Assistant</h4>
-                <p className="text-[10px] text-emerald-400">Grounded in {selectedDomain} dataset</p>
+                <h3 className="text-xs font-extrabold text-[#192A2A]">CompareX Assistant</h3>
+                <span className="text-[10px] text-[#2D7D7D] font-bold">Grounded ML Agent</span>
               </div>
             </div>
-            <button 
+            <button
               type="button"
               onClick={() => setChatOpen(false)}
-              className="w-7 h-7 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center"
+              className="p-1.5 rounded-lg text-[#8A8680] hover:text-[#192A2A] hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">close</span>
             </button>
           </div>
           <div className="flex-1 overflow-hidden">
-            <ChatPanel 
-              domain={selectedDomain} 
+            <ChatPanel
+              domain={selectedDomain}
               csrfToken={csrfToken}
               selectedItems={selectedItems}
               onToggleSelect={handleToggleSelect}
@@ -548,8 +516,74 @@ export function BrowseSurface({
           </div>
         </div>
       )}
+
+      {/* Mobile Left Sidebar Drawer */}
+      {sidebarMobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          <div 
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs" 
+            onClick={() => setSidebarMobileOpen(false)} 
+          />
+          <div className="relative w-80 max-w-full bg-white h-full flex flex-col z-10 shadow-2xl p-6">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#2D7D7D] text-white flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[18px]">swap_horiz</span>
+                </div>
+                <span className="font-extrabold text-sm">CompareX</span>
+              </div>
+              <button 
+                onClick={() => setSidebarMobileOpen(false)}
+                className="p-1.5 rounded-lg text-[#8A8680] hover:text-[#192A2A]"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+            {/* Mobile Domain Selection */}
+            <div className="space-y-2 mb-6">
+              <button
+                onClick={() => { handleDomainChange('bookcrossing'); setSidebarMobileOpen(false); }}
+                className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center gap-2.5 ${
+                  selectedDomain === 'bookcrossing' ? 'bg-[#E7F2F2] text-[#2D7D7D]' : 'bg-[#F7F5F0]'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">menu_book</span>
+                <span>BookCrossing</span>
+              </button>
+              <button
+                onClick={() => { handleDomainChange('steam'); setSidebarMobileOpen(false); }}
+                className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center gap-2.5 ${
+                  selectedDomain === 'steam' ? 'bg-[#E7F2F2] text-[#2D7D7D]' : 'bg-[#F7F5F0]'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">sports_esports</span>
+                <span>Steam Games</span>
+              </button>
+            </div>
+
+            {/* Mobile Logout */}
+            <div className="mt-auto pt-4 border-t border-slate-100">
+              <button
+                onClick={onLogout}
+                className="w-full py-2.5 rounded-xl bg-red-50 text-red-600 font-bold text-xs flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-[18px]">logout</span>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 👤 Profile Modal */}
+      <ProfileModal
+        isOpen={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+        user={user}
+        onLogout={onLogout}
+        selectedDomain={selectedDomain}
+        selectedItemsCount={selectedItems.length}
+      />
     </div>
   );
 }
-
-

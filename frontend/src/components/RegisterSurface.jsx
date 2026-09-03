@@ -33,44 +33,42 @@ export function RegisterSurface({ onRegisterSuccess, onSwitchToLogin, onBack }) 
   };
 
   return (
-    <div className="flex items-center justify-center font-sans text-gray-900 p-6 min-h-screen relative bg-gray-50 selection:bg-emerald-500/30">
+    <div className="flex items-center justify-center font-sans text-[#192A2A] p-6 min-h-screen relative bg-[#F7F5F0] selection:bg-[#2D7D7D] selection:text-white">
       <button 
         onClick={onBack}
-        className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors text-sm font-semibold z-20"
+        className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 text-[#586666] hover:text-[#2D7D7D] transition-colors text-xs font-bold z-20 cursor-pointer"
       >
-        <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-        Back
+        <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+        Back to Home
       </button>
 
-      <main className="w-full max-w-[480px]">
-        <div className="text-center mb-8 relative z-10">
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">CompareX</h1>
-          <p className="text-gray-500">Join CompareX to start saving today.</p>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg p-8 md:p-10 border border-gray-200 relative overflow-hidden transition-all duration-300">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Create an Account</h2>
-            <p className="text-sm text-gray-500">Please fill in the details below to register.</p>
+      <main className="w-full max-w-[440px]">
+        <div className="bg-white rounded-3xl shadow-[0_12px_40px_rgba(45,125,125,0.08)] p-8 md:p-10 border border-[#2D7D7D]/15 relative overflow-hidden animate-spring">
+          <div className="text-center mb-8 relative z-10">
+            <div className="w-12 h-12 mx-auto rounded-2xl bg-[#2D7D7D] text-white flex items-center justify-center mb-3 shadow-md shadow-[#2D7D7D]/25">
+              <span className="material-symbols-outlined text-2xl">person_add</span>
+            </div>
+            <h1 className="text-2xl font-black text-[#192A2A] tracking-tight">Create Account</h1>
+            <p className="text-xs text-[#586666] font-semibold mt-1">Join CompareX Analytical Suite</p>
           </div>
 
-          <form className="space-y-6 relative z-10" onSubmit={handleSubmit}>
+          <form className="space-y-4 relative z-10" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-lg text-sm">
+              <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-xs font-semibold">
                 {error}
               </div>
             )}
             
             {/* Full Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="fullName">Full Name</label>
+              <label className="block text-xs font-bold text-[#192A2A] mb-1.5" htmlFor="fullName">Full Name</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">person</span>
+                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A8680] text-[18px]">badge</span>
                 <input 
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#0f7632] focus:ring-4 focus:ring-emerald-500/10 transition-all [&:-webkit-autofill]:[transition:background-color_9999s_ease-in-out_0s] [&:-webkit-autofill]:[-webkit-text-fill-color:#111827]" 
+                  className="w-full pl-10 pr-4 py-3 bg-[#F7F5F0] border border-[#2D7D7D]/15 rounded-xl text-xs font-semibold text-[#192A2A] placeholder:text-[#8A8680] focus:outline-none focus:border-[#2D7D7D] focus:bg-white focus:ring-4 focus:ring-[#2D7D7D]/10 transition-all" 
                   id="fullName" 
                   name="fullName"
-                  placeholder="Enter your name" 
+                  placeholder="Your Full Name" 
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
@@ -80,14 +78,14 @@ export function RegisterSurface({ onRegisterSuccess, onSwitchToLogin, onBack }) 
 
             {/* Email Address */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="email">Email Address</label>
+              <label className="block text-xs font-bold text-[#192A2A] mb-1.5" htmlFor="email">Email Address</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">mail</span>
+                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A8680] text-[18px]">mail</span>
                 <input 
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#0f7632] focus:ring-4 focus:ring-emerald-500/10 transition-all [&:-webkit-autofill]:[transition:background-color_9999s_ease-in-out_0s] [&:-webkit-autofill]:[-webkit-text-fill-color:#111827]" 
+                  className="w-full pl-10 pr-4 py-3 bg-[#F7F5F0] border border-[#2D7D7D]/15 rounded-xl text-xs font-semibold text-[#192A2A] placeholder:text-[#8A8680] focus:outline-none focus:border-[#2D7D7D] focus:bg-white focus:ring-4 focus:ring-[#2D7D7D]/10 transition-all" 
                   id="email" 
                   name="email"
-                  placeholder="Enter your email" 
+                  placeholder="name@company.com" 
                   type="email"
                   required
                   value={email}
@@ -96,15 +94,13 @@ export function RegisterSurface({ onRegisterSuccess, onSwitchToLogin, onBack }) 
               </div>
             </div>
 
-
-
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="password">Password</label>
+              <label className="block text-xs font-bold text-[#192A2A] mb-1.5" htmlFor="password">Password</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">lock</span>
+                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A8680] text-[18px]">lock</span>
                 <input 
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#0f7632] focus:ring-4 focus:ring-emerald-500/10 transition-all [&:-webkit-autofill]:[transition:background-color_9999s_ease-in-out_0s] [&:-webkit-autofill]:[-webkit-text-fill-color:#111827]" 
+                  className="w-full pl-10 pr-4 py-3 bg-[#F7F5F0] border border-[#2D7D7D]/15 rounded-xl text-xs font-semibold text-[#192A2A] placeholder:text-[#8A8680] focus:outline-none focus:border-[#2D7D7D] focus:bg-white focus:ring-4 focus:ring-[#2D7D7D]/10 transition-all" 
                   id="password" 
                   name="password"
                   placeholder="••••••••" 
@@ -114,33 +110,29 @@ export function RegisterSurface({ onRegisterSuccess, onSwitchToLogin, onBack }) 
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-2">Must be at least 8 characters.</p>
+              <p className="text-[11px] text-[#8A8680] mt-1 font-medium">Must be at least 8 characters.</p>
             </div>
 
             <div className="pt-2">
               <button 
-                className="w-full flex items-center justify-center gap-2 bg-[#0f7632] text-white font-semibold py-3.5 px-6 rounded-xl shadow-md hover:bg-emerald-700 hover:shadow-lg active:scale-[0.98] transition-all duration-200 disabled:opacity-50" 
+                className="w-full bg-[#2D7D7D] hover:bg-[#1E5C5C] text-white font-bold py-3.5 px-6 rounded-xl shadow-md shadow-[#2D7D7D]/25 active:scale-[0.99] transition-all text-xs cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50" 
                 type="submit"
                 disabled={loading}
               >
-                {loading ? 'Registering...' : 'Register'}
-                <span className="material-symbols-outlined text-[20px]" data-weight="fill">arrow_forward</span>
-              </button>
-            </div>
-            
-            <div className="flex justify-center mt-4">
-              <button type="button" onClick={onBack} className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
-                Back to home
+                <span>{loading ? 'Creating Account...' : 'Create Account'}</span>
+                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
               </button>
             </div>
           </form>
-        </div>
 
-        <div className="text-center mt-8">
-          <p className="text-sm text-gray-600">
-            Already have an account? 
-            <button onClick={onSwitchToLogin} className="text-sm font-semibold text-[#0f7632] hover:underline hover:text-emerald-700 ml-1 transition-colors">Back to Login</button>
-          </p>
+          <div className="mt-8 text-center relative z-10 border-t border-slate-100 pt-6">
+            <p className="text-xs text-[#586666] font-medium">
+              Already have an account? 
+              <button onClick={onSwitchToLogin} className="text-xs font-bold text-[#2D7D7D] hover:underline ml-1.5 transition-colors cursor-pointer">
+                Sign In
+              </button>
+            </p>
+          </div>
         </div>
       </main>
     </div>

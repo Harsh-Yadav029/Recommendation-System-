@@ -31,16 +31,16 @@ export function FilterSidebar({ domain, filters, setFilters, onNavigate }) {
   };
 
   return (
-    <div className="flex flex-col h-full px-5 py-4">
+    <div className="flex flex-col h-full px-5 py-5">
       {/* Filters Title Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-slate-200/80 dark:border-slate-800">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+      <div className="flex items-center justify-between pb-4 border-b border-slate-200/90">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-[#EBF4FC] text-[#10367D] flex items-center justify-center border border-[#70B4E8]/40 shadow-2xs">
             <span className="material-symbols-outlined text-[18px]">tune</span>
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">Filters</h2>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">Refine recommendation</p>
+            <h2 className="text-sm font-extrabold text-[#0D1F42]">Filters</h2>
+            <p className="text-[11px] font-medium text-slate-500">Refine recommendation</p>
           </div>
         </div>
 
@@ -48,7 +48,7 @@ export function FilterSidebar({ domain, filters, setFilters, onNavigate }) {
           <button 
             type="button"
             onClick={handleReset}
-            className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:underline transition-all"
+            className="text-[11px] font-bold text-[#10367D] hover:text-[#0C285E] hover:underline transition-all cursor-pointer"
           >
             Reset All
           </button>
@@ -56,11 +56,11 @@ export function FilterSidebar({ domain, filters, setFilters, onNavigate }) {
       </div>
 
       {/* Domain Indicator Pill */}
-      <div className="mt-4 mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 text-xs font-semibold text-slate-700 dark:text-slate-200 capitalize">
-        <span className="material-symbols-outlined text-[16px] text-emerald-600 dark:text-emerald-400">{getDomainIcon()}</span>
+      <div className="mt-4 mb-4 flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#F4F6FA] border border-slate-200/80 text-xs font-bold text-[#10367D] capitalize shadow-2xs">
+        <span className="material-symbols-outlined text-[16px] text-[#10367D]">{getDomainIcon()}</span>
         <span>{domain} Attributes</span>
         {activeCount > 0 && (
-          <span className="ml-auto bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+          <span className="ml-auto bg-[#10367D] text-white text-[10px] px-2 py-0.5 rounded-full font-extrabold shadow-2xs">
             {activeCount} active
           </span>
         )}
@@ -73,13 +73,13 @@ export function FilterSidebar({ domain, filters, setFilters, onNavigate }) {
           
           return (
             <div key={filterKey} className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 capitalize flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-700 capitalize flex items-center justify-between">
                 <span>{filterKey}</span>
                 {currentValue && (
                   <button 
                     type="button"
                     onClick={() => setFilters?.(prev => ({ ...prev, [filterKey]: '' }))}
-                    className="text-[10px] text-slate-400 hover:text-red-500 transition-colors"
+                    className="text-[10px] font-semibold text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
                   >
                     clear
                   </button>
@@ -88,10 +88,10 @@ export function FilterSidebar({ domain, filters, setFilters, onNavigate }) {
 
               <div className="relative">
                 <select 
-                  className={`w-full appearance-none bg-white dark:bg-slate-900 border text-xs font-medium rounded-xl py-2.5 pl-3 pr-8 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/20 ${
+                  className={`w-full appearance-none bg-white border text-xs font-semibold rounded-xl py-2.5 pl-3.5 pr-8 transition-all focus:outline-none focus:ring-2 focus:ring-[#10367D]/20 cursor-pointer ${
                     currentValue 
-                      ? 'border-emerald-500 text-emerald-900 dark:text-emerald-200 bg-emerald-50/30 dark:bg-emerald-950/30' 
-                      : 'border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700'
+                      ? 'border-[#10367D] text-[#10367D] bg-[#EBF4FC]/40 shadow-2xs' 
+                      : 'border-slate-200/90 text-slate-700 hover:border-slate-300 shadow-2xs'
                   }`}
                   value={currentValue}
                   onChange={(e) => {
@@ -116,13 +116,12 @@ export function FilterSidebar({ domain, filters, setFilters, onNavigate }) {
         })}
 
         {Object.keys(activeFilters).length === 0 && (
-          <div className="p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-center">
+          <div className="p-4 rounded-xl border border-dashed border-slate-200 text-center">
             <span className="material-symbols-outlined text-slate-400 text-2xl mb-1">filter_none</span>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Pure collaborative filtering domain — no manual filters required.</p>
+            <p className="text-xs text-slate-500">Pure collaborative filtering domain — no manual filters required.</p>
           </div>
         )}
       </div>
     </div>
   );
 }
-

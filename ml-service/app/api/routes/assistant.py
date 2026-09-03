@@ -3,12 +3,12 @@ from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 
 from app.models.schemas import UserProfile, Constraints, RecommendationResponse
-from app.llm.gemini_client import GeminiClient
+from app.llm.hybrid_client import HybridLLMClient
 from app.core.exceptions import LLMUnavailableException
 from app.api.routes.recommender import get_service
 
 router = APIRouter()
-llm_client = GeminiClient()
+llm_client = HybridLLMClient()
 
 class AssistantChatRequest(BaseModel):
     domain: str

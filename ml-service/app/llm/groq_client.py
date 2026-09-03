@@ -1,8 +1,7 @@
 import os
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
-from google.genai.errors import APIError
+from groq import Groq
+import groq
 
 load_dotenv()
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -18,68 +17,38 @@ from app.models.schemas import (
 from app.core.exceptions import LLMUnavailableException
 
 def is_retryable_error(exception):
-    # Retry on 429 Too Many Requests or 503 Service Unavailable
-    if isinstance(exception, APIError):
-        if exception.code in (429, 503):
+    if isinstance(exception, groq.APIError):
+        status_code = getattr(exception, 'status_code', None)
+        if status_code in (429, 503, 500, 502, 504):
             return True
     return False
 
-class GeminiClient(BaseLLMClient):
+class GroqClient:
     def __init__(self):
-        self.api_key = os.environ.get("GEMINI_API_KEY")
-        if not self.api_key:
-            # We don't fail immediately in case it's set later, but typically it should be present.
-            pass
-        self.client = genai.Client(api_key=self.api_key)
-        self.model_name = "gemini-2.5-flash"
+        self.api_key = os.environ.get("GROQ_API_KEY")
+        self.client = Groq(api_key=self.api_key) if self.api_key else None
+        self.model_name = "llama3-8b-8192"
 
     @retry(
-        retry=retry_if_exception_type(APIError),
-        stop=stop_after_attempt(5),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type(groq.APIError),
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=4),
         reraise=True
     )
-    def _call_gemini_structured(self, prompt: str, schema) -> str:
+    def _call_groq_text(self, prompt: str) -> str:
+        if not self.client:
+            raise LLMUnavailableException("GROQ_API_KEY is missing")
         try:
-            response = self.client.models.generate_content(
+            response = self.client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
                 model=self.model_name,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    response_schema=schema,
-                    temperature=0.0
-                )
+                temperature=0.7,
             )
-            if response.text is None:
+            content = response.choices[0].message.content
+            if content is None:
                 raise LLMUnavailableException("Model returned empty text response")
-            return response.text
-        except APIError as e:
-            if is_retryable_error(e):
-                raise e
-            # If not a retryable error, don't retry, just raise immediately
-            raise LLMUnavailableException(f"Non-retryable LLM error: {str(e)}")
-        except Exception as e:
-            raise LLMUnavailableException(f"Unexpected LLM error: {str(e)}")
-
-    @retry(
-        retry=retry_if_exception_type(APIError),
-        stop=stop_after_attempt(5),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        reraise=True
-    )
-    def _call_gemini_text(self, prompt: str) -> str:
-        try:
-            response = self.client.models.generate_content(
-                model=self.model_name,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.7
-                )
-            )
-            if response.text is None:
-                raise LLMUnavailableException("Model returned empty text response")
-            return response.text
-        except APIError as e:
+            return content
+        except groq.APIError as e:
             if is_retryable_error(e):
                 raise e
             raise LLMUnavailableException(f"Non-retryable LLM error: {str(e)}")
@@ -87,31 +56,10 @@ class GeminiClient(BaseLLMClient):
             raise LLMUnavailableException(f"Unexpected LLM error: {str(e)}")
 
     def classify_intent(self, user_message: str, history: list) -> IntentResult:
-        prompt = f"""
-You are an intent classification engine for an ecommerce assistant.
-History: {history}
-User message: "{user_message}"
-Determine if the user wants to 'recommend' items, 'compare' items, or something else ('unknown').
-"""
-        try:
-            result_json = self._call_gemini_structured(prompt, IntentResult)
-            return IntentResult.model_validate_json(result_json)
-        except Exception as e:
-            raise LLMUnavailableException(f"Failed to classify intent: {str(e)}")
+        raise NotImplementedError("Use Gemini for structured JSON tasks")
 
     def extract_constraints(self, user_message: str) -> Constraints:
-        prompt = f"""
-Extract product constraints from the user message.
-User message: "{user_message}"
-Extract budget_max, category, and tags if present.
-If the user is asking for items similar to a specific title (e.g. "similar to Decision in Normandy"), extract that exact title into `similar_to_title`.
-If the user provides a free-text semantic description (e.g. "a book about world war 2"), extract that entire phrase into `similar_to_title`.
-"""
-        try:
-            result_json = self._call_gemini_structured(prompt, Constraints)
-            return Constraints.model_validate_json(result_json)
-        except Exception as e:
-            raise LLMUnavailableException(f"Failed to extract constraints: {str(e)}")
+        raise NotImplementedError("Use Gemini for structured JSON tasks")
 
     def format_comparison(self, comparison_data: ComparisonTable) -> str:
         prompt = f"""
@@ -121,13 +69,11 @@ Data:
 {comparison_data.model_dump_json()}
 """
         try:
-            return self._call_gemini_text(prompt)
+            return self._call_groq_text(prompt)
         except Exception as e:
             raise LLMUnavailableException(f"Failed to format comparison: {str(e)}")
 
-    def explain_recommendation(
-        self, item: RankedItem, user_profile: UserProfile
-    ) -> str:
+    def explain_recommendation(self, item: RankedItem, user_profile: UserProfile) -> str:
         prompt = f"""
 Explain why this item was recommended.
 Item data: {item.model_dump_json()}
@@ -138,7 +84,7 @@ Do NOT fabricate a product title, category, or price if it is not explicitly pro
 Explain the recommendation naturally and conversationally based ONLY on the data above.
 """
         try:
-            return self._call_gemini_text(prompt)
+            return self._call_groq_text(prompt)
         except Exception as e:
             raise LLMUnavailableException(f"Failed to explain recommendation: {str(e)}")
 
@@ -170,7 +116,7 @@ Answer the user's query in detail, referencing specific metrics or metadata from
 Provide a comprehensive and detailed side-by-side summary comparing these items. Highlight their key similarities, differences, and what makes each unique based on the provided audit data and baseline scores.
 """
         try:
-            return self._call_gemini_text(prompt)
+            return self._call_groq_text(prompt)
         except Exception as e:
-            print(f"DEBUG GEMINI EXCEPTION: {repr(e)}")
+            print(f"DEBUG GROQ EXCEPTION: {repr(e)}")
             raise LLMUnavailableException(f"Failed to generate comparison chat: {str(e)}")

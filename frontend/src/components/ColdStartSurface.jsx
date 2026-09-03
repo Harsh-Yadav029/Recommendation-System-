@@ -48,7 +48,6 @@ export function ColdStartSurface({ csrfToken, onComplete, onSkip }) {
   const handleFinish = async () => {
     setLoading(true);
     try {
-      // Call the cold-start endpoint with preferences
       const response = await fetch(`/api/cold-start/${selectedDomain}`, {
         method: "POST",
         credentials: "include",
@@ -57,9 +56,6 @@ export function ColdStartSurface({ csrfToken, onComplete, onSkip }) {
           "CSRF-Token": csrfToken,
         },
         body: JSON.stringify({
-          // The backend expects preference_answers dict with session_items
-          // Since our chips are thematic (not real item IDs), we pass interests as context
-          // and let the backend fall back to baseline recommendations
           interests: selectedInterests,
           session_items: [],
         }),
@@ -68,11 +64,9 @@ export function ColdStartSurface({ csrfToken, onComplete, onSkip }) {
       if (!response.ok) throw new Error("Cold-start request failed");
 
       const data = await response.json();
-      // Transition to Browse with these cold-start results available
       onComplete(selectedDomain, data.items || []);
     } catch (err) {
       console.error("Cold-start error:", err);
-      // Even on error, transition to Browse with the selected domain
       onComplete(selectedDomain, []);
     } finally {
       setLoading(false);
@@ -80,74 +74,75 @@ export function ColdStartSurface({ csrfToken, onComplete, onSkip }) {
   };
 
   return (
-    <div className="min-h-screen bg-background text-on-background flex flex-col items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#F7F5F0] text-[#192A2A] flex flex-col items-center justify-center px-4 relative overflow-hidden font-sans">
       
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-primary rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
-      </div>
+      {/* Background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-[#2D7D7D]/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-2xl relative z-10">
+      <div className="w-full max-w-2xl relative z-10 bg-white border border-[#2D7D7D]/15 rounded-3xl p-8 sm:p-12 shadow-[0_12px_40px_rgba(45,125,125,0.06)] animate-spring">
         
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-primary tracking-tight mb-3">CompareX</h1>
-          <p className="text-lg text-on-surface-variant">Analytical Recommendation Engine</p>
+        <div className="text-center mb-10">
+          <div className="w-12 h-12 mx-auto rounded-2xl bg-[#2D7D7D] text-white flex items-center justify-center mb-3 shadow-md shadow-[#2D7D7D]/25">
+            <span className="material-symbols-outlined text-2xl text-white">swap_horiz</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#192A2A] tracking-tight">CompareX</h1>
+          <p className="text-xs text-[#586666] font-semibold mt-1">Personalized Recommendation Calibration</p>
         </div>
 
         {/* Step Indicator */}
-        <div className="flex items-center justify-center gap-3 mb-10">
-          <div className={`w-2.5 h-2.5 rounded-full transition-colors ${step >= 1 ? 'bg-primary' : 'bg-surface-variant'}`}></div>
-          <div className={`w-8 h-0.5 transition-colors ${step >= 2 ? 'bg-primary' : 'bg-surface-variant'}`}></div>
-          <div className={`w-2.5 h-2.5 rounded-full transition-colors ${step >= 2 ? 'bg-primary' : 'bg-surface-variant'}`}></div>
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <div className={`w-3 h-3 rounded-full transition-all ${step >= 1 ? 'bg-[#2D7D7D] scale-110 shadow-2xs' : 'bg-[#EAE8E4]'}`} />
+          <div className={`w-10 h-1 rounded-full transition-all ${step >= 2 ? 'bg-[#2D7D7D]' : 'bg-[#EAE8E4]'}`} />
+          <div className={`w-3 h-3 rounded-full transition-all ${step >= 2 ? 'bg-[#2D7D7D] scale-110 shadow-2xs' : 'bg-[#EAE8E4]'}`} />
         </div>
 
         {/* Step 1: Choose Domain */}
         {step === 1 && (
-          <div className="animate-[fadeIn_0.3s_ease-out]">
-            <h2 className="text-2xl font-semibold text-on-surface text-center mb-2">What are you exploring today?</h2>
-            <p className="text-sm text-on-surface-variant text-center mb-8">Pick a domain to get personalized recommendations.</p>
+          <div className="animate-spring">
+            <h2 className="text-lg font-black text-[#192A2A] text-center mb-1">Select Domain to Explore</h2>
+            <p className="text-xs text-[#586666] text-center mb-6">Choose an initial dataset to calibrate recommendations.</p>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {DOMAIN_OPTIONS.map(opt => (
                 <button
                   key={opt.id}
                   onClick={() => { setSelectedDomain(opt.id); setSelectedInterests([]); }}
-                  className={`group relative flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all duration-200 cursor-pointer text-left ${
+                  className={`group relative flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all duration-200 cursor-pointer text-left ${
                     selectedDomain === opt.id 
-                      ? 'border-primary bg-primary/5 shadow-md' 
-                      : 'border-outline-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-sm'
+                      ? 'border-[#2D7D7D] bg-[#E7F2F2] ring-2 ring-[#2D7D7D]/20 shadow-xs' 
+                      : 'border-[#2D7D7D]/15 bg-white hover:border-[#2D7D7D]/30'
                   }`}
                 >
-                  <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
-                    selectedDomain === opt.id ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant group-hover:bg-primary/10 group-hover:text-primary'
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                    selectedDomain === opt.id ? 'bg-[#2D7D7D] text-white shadow-xs' : 'bg-[#F7F5F0] text-[#8A8680] group-hover:text-[#2D7D7D]'
                   }`}>
-                    <span className="material-symbols-outlined text-[28px]">{opt.icon}</span>
+                    <span className="material-symbols-outlined text-2xl">{opt.icon}</span>
                   </div>
-                  <h3 className="text-base font-semibold text-on-surface">{opt.label}</h3>
-                  <p className="text-xs text-on-surface-variant text-center leading-relaxed">{opt.description}</p>
+                  <h3 className="text-sm font-extrabold text-[#192A2A]">{opt.label}</h3>
+                  <p className="text-xs text-[#586666] text-center leading-relaxed font-medium">{opt.description}</p>
                 </button>
               ))}
             </div>
 
-            <div className="flex items-center justify-between mt-10">
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-[#2D7D7D]/10">
               <button 
                 onClick={onSkip} 
-                className="text-sm text-on-surface-variant hover:text-on-surface transition-colors font-medium"
+                className="text-xs text-[#586666] hover:text-[#2D7D7D] transition-colors font-bold cursor-pointer"
               >
-                Skip onboarding →
+                Skip Onboarding →
               </button>
               <button
                 onClick={() => step === 1 && selectedDomain && setStep(2)}
                 disabled={!selectedDomain}
-                className={`px-8 py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
+                className={`px-6 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer ${
                   selectedDomain 
-                    ? 'bg-primary text-on-primary hover:bg-surface-tint shadow-sm' 
-                    : 'bg-surface-variant text-on-surface-variant opacity-50 cursor-not-allowed'
+                    ? 'bg-[#2D7D7D] text-white hover:bg-[#1E5C5C] shadow-md shadow-[#2D7D7D]/25' 
+                    : 'bg-[#EAE8E4] text-[#8A8680] cursor-not-allowed'
                 }`}
               >
-                Next <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                <span>Continue</span>
+                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
               </button>
             </div>
           </div>
@@ -155,66 +150,65 @@ export function ColdStartSurface({ csrfToken, onComplete, onSkip }) {
 
         {/* Step 2: Pick Interests */}
         {step === 2 && domainConfig && (
-          <div className="animate-[fadeIn_0.3s_ease-out]">
-            <h2 className="text-2xl font-semibold text-on-surface text-center mb-2">
-              What interests you in <span className="text-primary">{domainConfig.label}</span>?
+          <div className="animate-spring">
+            <h2 className="text-lg font-black text-[#192A2A] text-center mb-1">
+              Select Interests in <span className="text-[#2D7D7D]">{domainConfig.label}</span>
             </h2>
-            <p className="text-sm text-on-surface-variant text-center mb-8">Select any that apply — this helps us tune your first set of recommendations.</p>
+            <p className="text-xs text-[#586666] text-center mb-6">Select candidate categories to prioritize in the catalog.</p>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {domainConfig.interests.map(interest => {
                 const isActive = selectedInterests.includes(interest.label);
                 return (
                   <button
                     key={interest.label}
                     onClick={() => handleInterestToggle(interest.label)}
-                    className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 transition-all duration-200 text-left ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 text-left cursor-pointer ${
                       isActive
-                        ? 'border-primary bg-primary/5 shadow-sm'
-                        : 'border-outline-variant bg-surface-container-lowest hover:border-primary/40'
+                        ? 'border-[#2D7D7D] bg-[#E7F2F2] text-[#2D7D7D] font-bold shadow-2xs'
+                        : 'border-[#2D7D7D]/15 bg-white text-[#192A2A] hover:border-[#2D7D7D]/30'
                     }`}
                   >
-                    <span className={`material-symbols-outlined text-[22px] transition-colors ${isActive ? 'text-primary' : 'text-on-surface-variant'}`}>
+                    <span className={`material-symbols-outlined text-[20px] ${isActive ? 'text-[#2D7D7D]' : 'text-[#8A8680]'}`}>
                       {interest.icon}
                     </span>
-                    <span className={`text-sm font-medium transition-colors ${isActive ? 'text-primary' : 'text-on-surface'}`}>
+                    <span className="text-xs font-bold truncate">
                       {interest.label}
                     </span>
                     {isActive && (
-                      <span className="material-symbols-outlined text-primary text-[18px] ml-auto">check_circle</span>
+                      <span className="material-symbols-outlined text-[#2D7D7D] text-[16px] ml-auto">check_circle</span>
                     )}
                   </button>
                 );
               })}
             </div>
 
-            <div className="flex items-center justify-between mt-10">
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-[#2D7D7D]/10">
               <button 
                 onClick={() => setStep(1)} 
-                className="text-sm text-on-surface-variant hover:text-on-surface transition-colors font-medium flex items-center gap-1"
+                className="text-xs text-[#586666] hover:text-[#192A2A] transition-colors font-bold flex items-center gap-1 cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[18px]">arrow_back</span> Back
+                <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                <span>Back</span>
               </button>
               <div className="flex items-center gap-4">
                 <button 
                   onClick={onSkip} 
-                  className="text-sm text-on-surface-variant hover:text-on-surface transition-colors font-medium"
+                  className="text-xs text-[#586666] hover:text-[#2D7D7D] transition-colors font-bold cursor-pointer"
                 >
                   Skip
                 </button>
                 <button
                   onClick={handleFinish}
                   disabled={loading}
-                  className="px-8 py-2.5 rounded-lg font-semibold text-sm bg-primary text-on-primary hover:bg-surface-tint shadow-sm transition-all flex items-center gap-2 disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl font-bold text-xs bg-[#2D7D7D] hover:bg-[#1E5C5C] text-white shadow-md shadow-[#2D7D7D]/25 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {loading ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin"></span>
-                      Loading...
-                    </>
+                    <span>Calibrating...</span>
                   ) : (
                     <>
-                      Get Recommendations <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
+                      <span>Get Recommendations</span>
+                      <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
                     </>
                   )}
                 </button>
