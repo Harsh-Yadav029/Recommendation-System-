@@ -132,7 +132,8 @@ export function LoginSurface({ onLoginSuccess, onSwitchToRegister, onBack }) {
                 theme="outline"
                 size="large"
                 shape="pill"
-                width="100%"
+                width="360"
+                logo_alignment="center"
               />
             </div>
           </div>
