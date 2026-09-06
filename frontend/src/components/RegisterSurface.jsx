@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { GoogleLogin } from '@react-oauth/google';
 
 export function RegisterSurface({ onRegisterSuccess, onSwitchToLogin, onBack }) {
   const [email, setEmail] = useState('');
@@ -24,6 +25,25 @@ export function RegisterSurface({ onRegisterSuccess, onSwitchToLogin, onBack }) 
         throw new Error(data.error || 'Failed to register');
       }
 
+      onRegisterSuccess(data.user);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: credentialResponse.credential }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to authenticate with Google');
       onRegisterSuccess(data.user);
     } catch (err) {
       setError(err.message);
@@ -122,6 +142,22 @@ export function RegisterSurface({ onRegisterSuccess, onSwitchToLogin, onBack }) 
                 <span>{loading ? 'Creating Account...' : 'Create Account'}</span>
                 <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
               </button>
+            </div>
+            
+            <div className="mt-5 flex flex-col items-center gap-4">
+              <div className="w-full flex items-center justify-between text-[#8A8680] text-[10px] font-bold uppercase tracking-wider">
+                <hr className="w-full border-t border-[#2D7D7D]/15" />
+                <span className="px-3 bg-white relative z-10">or continue with</span>
+                <hr className="w-full border-t border-[#2D7D7D]/15" />
+              </div>
+              <div className="w-full flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError('Google Login Failed')}
+                  theme="outline"
+                  size="large"
+                />
+              </div>
             </div>
           </form>
 

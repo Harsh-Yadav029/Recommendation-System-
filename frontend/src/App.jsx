@@ -7,6 +7,7 @@ import { RegisterSurface } from './components/RegisterSurface';
 import { LandingSurface } from './components/LandingSurface';
 import { AboutSurface } from './components/AboutSurface';
 import { FeaturesSurface } from './components/FeaturesSurface';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 function App() {
   const [authReady, setAuthReady] = useState(false);
@@ -68,7 +69,8 @@ function App() {
 
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || 'dummy-client-id'}>
+      <div className="min-h-screen flex flex-col bg-background">
       {/* Main Content Area */}
       <main className="flex-1 relative overflow-hidden flex flex-col">
         {currentView === 'landing' && (
@@ -157,6 +159,7 @@ function App() {
 
       </main>
     </div>
+    </GoogleOAuthProvider>
   );
 }
 

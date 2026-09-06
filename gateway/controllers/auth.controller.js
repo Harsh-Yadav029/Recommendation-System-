@@ -1,5 +1,8 @@
 const { User } = require('../models/user.model');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'dummy-client-id');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const ACCESS_TOKEN_EXPIRY = '15m';
@@ -120,8 +123,67 @@ const logoutUser = (req, res) => {
   return res.status(200).json({ status: 'success', message: 'Logged out successfully' });
 };
 
+const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ error: 'Google credential missing' });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID || 'dummy-client-id'
+    });
+    
+    const payload = ticket.getPayload();
+    const { email, sub: googleId } = payload;
+    
+    let user = await User.findOne({ $or: [{ email }, { googleId }] });
+    
+    if (user) {
+      if (!user.googleId) {
+        user.googleId = googleId;
+        await user.save();
+      }
+    } else {
+      user = await User.create({ email, googleId });
+    }
+
+    let sessionId;
+    const token = req.cookies.access_token;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        sessionId = decoded.session_id;
+      } catch (e) {}
+    }
+    if (!sessionId) {
+      const crypto = require('crypto');
+      sessionId = crypto.randomUUID();
+    }
+
+    const sessionPayload = { session_id: sessionId, user_id: user._id, email: user.email, role: 'registered' };
+    const accessToken = jwt.sign(sessionPayload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
+    const refreshToken = jwt.sign(sessionPayload, JWT_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY });
+
+    res.cookie('access_token', accessToken, { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 });
+    res.cookie('refresh_token', refreshToken, { ...COOKIE_OPTIONS, maxAge: 7 * 24 * 60 * 60 * 1000 });
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'User logged in successfully with Google',
+      user: { id: user._id, email: user.email }
+    });
+
+  } catch (error) {
+    console.error('Google login error:', error);
+    return res.status(500).json({ error: 'Internal Server Error: ' + error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
+  googleLogin,
   logoutUser
 };

@@ -1,7 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { registerUser, loginUser, logoutUser } = require('../controllers/auth.controller');
+const { registerUser, loginUser, googleLogin, logoutUser } = require('../controllers/auth.controller');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -88,6 +88,7 @@ router.post('/refresh', (req, res) => {
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/google', googleLogin);
 router.post('/logout', logoutUser);
 
 module.exports = router;

@@ -11,9 +11,14 @@ const userSchema = new mongoose.Schema(
       trim: true,
       match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email address']
     },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true
+    },
     password: {
       type: String,
-      required: [true, 'Password is required'],
+      required: [function() { return !this.googleId; }, 'Password is required'],
       minlength: [8, 'Password must be at least 8 characters long']
     }
   },
@@ -21,9 +26,10 @@ const userSchema = new mongoose.Schema(
 );
 
 // Hash password before saving
-userSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password") || !this.password) return next();
   this.password = await bcrypt.hash(this.password, 10);
+  next();
 });
 
 // Compare password method
