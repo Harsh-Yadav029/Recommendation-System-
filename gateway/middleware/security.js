@@ -5,7 +5,9 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 // Helmet setup
-const helmetMiddleware = helmet();
+const helmetMiddleware = helmet({
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
+});
 
 // CORS setup
 const allowedOrigins = [

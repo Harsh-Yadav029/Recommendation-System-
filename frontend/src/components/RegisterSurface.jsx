@@ -147,7 +147,7 @@ export function RegisterSurface({ onRegisterSuccess, onSwitchToLogin, onBack }) 
             <div className="mt-5 flex flex-col items-center gap-4">
               <div className="w-full flex items-center justify-between text-[#8A8680] text-[10px] font-bold uppercase tracking-wider">
                 <hr className="w-full border-t border-[#2D7D7D]/15" />
-                <span className="px-3 bg-white relative z-10">or continue with</span>
+                <span className="px-3 bg-white relative z-10 whitespace-nowrap">or continue with</span>
                 <hr className="w-full border-t border-[#2D7D7D]/15" />
               </div>
               <div className="w-full flex justify-center">
@@ -156,6 +156,8 @@ export function RegisterSurface({ onRegisterSuccess, onSwitchToLogin, onBack }) 
                   onError={() => setError('Google Login Failed')}
                   theme="outline"
                   size="large"
+                  shape="pill"
+                  width="100%"
                 />
               </div>
             </div>
