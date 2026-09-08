@@ -274,7 +274,7 @@ class SteamService(BaseRecommenderService):
         if db.name == 'test' and uri is not None and "comparex" in uri:
             db = client["comparex"]
             
-        target = db.items.find_one({"domain": "steam", "item_id": str(item_id)})
+        target = db.items.find_one({"domain": "bookcrossing", "item_id": item_id})
         if not target:
             return RecommendationResponse(items=[])
             
@@ -294,7 +294,8 @@ class SteamService(BaseRecommenderService):
         ranked_items = []
         rank = 1
         for match in matches:
-            if match["id"] == str(item_id):
+            raw_id = match["id"].replace("steam_", "")
+            if raw_id == item_id:
                 continue
             if rank > k:
                 break
@@ -303,12 +304,12 @@ class SteamService(BaseRecommenderService):
             score = float(match.get("score", 0.0))
             
             # Fetch metadata from MongoDB to match the previous structure
-            meta_doc = db.items.find_one({"domain": "steam", "item_id": match["id"]})
+            meta_doc = db.items.find_one({"domain": "steam", "item_id": raw_id})
             metadata = meta_doc.get("metadata", {}) if meta_doc else {}
             
             ranked_items.append(
                 RankedItem(
-                    item_id=str(match["id"]),
+                    item_id=raw_id,
                     title=title,
                     score=score,
                     rank=rank,
