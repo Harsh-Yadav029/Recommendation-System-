@@ -131,7 +131,7 @@ export function LoginSurface({ onLoginSuccess, onSwitchToRegister, onBack }) {
                 onError={() => setError('Google Login Failed')}
                 theme="outline"
                 size="large"
-                shape="pill"
+                shape="rectangular"
                 width="360"
                 logo_alignment="center"
               />

@@ -5,13 +5,14 @@ from app.models.schemas import UserProfile, Constraints, RecommendationResponse,
 from app.contracts.recommender import BaseRecommenderService
 from app.domains.steam_service import SteamService
 from app.domains.bookcrossing_service import BookCrossingService
+from app.domains.anime_service import AnimeService
 
 router = APIRouter()
 
 _services: Dict[str, BaseRecommenderService] = {}
 
 def get_enabled_domains() -> List[str]:
-    return [d.strip() for d in os.environ.get("ENABLED_DOMAINS", "steam,bookcrossing").split(",")]
+    return [d.strip() for d in os.environ.get("ENABLED_DOMAINS", "steam,bookcrossing,anime").split(",")]
 
 def get_service(domain: str) -> BaseRecommenderService:
     if domain not in get_enabled_domains():
@@ -22,6 +23,8 @@ def get_service(domain: str) -> BaseRecommenderService:
             _services[domain] = SteamService()
         elif domain == "bookcrossing":
             _services[domain] = BookCrossingService()
+        elif domain == "anime":
+            _services[domain] = AnimeService()
         else:
             raise HTTPException(status_code=400, detail=f"Domain '{domain}' service not found.")
             

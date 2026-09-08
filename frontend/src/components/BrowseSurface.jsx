@@ -84,6 +84,10 @@ export function BrowseSurface({
       genre: ['Action', 'Adventure', 'RPG', 'Strategy', 'Sports', 'Multiplayer'],
       rating: ['80-89', '90-100'],
       platform: ['PC', 'Console', 'Mobile']
+    },
+    anime: {
+      genre: ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Sci-Fi', 'Romance'],
+      type: ['TV', 'Movie', 'OVA', 'Special']
     }
   };
 
@@ -184,7 +188,7 @@ export function BrowseSurface({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={`Search ${selectedDomain === 'bookcrossing' ? 'books, authors...' : 'games, titles...'}`}
+                placeholder={`Search ${selectedDomain === 'bookcrossing' ? 'books, authors...' : selectedDomain === 'anime' ? 'anime, studios...' : 'games, titles...'}`}
                 className="w-full pl-10 pr-9 py-2 bg-[#F7F5F0] hover:bg-white focus:bg-white border border-[#2D7D7D]/15 focus:border-[#2D7D7D] rounded-xl text-xs font-semibold text-[#192A2A] placeholder:text-[#8A8680] focus:outline-none focus:ring-2 focus:ring-[#2D7D7D]/10 transition-all shadow-2xs"
               />
               {searchQuery && (
@@ -335,6 +339,19 @@ export function BrowseSurface({
                   }`}
                 >
                   Steam
+                </button>
+
+                {/* Tab: Anime */}
+                <button
+                  type="button"
+                  onClick={() => handleDomainChange('anime')}
+                  className={`px-5 py-3 text-sm transition-all cursor-pointer relative ${
+                    selectedDomain === 'anime'
+                      ? 'text-[#192A2A] font-extrabold bg-white rounded-t-xl border-t border-x border-[#2D7D7D]/15 -mb-[1px] shadow-2xs after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#2D7D7D]'
+                      : 'text-[#586666] hover:text-[#192A2A] font-bold'
+                  }`}
+                >
+                  Anime
                 </button>
 
                 {searchQuery && (
@@ -545,6 +562,15 @@ export function BrowseSurface({
               >
                 <span className="material-symbols-outlined text-[18px]">sports_esports</span>
                 <span>Steam Games</span>
+              </button>
+              <button
+                onClick={() => { handleDomainChange('anime'); setSidebarMobileOpen(false); }}
+                className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center gap-2.5 ${
+                  selectedDomain === 'anime' ? 'bg-[#E7F2F2] text-[#2D7D7D]' : 'bg-[#F7F5F0]'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">movie</span>
+                <span>Anime</span>
               </button>
             </div>
 

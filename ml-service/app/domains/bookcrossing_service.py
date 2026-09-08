@@ -30,7 +30,7 @@ class BookCrossingService(BaseRecommenderService):
         if os.path.exists(model_path):
             try:
                 with open(model_path, "rb") as f:
-                    artifact = pickle.load(f)
+                    artifact = pickle.load(f)  # nosec B301
                     self.model = artifact["model"]
                     self.trainset = artifact["trainset"]
             except Exception as e:
@@ -56,7 +56,7 @@ class BookCrossingService(BaseRecommenderService):
         res = {}
         for iid in item_ids:
             doc = dict(self.item_metadata.get(iid, {}))
-            h = int(hashlib.md5(iid.encode()).hexdigest(), 16)
+            h = int(hashlib.md5(iid.encode(), usedforsecurity=False).hexdigest(), 16)
             categories = ['Fiction', 'Non-Fiction', 'Academic', 'Poetry']
             
             if "metadata" not in doc:
@@ -173,7 +173,7 @@ class BookCrossingService(BaseRecommenderService):
         categories = ['Fiction', 'Non-Fiction', 'Academic', 'Poetry']
         for item_id in item_ids:
             meta = metadata_map.get(item_id, {})
-            h = int(hashlib.md5(item_id.encode()).hexdigest(), 16)
+            h = int(hashlib.md5(item_id.encode(), usedforsecurity=False).hexdigest(), 16)
             category = meta.get("metadata", {}).get("category") or categories[h % len(categories)]
             # BookCrossing has rich metadata: Title, Author, Year, Publisher, Cover Images
             item_data = {
@@ -229,6 +229,8 @@ class BookCrossingService(BaseRecommenderService):
         from pymongo import MongoClient
         import os
         from dotenv import load_dotenv
+        from app.core.pinecone_client import PineconeClient
+        
         load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
         uri = os.environ.get("MONGODB_URI", "")
         client = MongoClient(uri or "mongodb://localhost:27017")
@@ -236,53 +238,49 @@ class BookCrossingService(BaseRecommenderService):
         if db.name == 'test' and "comparex" in uri:
             db = client["comparex"]
             
-        # Get target item embedding
         target = db.items.find_one({"domain": "bookcrossing", "item_id": str(item_id)})
-        if not target or "embedding" not in target:
+        if not target:
             return RecommendationResponse(items=[])
             
-        vector = target["embedding"]
+        pc = PineconeClient.get_instance()
+        prefixed_id = f"bookcrossing_{item_id}"
+        vectors = pc.fetch_vectors([prefixed_id])
         
-        search_pipeline = [
-            {
-                "$vectorSearch": {
-                    "index": "items_embedding_vector_index",
-                    "path": "embedding",
-                    "queryVector": vector,
-                    "numCandidates": k * 4,
-                    "limit": k + 1
-                }
-            },
-            {
-                "$match": {
-                    "item_id": {"$ne": str(item_id)} # Exclude itself
-                }
-            },
-            {"$limit": k},
-            {
-                "$project": {
-                    "item_id": 1,
-                    "title": 1,
-                    "metadata": 1,
-                    "score": {"$meta": "vectorSearchScore"}
-                }
-            }
-        ]
-        
-        results = db.items.aggregate(search_pipeline)
+        if prefixed_id in vectors and "values" in vectors[prefixed_id]:
+            vector = vectors[prefixed_id]["values"]
+        elif "embedding" in target:
+            vector = target["embedding"]
+        else:
+            return RecommendationResponse(items=[])
+            
+        matches = pc.query(vector, top_k=k+1, filter_dict={"domain": "bookcrossing"})
         
         ranked_items = []
-        for rank, res in enumerate(results, 1):
+        rank = 1
+        for match in matches:
+            if match["id"] == str(item_id):
+                continue
+            if rank > k:
+                break
+                
+            title = match.get("metadata", {}).get("title", "Unknown")
+            score = float(match.get("score", 0.0))
+            
+            meta_doc = db.items.find_one({"domain": "bookcrossing", "item_id": match["id"]})
+            metadata = meta_doc.get("metadata", {}) if meta_doc else {}
+            
             ranked_items.append(
                 RankedItem(
-                    item_id=str(res.get("item_id")),
-                    title=res.get("title", "Unknown"),
-                    score=float(res.get("score", 0.0)),
+                    item_id=str(match["id"]),
+                    title=title,
+                    score=score,
                     rank=rank,
-                    similarity_basis="semantically similar based on title/metadata",
+                    metadata=metadata,
+                    similarity_basis="semantically similar based on title/metadata (Pinecone)",
                     matched_constraints=[],
                     domain="bookcrossing"
                 )
             )
+            rank += 1
             
         return RecommendationResponse(items=ranked_items)

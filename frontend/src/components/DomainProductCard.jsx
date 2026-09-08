@@ -7,7 +7,7 @@ export function DomainProductCard({ domain, item, isSelected, onToggleSelect }) 
     if (item.score <= 1) {
       percentage = Math.round(item.score * 100);
     } else {
-      const maxScore = domain === 'bookcrossing' ? 10 : (domain === 'steam' ? 30000 : 1000);
+      const maxScore = domain === 'bookcrossing' || domain === 'anime' ? 10 : (domain === 'steam' ? 30000 : 1000);
       percentage = Math.min(100, Math.round((item.score / maxScore) * 100));
     }
   }
@@ -18,6 +18,13 @@ export function DomainProductCard({ domain, item, isSelected, onToggleSelect }) 
       case 'steam':
         return {
           label: 'Steam Game',
+          scoreLabel: 'Match Score',
+          accent: 'from-[#2D7D7D] to-[#6B9B7A]',
+          badgeBg: 'bg-[#E7F2F2] text-[#2D7D7D] border-[#2D7D7D]/20',
+        };
+      case 'anime':
+        return {
+          label: 'Anime Series',
           scoreLabel: 'Match Score',
           accent: 'from-[#2D7D7D] to-[#6B9B7A]',
           badgeBg: 'bg-[#E7F2F2] text-[#2D7D7D] border-[#2D7D7D]/20',
@@ -36,9 +43,9 @@ export function DomainProductCard({ domain, item, isSelected, onToggleSelect }) 
   };
 
   const theme = getDomainTheme();
-  const title = item.title || item.metadata?.title || (domain === 'steam' ? `Game #${item.item_id}` : `Item #${item.item_id}`);
-  const authorOrDev = item.metadata?.author || item.metadata?.publisher || item.metadata?.developer;
-  const year = item.metadata?.year || item.metadata?.release_date;
+  const title = item.title || item.metadata?.title || item.metadata?.name || (domain === 'steam' ? `Game #${item.item_id}` : `Item #${item.item_id}`);
+  const authorOrDev = domain === 'anime' ? item.metadata?.type : (item.metadata?.author || item.metadata?.publisher || item.metadata?.developer || item.metadata?.studio);
+  const year = domain === 'anime' ? (item.metadata?.episodes ? `${item.metadata.episodes} Ep` : '') : (item.metadata?.year || item.metadata?.release_date || item.metadata?.aired);
   const category = item.metadata?.category || item.metadata?.genre;
 
   // Calculate star count (1 to 5)

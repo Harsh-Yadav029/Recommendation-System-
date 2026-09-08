@@ -18,7 +18,7 @@
     "cookie": "^2.0.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
-    "csurf": "^1.11.0",
+    "csurf": "^1.2.2",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.6.2",
@@ -33,7 +33,7 @@
     "chai": "^6.2.2",
     "eslint": "^10.8.1",
     "globals": "^17.11.0",
-    "mocha": "^11.8.0",
+    "mocha": "^12.0.0",
     "nodemon": "^3.1.14",
     "supertest": "^7.2.2"
   }

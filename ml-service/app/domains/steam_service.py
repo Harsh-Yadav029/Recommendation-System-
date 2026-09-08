@@ -33,7 +33,7 @@ class SteamService(BaseRecommenderService):
         if os.path.exists(model_path):
             try:
                 with open(model_path, "rb") as f:
-                    artifact = pickle.load(f)
+                    artifact = pickle.load(f)  # nosec B301
                     self.model = artifact["model"]
                     self.user_to_idx = artifact["user_to_idx"]
                     self.item_to_idx = artifact["item_to_idx"]
@@ -65,7 +65,7 @@ class SteamService(BaseRecommenderService):
         res = {}
         for iid in item_ids:
             doc = dict(self.item_metadata.get(iid, {}))
-            h = int(hashlib.md5(iid.encode()).hexdigest(), 16)
+            h = int(hashlib.md5(iid.encode(), usedforsecurity=False).hexdigest(), 16)
             genres = ['Action', 'Adventure', 'RPG', 'Strategy', 'Sports', 'Multiplayer']
             ratings = ['80-89', '90-100']
             platforms = ['PC', 'Console', 'Mobile']
@@ -109,42 +109,68 @@ class SteamService(BaseRecommenderService):
         return RecommendationResponse(items=results[offset:offset+limit])
         
     def get_recommendations(self, user_profile: UserProfile, constraints: Constraints) -> RecommendationResponse:
+        from app.core.semantic_recommender import get_semantic_recommendations
+        
         def _fetch(c: Constraints) -> RecommendationResponse:
-            if self.model is None or user_profile.user_id not in self.user_to_idx:
-                return self._get_baseline_recommendations(limit=c.limit, offset=c.offset, constraints=c)
-                
-            u_idx = self.user_to_idx[user_profile.user_id]
+            results = []
             
-            try:
-                ids, scores = self.model.recommend(u_idx, None, N=c.offset + c.limit * 10, filter_already_liked_items=False)
-                
-                results = []
-                if isinstance(ids, np.ndarray):
-                    raw_ids = [str(self.idx_to_item[ids[i]]) for i in range(len(ids))]
-                    metadata_map = self._get_item_metadata(raw_ids)
+            if self.model is not None and user_profile.user_id in self.user_to_idx:
+                u_idx = self.user_to_idx[user_profile.user_id]
+                try:
+                    ids, scores = self.model.recommend(u_idx, None, N=c.offset + c.limit * 10, filter_already_liked_items=False)
+                    if isinstance(ids, np.ndarray):
+                        raw_ids = [str(self.idx_to_item[ids[i]]) for i in range(len(ids))]
+                        metadata_map = self._get_item_metadata(raw_ids)
 
-                    for i in range(len(ids)):
-                        item_id = raw_ids[i]
-                        meta = metadata_map.get(item_id, {})
+                        for i in range(len(ids)):
+                            item_id = raw_ids[i]
+                            meta = metadata_map.get(item_id, {})
+                            m = meta.get("metadata", {})
+                            
+                            if c.genre and c.genre != m.get("genre"): continue
+                            if c.rating and c.rating != m.get("rating"): continue
+                            if c.platform and c.platform != m.get("platform"): continue
+
+                            results.append(RankedItem(
+                                item_id=item_id,
+                                score=float(scores[i]),
+                                matched_constraints=[],
+                                similarity_basis="collaborative filtering based on similar purchase/play patterns",
+                                domain=self.domain,
+                                title=meta.get("title", f"Steam Item #{item_id}"),
+                                metadata=m
+                            ))
+                except Exception as e:
+                    print(f"Error mapping steam recommendation: {e}")
+
+            if user_profile.history:
+                try:
+                    sem_results = get_semantic_recommendations(user_profile.history, self.domain, top_k=c.limit)
+                    metadata_map = self._get_item_metadata([item.item_id for item in sem_results])
+                    for item in sem_results:
+                        meta = metadata_map.get(item.item_id, {})
                         m = meta.get("metadata", {})
-                        
                         if c.genre and c.genre != m.get("genre"): continue
                         if c.rating and c.rating != m.get("rating"): continue
                         if c.platform and c.platform != m.get("platform"): continue
-
-                        results.append(RankedItem(
-                            item_id=item_id,
-                            score=float(scores[i]),
-                            matched_constraints=[],
-                            similarity_basis="collaborative filtering based on similar purchase/play patterns",
-                            domain=self.domain,
-                            title=meta.get("title", f"Steam Item #{item_id}"),
-                            metadata=m
-                        ))
-                
-                return RecommendationResponse(items=results[c.offset:c.offset+c.limit])
-            except Exception:
+                        item.metadata = m
+                        item.title = meta.get("title", item.title)
+                        results.append(item)
+                except Exception as e:
+                    print(f"Semantic fallback failed: {e}")
+                    
+            if not results:
                 return self._get_baseline_recommendations(limit=c.limit, offset=c.offset, constraints=c)
+                
+            seen = set()
+            dedup = []
+            for r in results:
+                if r.item_id not in seen:
+                    seen.add(r.item_id)
+                    dedup.append(r)
+                    
+            dedup.sort(key=lambda x: x.score, reverse=True)
+            return RecommendationResponse(items=dedup[c.offset:c.offset+c.limit])
                 
         return relax_constraints_and_retry(_fetch, constraints, target_count=constraints.limit)
 
@@ -158,7 +184,7 @@ class SteamService(BaseRecommenderService):
         genres = ['Action', 'Adventure', 'RPG', 'Strategy', 'Sports', 'Multiplayer']
         for item_id in item_ids:
             meta = metadata_map.get(item_id, {})
-            h = int(hashlib.md5(item_id.encode()).hexdigest(), 16)
+            h = int(hashlib.md5(item_id.encode(), usedforsecurity=False).hexdigest(), 16)
             genre = meta.get("metadata", {}).get("genre") or genres[h % len(genres)]
             item_data = {
                 "item_id": item_id,
@@ -195,7 +221,7 @@ class SteamService(BaseRecommenderService):
                             if sim_item_id not in session_items:
                                 scores[sim_item_id] = scores.get(sim_item_id, 0) + sim_score
                 except Exception as e:
-                    pass
+                    print(f"Error mapping similar item in steam: {e}")
                     
         if not scores:
             return self._get_baseline_recommendations(24)
@@ -239,6 +265,8 @@ class SteamService(BaseRecommenderService):
         from pymongo import MongoClient
         import os
         from dotenv import load_dotenv
+        from app.core.pinecone_client import PineconeClient
+        
         load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
         uri = os.environ.get("MONGODB_URI")
         client = MongoClient(uri)
@@ -247,51 +275,49 @@ class SteamService(BaseRecommenderService):
             db = client["comparex"]
             
         target = db.items.find_one({"domain": "steam", "item_id": str(item_id)})
-        if not target or "embedding" not in target:
+        if not target:
             return RecommendationResponse(items=[])
             
-        vector = target["embedding"]
+        pc = PineconeClient.get_instance()
+        prefixed_id = f"steam_{item_id}"
+        vectors = pc.fetch_vectors([prefixed_id])
         
-        search_pipeline = [
-            {
-                "$vectorSearch": {
-                    "index": "items_embedding_vector_index",
-                    "path": "embedding",
-                    "queryVector": vector,
-                    "numCandidates": k * 4,
-                    "limit": k + 1
-                }
-            },
-            {
-                "$match": {
-                    "item_id": {"$ne": str(item_id)} # Exclude itself
-                }
-            },
-            {"$limit": k},
-            {
-                "$project": {
-                    "item_id": 1,
-                    "title": 1,
-                    "metadata": 1,
-                    "score": {"$meta": "vectorSearchScore"}
-                }
-            }
-        ]
-        
-        results = db.items.aggregate(search_pipeline)
+        if prefixed_id in vectors and "values" in vectors[prefixed_id]:
+            vector = vectors[prefixed_id]["values"]
+        elif "embedding" in target:
+            vector = target["embedding"]
+        else:
+            return RecommendationResponse(items=[])
+            
+        matches = pc.query(vector, top_k=k+1, filter_dict={"domain": "steam"})
         
         ranked_items = []
-        for rank, res in enumerate(results, 1):
+        rank = 1
+        for match in matches:
+            if match["id"] == str(item_id):
+                continue
+            if rank > k:
+                break
+                
+            title = match.get("metadata", {}).get("title", "Unknown")
+            score = float(match.get("score", 0.0))
+            
+            # Fetch metadata from MongoDB to match the previous structure
+            meta_doc = db.items.find_one({"domain": "steam", "item_id": match["id"]})
+            metadata = meta_doc.get("metadata", {}) if meta_doc else {}
+            
             ranked_items.append(
                 RankedItem(
-                    item_id=str(res.get("item_id")),
-                    title=res.get("title", "Unknown"),
-                    score=float(res.get("score", 0.0)),
+                    item_id=str(match["id"]),
+                    title=title,
+                    score=score,
                     rank=rank,
-                    similarity_basis="semantically similar based on title/metadata",
+                    metadata=metadata,
+                    similarity_basis="semantically similar based on title/metadata (Pinecone)",
                     matched_constraints=[],
                     domain="steam"
                 )
             )
+            rank += 1
             
         return RecommendationResponse(items=ranked_items)

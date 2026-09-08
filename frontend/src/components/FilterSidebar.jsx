@@ -12,6 +12,10 @@ export function FilterSidebar({ domain, filters, setFilters, onNavigate }) {
       genre: ['Action', 'Adventure', 'RPG', 'Strategy', 'Sports', 'Multiplayer'],
       rating: ['80-89', '90-100'],
       platform: ['PC', 'Console', 'Mobile']
+    },
+    anime: {
+      genre: ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Sci-Fi', 'Romance'],
+      type: ['TV', 'Movie', 'OVA', 'Special']
     }
   };
 
@@ -25,6 +29,7 @@ export function FilterSidebar({ domain, filters, setFilters, onNavigate }) {
   const getDomainIcon = () => {
     switch (domain) {
       case 'steam': return 'sports_esports';
+      case 'anime': return 'movie';
       case 'bookcrossing':
       default: return 'menu_book';
     }

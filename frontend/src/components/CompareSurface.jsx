@@ -115,11 +115,13 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
 
   const renderCreatorLabel = () => {
     if (domain === "bookcrossing") return "Author";
+    if (domain === "anime") return "Format / Type";
     return "Genre / Category";
   };
 
   const getCreatorValue = (item) => {
     if (domain === "bookcrossing") return item.metadata?.author || item.author;
+    if (domain === "anime") return item.metadata?.type || "Unknown Format";
     return item.category || item.metadata?.genre;
   };
 
@@ -229,9 +231,13 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
                   </div>
 
                   <img 
-                    src={(item.image_url_l || item.image_url_m || item.header_image || item.image_url || 'https://via.placeholder.com/300x400?text=No+Image').replace(/^http:\/\//i, 'https://')} 
+                    src={(item.image_url_l || item.image_url_m || item.header_image || item.image_url || 'https://placehold.co/300x400/E7F2F2/2D7D7D?text=No+Image').replace(/^http:\/\//i, 'https://')} 
                     alt={item.title || item.name}
                     className="w-full h-40 object-contain rounded-xl bg-white border border-[#2D7D7D]/10 mb-4 shadow-sm p-1"
+                    onError={(e) => { 
+                      e.currentTarget.onerror = null; 
+                      e.currentTarget.src = 'https://placehold.co/300x400/E7F2F2/2D7D7D?text=No+Image'; 
+                    }}
                   />
 
                   <h3 className="text-sm font-extrabold text-[#192A2A] line-clamp-2 mb-1" title={item.title || item.name}>
@@ -269,7 +275,7 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
                 {items.map(i => {
                   const catVal = (i.category && String(i.category).toLowerCase() !== "not specified") ? i.category : (
                     (i.metadata?.category && String(i.metadata.category).toLowerCase() !== "not specified") ? i.metadata.category : (
-                      (i.metadata?.genre && String(i.metadata.genre).toLowerCase() !== "not specified") ? i.metadata.genre : (domain === 'steam' ? 'Action' : 'Fiction')
+                      (i.metadata?.genre && String(i.metadata.genre).toLowerCase() !== "not specified") ? i.metadata.genre : (domain === 'steam' ? 'Action' : (domain === 'anime' ? 'TV' : 'Fiction'))
                     )
                   );
                   return (
@@ -281,13 +287,18 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
               </div>
             </div>
 
-            {/* Row 3: Year / Release Date */}
+            {/* Row 3: Year / Release Date (or Episodes for Anime) */}
             <div className="bg-[#F7F5F0] rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-[#2D7D7D]/10">
-              <span className="text-xs font-bold text-[#192A2A] w-44 shrink-0">Release / Publication</span>
+              <span className="text-xs font-bold text-[#192A2A] w-44 shrink-0">
+                {domain === 'anime' ? 'Episodes' : 'Release / Publication'}
+              </span>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-1 w-full">
                 {items.map(i => (
                   <div key={i.item_id} className="text-xs font-semibold text-[#192A2A] truncate">
-                    {i.metadata?.year || i.metadata?.release_date || i.year || <span className="text-[#8A8680] italic">Not specified</span>}
+                    {domain === 'anime' 
+                      ? (i.metadata?.episodes || i.episodes || <span className="text-[#8A8680] italic">Not specified</span>)
+                      : (i.metadata?.year || i.metadata?.release_date || i.metadata?.aired || i.year || <span className="text-[#8A8680] italic">Not specified</span>)
+                    }
                   </div>
                 ))}
               </div>
@@ -333,9 +344,13 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
                         {items.map(i => (
                           <div key={i.item_id} className="bg-white p-2.5 rounded-xl border border-[#2D7D7D]/15 shadow-2xs flex flex-col gap-2 items-center text-center">
                             <img 
-                              src={(i.image_url_l || i.image_url_m || i.header_image || i.image_url || 'https://via.placeholder.com/300x400?text=No+Image').replace(/^http:\/\//i, 'https://')} 
+                              src={(i.image_url_l || i.image_url_m || i.header_image || i.image_url || 'https://placehold.co/300x400/E7F2F2/2D7D7D?text=No+Image').replace(/^http:\/\//i, 'https://')} 
                               alt={i.title || i.name}
                               className="w-full h-28 object-contain rounded-lg bg-white p-1"
+                              onError={(e) => { 
+                                e.currentTarget.onerror = null; 
+                                e.currentTarget.src = 'https://placehold.co/300x400/E7F2F2/2D7D7D?text=No+Image'; 
+                              }}
                             />
                             <div>
                               <div className="font-bold text-[10px] text-[#192A2A] line-clamp-2 leading-tight">{i.title || i.name}</div>

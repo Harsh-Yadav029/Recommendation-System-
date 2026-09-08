@@ -9,12 +9,14 @@ from app.models.schemas import (
 )
 from app.llm.gemini_client import GeminiClient
 from app.llm.groq_client import GroqClient
+from app.llm.claude_client import ClaudeClient
 from app.core.exceptions import LLMUnavailableException
 
 class HybridLLMClient(BaseLLMClient):
     def __init__(self):
         self.gemini = GeminiClient()
         self.groq = GroqClient()
+        self.claude = ClaudeClient()
 
     def classify_intent(self, user_message: str, history: list) -> IntentResult:
         """
@@ -39,33 +41,45 @@ class HybridLLMClient(BaseLLMClient):
 
     def format_comparison(self, comparison_data: ComparisonTable) -> str:
         """
-        Conversational Logic: Primary is Groq. Fallback is Gemini.
+        Conversational Logic: Primary is Claude. Fallback is Groq, then Gemini.
         """
         try:
-            print("Routing to Groq (Primary) for format_comparison...")
-            return self.groq.format_comparison(comparison_data)
+            print("Routing to Claude (Primary) for format_comparison...")
+            return self.claude.format_comparison(comparison_data)
         except Exception as e:
-            print(f"Groq failed: {e}. Falling back to Gemini...")
-            return self.gemini.format_comparison(comparison_data)
+            print(f"Claude failed: {e}. Falling back to Groq...")
+            try:
+                return self.groq.format_comparison(comparison_data)
+            except Exception as e2:
+                print(f"Groq failed: {e2}. Falling back to Gemini...")
+                return self.gemini.format_comparison(comparison_data)
 
     def explain_recommendation(self, item: RankedItem, user_profile: UserProfile) -> str:
         """
-        Conversational Logic: Primary is Groq. Fallback is Gemini.
+        Conversational Logic: Primary is Claude. Fallback is Groq, then Gemini.
         """
         try:
-            print("Routing to Groq (Primary) for explain_recommendation...")
-            return self.groq.explain_recommendation(item, user_profile)
+            print("Routing to Claude (Primary) for explain_recommendation...")
+            return self.claude.explain_recommendation(item, user_profile)
         except Exception as e:
-            print(f"Groq failed: {e}. Falling back to Gemini...")
-            return self.gemini.explain_recommendation(item, user_profile)
+            print(f"Claude failed: {e}. Falling back to Groq...")
+            try:
+                return self.groq.explain_recommendation(item, user_profile)
+            except Exception as e2:
+                print(f"Groq failed: {e2}. Falling back to Gemini...")
+                return self.gemini.explain_recommendation(item, user_profile)
 
     def chat_about_comparison(self, items: list[dict], user_message: str | None = None) -> str:
         """
-        Conversational Logic: Primary is Groq. Fallback is Gemini.
+        Conversational Logic: Primary is Claude. Fallback is Groq, then Gemini.
         """
         try:
-            print("Routing to Groq (Primary) for chat_about_comparison...")
-            return self.groq.chat_about_comparison(items, user_message)
+            print("Routing to Claude (Primary) for chat_about_comparison...")
+            return self.claude.chat_about_comparison(items, user_message)
         except Exception as e:
-            print(f"Groq failed: {e}. Falling back to Gemini...")
-            return self.gemini.chat_about_comparison(items, user_message)
+            print(f"Claude failed: {e}. Falling back to Groq...")
+            try:
+                return self.groq.chat_about_comparison(items, user_message)
+            except Exception as e2:
+                print(f"Groq failed: {e2}. Falling back to Gemini...")
+                return self.gemini.chat_about_comparison(items, user_message)
