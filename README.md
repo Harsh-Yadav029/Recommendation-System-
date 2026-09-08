@@ -5,59 +5,85 @@
 ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
 ![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
-![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
-![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Pinecone](https://img.shields.io/badge/Pinecone-1A1A1A?style=for-the-badge&logo=pinecone&logoColor=white)
 
 **CompareX** is a multi-domain product comparison and recommendation platform designed for real users. 
 
-Unlike simple "AI Wrappers" that rely on LLM hallucinations to guess products, CompareX uses a **deterministic hybrid recommendation engine** trained on real interaction data. An LLM (Google Gemini) sits purely on top of this engine as an *explanation and routing layer*, guaranteeing that recommendations are always factually grounded in real databases.
+Unlike simple "AI Wrappers" that rely on LLM hallucinations to guess products, CompareX uses a **deterministic hybrid recommendation engine** trained on real interaction data. An LLM (Google Gemini / Groq / Claude) sits purely on top of this engine as an *explanation and routing layer*, guaranteeing that recommendations are always factually grounded in real databases.
+
+---
+
+## 🏗️ Project Structure
+
+The repository is structured as a modern microservices monorepo:
+
+```text
+comparex/
+├── frontend/                # React SPA (Vite + TailwindCSS)
+│   ├── src/components/      # UI Surfaces (Browse, Compare, Chat, Login)
+│   └── src/hooks/           # Custom React hooks for API state management
+├── gateway/                 # Express.js API Gateway
+│   ├── controllers/         # Auth & Proxy controllers
+│   ├── middleware/          # JWT Verification, CSRF, Rate Limiting
+│   └── models/              # Mongoose Schemas (User)
+├── ml-service/              # Python FastAPI Machine Learning backend
+│   ├── app/api/             # FastAPI routes (recommender, assistant)
+│   ├── app/core/            # Global connections (Mongo, Pinecone, Embeddings)
+│   ├── app/domains/         # Domain-specific recommender logic (Anime, Steam, Books)
+│   └── app/llm/             # Hybrid LLM Client (Gemini -> Groq -> Claude fallback)
+├── models/                  # Pickled ML models (ALS, SVD) & baseline JSONs
+└── data/                    # Raw datasets & ingestion scripts
+```
+
+---
+
+## 🔄 Complete Code & Data Flow
+
+### 1. Authentication Flow
+- **Registration/Login**: The user enters credentials on the `frontend`. The request is sent to the Node.js `gateway`.
+- **Validation**: The gateway hashes passwords using `bcrypt` and validates against MongoDB. Google OAuth is also supported via `@react-oauth/google`.
+- **Session**: On success, the gateway issues an HttpOnly, secure JWT cookie, protecting against XSS attacks. 
+
+### 2. Standard Recommendation Flow
+When a user navigates to the Browse page (e.g., Anime):
+1. **Request**: The frontend requests `/api/recommend/anime`.
+2. **Proxy**: The gateway verifies the JWT cookie and proxies the request to the `ml-service`.
+3. **ML Service Processing**: 
+   - Uses the `AnimeService` which implements the `BaseRecommenderService` contract.
+   - Generates personalized recommendations using **Explicit Matrix Factorization (SVD)** or **Alternating Least Squares (ALS)**.
+   - If constraints (budget, genre) are too strict, it triggers `relax_constraints_and_retry` to smoothly expand the search.
+   - Enriches the ML output with item metadata stored in MongoDB via a highly optimized, global `MongoManager` connection pool.
+4. **Response**: The frontend renders `DomainProductCard`s using the structured JSON response.
+
+### 3. AI Assistant & Semantic Search Flow
+When a user opens the side chat panel and asks *"Suggest me a relaxing strategy game"*:
+1. **LLM Routing**: The `ml-service` uses `HybridLLMClient` to route the prompt to the primary LLM (Gemini). If Gemini hits rate limits (429), it automatically cascades to Groq, and then to Claude.
+2. **Intent Classification**: The LLM securely parses the natural language to classify the intent (`recommend`, `compare`, etc.) and extracts JSON constraints (`{"similar_to_title": "relaxing strategy game"}`).
+3. **Vector Search (Pinecone)**:
+   - If thematic/natural language queries are detected, the local `EmbeddingsClient` (SentenceTransformers) converts the query into a dense vector embedding.
+   - `PineconeClient` performs a semantic similarity search across the cloud vector database for the active domain.
+4. **Explanation**: The semantically recommended items are fed *back* to the LLM. Using strict *No-Fabrication Style Instructions*, the LLM explains *why* the item was chosen based strictly on its `similarity_basis` and real metadata.
+5. **UI Update**: The frontend chat panel streams the conversational response while seamlessly rendering actual, clickable product UI cards inline with the text.
 
 ---
 
 ## ✨ Key Features
 
-- **Multi-Domain Recommendations**: Seamlessly switch between BookCrossing (Books) and Steam (Games).
-- **Secure Authentication**: JWT-based secure user registration, login, and HttpOnly session management.
-- **Dynamic Constraint Relaxation**: If your filters are too strict, the engine intelligently relaxes them (e.g., drops tags before budget) instead of returning a frustrating empty screen.
-- **AI-Powered Explanations**: Gemini evaluates the deterministic `similarity_basis` scores returned by the Recommender, translating complex math into natural language for the user.
+- **Multi-Domain Recommendations**: Seamlessly switch between BookCrossing (Books), Steam (Games), and Anime.
+- **Semantic & Collaborative Filtering**: Combines Pinecone vector searches with implicit/explicit collaborative models.
+- **Dynamic Constraint Relaxation**: If your filters are too strict, the engine intelligently relaxes them instead of returning an empty screen.
+- **Hybrid LLM Infrastructure**: Reliable AI parsing with built-in cascading fallbacks across multiple top-tier providers.
 - **Side-by-Side Comparisons**: Select multiple items and instantly generate a structured comparison matrix.
-- **Expert Assistant Chat**: Talk to the recommendation engine to refine searches or ask why a specific item was chosen for you.
-
----
-
-## 🏗️ Architecture Stack
-
-CompareX is built on a scalable microservices architecture spanning three independent systems:
-
-### 1. Frontend (`/frontend`)
-A blazing fast React Single Page Application (SPA) built with Vite and Tailwind CSS. 
-- **Browse/Search**: A filterable product grid with category, budget, and tag dropdowns.
-- **Comparison Engine**: Real-time side-by-side matrices.
-- **State Management**: React Hooks and Context for complex cross-component state (like the floating Compare bar).
-- **Proxy Routing**: Uses Vite proxying in dev, and Vercel edge rewrites in production, completely eliminating CORS issues.
-
-### 2. API Gateway (`/gateway`)
-An Express/Node.js service acting as the central nervous system.
-- **Security First**: Protected via `helmet`, `cors`, `express-rate-limit`, and robust CSRF token generation.
-- **JWT Auth**: Issues and validates `HttpOnly` access tokens (15m) and refresh tokens (7d).
-- **Proxy**: Securely authenticates users before proxying allowed traffic to the internal Python ML Service.
-
-### 3. ML Service (`/ml-service`)
-A FastAPI/Python backend doing the heavy lifting.
-- **Machine Learning**: Implements SVD (Singular Value Decomposition) and ALS (Alternating Least Squares) models via `Surprise` and `implicit`.
-- **Constraint Engine**: Custom algorithms to filter vectors based on rigid user requirements.
-- **LLM Client**: Secure, isolated Google Gemini integrations.
 
 ---
 
 ## 🗄️ Domain Ecosystem
 
-CompareX relies on real-world datasets from [caserec/Datasets-for-Recommender-Systems](https://github.com/caserec/Datasets-for-Recommender-Systems).
-
-| Domain | Data Type | Feedback | Strengths |
+| Domain | ML Model | Vector Search | Strengths |
 | :--- | :--- | :--- | :--- |
-| **BookCrossing** | Rich Metadata | Explicit (1-10) | UI Showcase. Includes titles, authors, years, and Amazon cover images. |
-| **Steam** | Medium | Implicit | Combines user playtime data with basic titles and item IDs. |
+| **BookCrossing** | Baseline Fallbacks | Yes | UI Showcase. Includes titles, authors, years, and Amazon cover images. |
+| **Steam** | ALS (Implicit) | Yes | Combines user playtime data with themes and genres. |
+| **Anime** | SVD (Explicit) | Yes | Studio, episode counts, and structured ratings. |
 
 ---
 
@@ -67,6 +93,7 @@ CompareX relies on real-world datasets from [caserec/Datasets-for-Recommender-Sy
 - Node.js (v18+)
 - Python (3.10+)
 - MongoDB Atlas Cluster (Free Tier is fine)
+- Pinecone Index (Dimension 384, Cosine)
 
 ### 1. Environment Configuration
 
@@ -80,13 +107,14 @@ JWT_SECRET=your_super_secret_jwt_key
 FRONTEND_URL=http://localhost:5173
 ML_SERVICE_URL=http://localhost:8000
 ```
-> **Windows DNS Bug**: If you encounter a `querySrv ECONNREFUSED` error on Windows, Node.js is failing to resolve the SRV record. Replace `mongodb+srv://...` with the direct node replica set string (e.g., `mongodb://user:pass@node1:27017,node2:27017...`).
 
 **ML Service (`ml-service/.env`)**:
 ```env
 MONGODB_URI=mongodb+srv://<user>:<password>@cluster...
+PINECONE_API_KEY=your_pinecone_key
 GEMINI_API_KEY=your_google_gemini_api_key
-ENABLED_DOMAINS=steam,bookcrossing
+GROQ_API_KEY=your_groq_api_key
+ANTHROPIC_API_KEY=your_claude_api_key
 ```
 
 ### 2. Booting the Services
@@ -99,7 +127,7 @@ cd ml-service
 python -m venv venv
 source venv/bin/activate  # Windows: .\venv\Scripts\activate
 pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
 **Terminal 2: API Gateway (Node.js)**
@@ -116,7 +144,7 @@ npm install
 npm run dev
 ```
 
-Visit `http://localhost:5173` in your browser. You will be greeted by the Landing page and must Register/Login to access the dashboard!
+Visit `http://localhost:5173` in your browser.
 
 ---
 
@@ -124,31 +152,6 @@ Visit `http://localhost:5173` in your browser. You will be greeted by the Landin
 
 This project is fully configured for zero-cost deployment on **Vercel** (Frontend) and **Render** (Gateway & ML Service).
 
-### Step 1: MongoDB Network Access
-Cloud PaaS providers like Vercel and Render use dynamic outbound IPs. You MUST go to your MongoDB Atlas dashboard -> Network Access, and ensure the IP Whitelist is set to `0.0.0.0/0` (Allow Access from Anywhere).
-
-### Step 2: Render (Backend Services)
-1. Log into Render and click **New -> Blueprint**.
-2. Connect this GitHub repository.
-3. Render will automatically detect the `render.yaml` file in the root directory.
-4. It will spin up **two** Web Services:
-   - `comparex-gateway` (Node.js)
-   - `comparex-ml-service` (Python FastAPI)
-5. Provide your environment variables (`MONGODB_URI`, `JWT_SECRET`, `GEMINI_API_KEY`) when prompted.
-6. Once deployed, copy the URL for the `comparex-gateway` (e.g., `https://comparex-gateway-xyz.onrender.com`).
-
-### Step 3: Vercel (Frontend)
-1. Open `frontend/vercel.json` in your code.
-2. Replace `YOUR_GATEWAY_URL` with the actual Gateway URL you got from Render in Step 2.
-3. Commit and push this change to GitHub.
-4. Log into Vercel and click **Add New -> Project**.
-5. Import this repository. **Crucial**: Set the Root Directory to `frontend`.
-6. Click Deploy. Vercel will automatically detect Vite, build the React app, and use the `vercel.json` file to proxy all `/api/*` traffic seamlessly to your Render backend, entirely bypassing CORS restrictions.
-
----
-
-## 🔒 Core Engineering Principles
-
-- **No AI Hallucinations**: The LLM is strictly forbidden from generating ranked recommendations from its own knowledge.
-- **Explainability Contract**: The backend must always return the "why" alongside the "what" via a `similarity_basis` string. 
-- **Graceful Fallbacks**: If a real model fails to load or constraints are too strict, the system gracefully falls back to a popularity baseline or relaxed constraints, rather than crashing with unhandled errors.
+1. **MongoDB & Pinecone**: Ensure network access allows inbound traffic (`0.0.0.0/0`).
+2. **Render**: Spin up two Web Services (`gateway` and `ml-service`) using the `render.yaml` Blueprint.
+3. **Vercel**: Deploy the `/frontend` directory and update `vercel.json` to proxy traffic to your Render Gateway URL.
