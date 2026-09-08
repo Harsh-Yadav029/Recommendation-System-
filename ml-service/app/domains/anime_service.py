@@ -178,7 +178,7 @@ class AnimeService(BaseRecommenderService):
         
         db = MongoManager.get_db()
             
-        target = db.items.find_one({"domain": "anime", "item_id": str(item_id)})
+        target = db.items.find_one({"domain": "anime", "item_id": item_id})
         if not target:
             return RecommendationResponse(items=[])
             
@@ -199,7 +199,7 @@ class AnimeService(BaseRecommenderService):
         rank = 1
         for match in matches:
             raw_id = match["id"].replace("anime_", "")
-            if raw_id == str(item_id):
+            if raw_id == item_id:
                 continue
             if rank > k:
                 break
