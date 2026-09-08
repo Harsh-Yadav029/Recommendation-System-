@@ -109,8 +109,11 @@ Determine if the user wants to 'recommend' items, 'compare' items, or something 
 Extract product constraints from the user message.
 User message: "{user_message}"
 Extract budget_max, category, and tags if present.
-If the user is asking for items similar to a specific title (e.g. "similar to Decision in Normandy"), extract that exact title into `similar_to_title`.
-If the user provides a free-text semantic description (e.g. "a book about world war 2"), extract that entire phrase into `similar_to_title`.
+
+IMPORTANT DOMAIN RULES:
+- For BookCrossing and Anime: If the user provides a standard genre, extract it into `category` or `genre` (whichever maps to the category field).
+- For Steam (which lacks a genre field) or if the user provides complex thematic queries (e.g., "a relaxing strategy game", "horror mystery themes"): extract the entire thematic text into `similar_to_title`.
+- If the user is asking for items similar to a specific title (e.g. "similar to Decision in Normandy"), extract that exact title into `similar_to_title`.
 """
         try:
             result_json = self._call_gemini_structured(prompt, Constraints)
@@ -140,7 +143,10 @@ User profile: {user_profile.model_dump_json()}
 
 You must strictly ground your explanation in the `matched_constraints` and `similarity_basis` provided in the item data.
 Do NOT fabricate a product title, category, or price if it is not explicitly provided. Do not guess.
-Explain the recommendation naturally and conversationally based ONLY on the data above.
+
+REQUIRED STRUCTURE:
+1. **Item Details**: Provide a detailed breakdown of the item using *only* available fields from the JSON. If a field is missing, state plainly that it is not specified.
+2. **Summary**: A short synthesis explaining why this item is a good fit. Do not invent any new details or claims not present in the data.
 """
         try:
             return self._call_gemini_text(prompt)
@@ -149,30 +155,30 @@ Explain the recommendation naturally and conversationally based ONLY on the data
 
     def chat_about_comparison(self, items: list[dict], user_message: str | None = None) -> str:
         base_prompt = f"""
-You are an expert comparison analyst and domain expert. You are helping a user compare the following items based on their backend audit data, metadata, and baseline scores:
+You are an assistant helping a user compare items.
+Here are the items being compared:
 {items}
 
 Guidelines:
-- Act as a domain expert.
-  - If the items are books, analyze author themes, publication years, and reader demographics or ratings.
-  - If the items are video games (Steam), analyze playtime, genre, and overwhelmingly positive review metrics.
-- Your response must be strictly grounded in the provided item data unless the user explicitly asks for external suggestions. Do not hallucinate or invent details for the provided items.
+- Only discuss the fields explicitly provided below.
+- The real fields present in the ComparisonTable data might include title, author, year, publisher, popularity_score, similarity_basis, etc. depending on the domain.
+- If a field is not provided, do not mention it, invent it, or guess a value — do not discuss ratings, categories, review counts, or any other attribute not explicitly listed here.
 """
         if user_message:
             prompt = base_prompt + f"""
 User's query: "{user_message}"
 
-Answer the user's query directly, naturally, and in a highly detailed, comprehensive manner. Expand on your reasoning, provide deep insights, and take the time to thoroughly explain your thought process. If the user asks for a recommendation outside of the provided items, you may suggest new items based on your general knowledge and provide detailed reasons why they fit.
+Answer the user's query directly and naturally based ONLY on the provided data.
 """
         else:
             prompt = base_prompt + """
 REQUIRED STRUCTURE:
 You MUST format your initial summary using the following three sections in Markdown:
-1. **Individual Item Breakdown**: Describe each item in its own subsection (e.g. `### [Item Title]`), highlighting its specific metrics, genre, and themes.
-2. **Expert Analytics**: A `## Expert Analysis` section comparing the items directly against each other, highlighting trade-offs, similarities, and differences based on the data.
-3. **Summary & Conclusion**: A `## Conclusion` section that summarizes everything into a definitive takeaway.
+1. **Individual Item Breakdown**: Describe each item in its own subsection (e.g. `### [Item Title]`). Only use real fields provided in the JSON data. If a field is missing, state plainly that it is not specified. Do not invent details, ratings, genres, or descriptions.
+2. **Analysis**: A `## Analysis` section comparing the items directly against each other, highlighting trade-offs, similarities, and differences strictly based on the provided data.
+3. **Conclusion**: A `## Conclusion` section that summarizes the comparison.
 
-Provide a comprehensive and detailed side-by-side summary comparing these items. Highlight their key similarities, differences, and what makes each unique based on the provided audit data and baseline scores.
+Provide a clear side-by-side summary comparing these items based ONLY on the provided data.
 """
         try:
             return self._call_gemini_text(prompt)

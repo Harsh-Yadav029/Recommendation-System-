@@ -1,137 +1,146 @@
 from typing import List, Dict, Any
 import os
-import random
+import json
+import pickle
+import numpy as np
 from app.contracts.recommender import BaseRecommenderService
 from app.models.schemas import UserProfile, Constraints, RankedItem, ComparisonTable, RecommendationResponse
 from app.core.relaxation import relax_constraints_and_retry
-from app.core.pinecone_client import PineconeClient
-from app.core.semantic_recommender import get_semantic_recommendations
 
 class AnimeService(BaseRecommenderService):
     def __init__(self):
         self.domain = "anime"
-        self.item_metadata = {}
-        self.baseline_items = []
+        self.model = None
+        self.trainset = None
         
-        # Load a simple baseline of popular anime from DB
-        from pymongo import MongoClient
-        from dotenv import load_dotenv
+        self.baseline_items = []
+        self.item_metadata = {}
         
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        load_dotenv(os.path.join(current_dir, "..", "..", ".env"))
+        project_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
         
-        uri = os.environ.get("MONGODB_URI", "")
-        if uri:
-            client = MongoClient(uri)
-            db = client.get_default_database()
-            if db.name == 'test' and "comparex" in uri:
-                db = client["comparex"]
+        # Load baseline
+        baseline_path = os.path.join(project_root, "models", "anime_baseline.json")
+        if os.path.exists(baseline_path):
+            with open(baseline_path, "r") as f:
+                self.baseline_items = json.load(f)
                 
-            # Fetch a sample of anime to use as baseline (since we don't have a pre-trained model)
-            # We'll just fetch 500 anime, parse their members/ratings, and sort them to create a popular baseline
-            docs = list(db.items.find({"domain": "anime"}).limit(1000))
-            
-            for doc in docs:
-                self.item_metadata[str(doc["item_id"])] = doc
-                members_str = doc.get("metadata", {}).get("members", "0")
-                try:
-                    members = int(members_str)
-                except ValueError:
-                    members = 0
+        # Load SVD model
+        model_path = os.path.join(project_root, "models", "anime_svd.pkl")
+        if os.path.exists(model_path):
+            try:
+                with open(model_path, "rb") as f:
+                    artifact = pickle.load(f)  # nosec B301
+                    self.model = artifact["model"]
+                    self.trainset = artifact["trainset"]
+            except Exception as e:
+                print(f"Failed to load Anime SVD model: {e}")
+                self.model = None
                 
-                self.baseline_items.append({
-                    "item_id": str(doc["item_id"]),
-                    "score": members,
-                    "doc": doc
-                })
-                
-            self.baseline_items.sort(key=lambda x: x["score"], reverse=True)
 
     def _get_item_metadata(self, item_ids: List[str]) -> Dict[str, Dict]:
         missing_ids = [iid for iid in item_ids if iid not in self.item_metadata]
         if missing_ids:
             from pymongo import MongoClient
-            import os
             from dotenv import load_dotenv
             load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
             uri = os.environ.get("MONGODB_URI", "")
             client = MongoClient(uri or "mongodb://localhost:27017")
-            db = client.get_default_database()
-            if db.name == 'test' and "comparex" in uri:
+            try:
+                db = client.get_default_database()
+                if db.name == 'test' and "comparex" in uri:
+                    db = client["comparex"]
+            except Exception:
                 db = client["comparex"]
                 
             for doc in db.items.find({"domain": "anime", "item_id": {"$in": missing_ids}}):
                 self.item_metadata[str(doc["item_id"])] = doc
                 
-        return {iid: self.item_metadata.get(iid, {}) for iid in item_ids}
-
+        res = {}
+        for iid in item_ids:
+            doc = dict(self.item_metadata.get(iid, {}))
+            if "metadata" not in doc:
+                doc["metadata"] = {}
+            res[iid] = doc
+        return res
+                
     def _get_baseline_recommendations(self, limit: int = 24, offset: int = 0, constraints: Constraints | None = None) -> RecommendationResponse:
         results = []
         c = constraints or Constraints()
         
-        # Give a popularity score normalized between 0 and 1
-        max_score = self.baseline_items[0]["score"] if self.baseline_items and self.baseline_items[0]["score"] > 0 else 1
-        
-        for item in self.baseline_items:
-            doc = item["doc"]
-            item_id = str(doc["item_id"])
-            m = doc.get("metadata", {})
+        subset = self.baseline_items[:offset + limit * 10]
+        item_ids = [str(item["item_id"]) for item in subset]
+        metadata_map = self._get_item_metadata(item_ids)
+
+        for item in subset:
+            item_id = str(item["item_id"])
+            meta = metadata_map.get(item_id, {})
+            m = meta.get("metadata", {})
             
-            if c.genre and c.genre.lower() not in m.get("genre", "").lower(): continue
-            
-            score = item["score"] / max_score
-            
+            if c.genre and c.genre.lower() not in str(m.get("genre", "")).lower(): continue
+
             results.append(RankedItem(
                 item_id=item_id,
-                score=float(score),
+                score=float(item["score"]),
                 matched_constraints=[],
-                similarity_basis="popularity baseline fallback (most members)",
+                similarity_basis="popularity baseline fallback (Bayesian average)",
                 domain=self.domain,
-                title=doc.get("title", f"Anime #{item_id}"),
+                title=meta.get("title", f"Anime #{item_id}"),
                 metadata=m
             ))
-            
-            if len(results) >= offset + limit * 5:
-                break
-                
         return RecommendationResponse(items=results[offset:offset+limit])
-
+        
     def get_recommendations(self, user_profile: UserProfile, constraints: Constraints) -> RecommendationResponse:
         def _fetch(c: Constraints) -> RecommendationResponse:
-            results = []
-            
-            # Fetch Semantic Recommendations if user has history
-            if user_profile.history:
-                try:
-                    sem_results = get_semantic_recommendations(user_profile.history, self.domain, top_k=c.limit * 3)
-                    metadata_map = self._get_item_metadata([item.item_id for item in sem_results])
-                    for item in sem_results:
-                        meta = metadata_map.get(item.item_id, {})
-                        m = meta.get("metadata", {})
-                        if c.genre and c.genre.lower() not in m.get("genre", "").lower(): continue
-                        item.metadata = m
-                        item.title = meta.get("title", item.title)
-                        results.append(item)
-                except Exception as e:
-                    print(f"Anime semantic fallback failed: {e}")
-                    
-            if not results:
+            if self.model is None or self.trainset is None:
                 return self._get_baseline_recommendations(limit=c.limit, offset=c.offset, constraints=c)
                 
-            seen = set()
-            dedup = []
-            for r in results:
-                if r.item_id not in seen:
-                    seen.add(r.item_id)
-                    dedup.append(r)
+            try:
+                try:
+                    inner_uid = self.trainset.to_inner_uid(user_profile.user_id)
+                    user_items = set([j for (j, _) in self.trainset.ur[inner_uid]])
+                except ValueError:
+                    return self._get_baseline_recommendations(limit=c.limit, offset=c.offset, constraints=c)
                     
-            dedup.sort(key=lambda x: x.score, reverse=True)
-            return RecommendationResponse(items=dedup[c.offset:c.offset+c.limit])
+                predictions = []
+                for inner_iid in self.trainset.all_items():
+                    if inner_iid not in user_items:
+                        raw_iid = self.trainset.to_raw_iid(inner_iid)
+                        est = self.model.predict(user_profile.user_id, raw_iid).est
+                        predictions.append((raw_iid, est))
+                        
+                predictions.sort(key=lambda x: x[1], reverse=True)
+                top_preds = predictions[:c.offset + c.limit * 10]
+                
+                results = []
+                metadata_map = self._get_item_metadata([iid for iid, _ in top_preds])
+
+                for item_id, est in top_preds:
+                    meta = metadata_map.get(item_id, {})
+                    m = meta.get("metadata", {})
+                    
+                    if c.genre and c.genre.lower() not in str(m.get("genre", "")).lower(): continue
+
+                    results.append(RankedItem(
+                        item_id=item_id,
+                        score=float(est),
+                        matched_constraints=[],
+                        similarity_basis="explicit matrix factorization (SVD)",
+                        domain=self.domain,
+                        title=meta.get("title", f"Anime #{item_id}"),
+                        metadata=m
+                    ))
+                
+                return RecommendationResponse(items=results[c.offset:c.offset+c.limit])
+            except Exception:
+                return self._get_baseline_recommendations(limit=c.limit, offset=c.offset, constraints=c)
                 
         return relax_constraints_and_retry(_fetch, constraints, target_count=constraints.limit)
 
     def compare(self, item_ids: List[str]) -> ComparisonTable:
         items = []
+        
+        score_map = {str(item["item_id"]): item["score"] for item in self.baseline_items}
         metadata_map = self._get_item_metadata(item_ids) 
         
         for item_id in item_ids:
@@ -144,7 +153,7 @@ class AnimeService(BaseRecommenderService):
                 "genre": m.get("genre", "Unknown"),
                 "type": m.get("type", "Unknown"),
                 "episodes": m.get("episodes", "Unknown"),
-                "popularity_score": m.get("rating", "0.0"),
+                "popularity_score": score_map.get(item_id, 0),
                 "user_feedback": {
                     "Total Members": m.get("members", "0"),
                     "Average Rating": f"{m.get('rating', '0.0')} / 10.0"
@@ -158,9 +167,9 @@ class AnimeService(BaseRecommenderService):
         return self._get_baseline_recommendations(10)
 
     def explain(self, item_id: str, user_profile: UserProfile) -> str:
-        if not user_profile.history:
-            return "matched_constraints=[], similarity_basis='popularity baseline fallback (most members)'"
-        return "matched_constraints=[], similarity_basis='semantic profile matching (Pinecone)'"
+        if self.model is None:
+            return "matched_constraints=[], similarity_basis='popularity baseline fallback (Bayesian average)'"
+        return "matched_constraints=[], similarity_basis='explicit matrix factorization (SVD)'"
 
     def search_by_title(self, title: str) -> List[Dict]:
         from pymongo import MongoClient
@@ -169,8 +178,11 @@ class AnimeService(BaseRecommenderService):
         load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
         uri = os.environ.get("MONGODB_URI", "")
         client = MongoClient(uri or "mongodb://localhost:27017")
-        db = client.get_default_database()
-        if db.name == 'test' and "comparex" in uri:
+        try:
+            db = client.get_default_database()
+            if db.name == 'test' and "comparex" in uri:
+                db = client["comparex"]
+        except Exception:
             db = client["comparex"]
             
         docs = list(db.items.find({
@@ -183,12 +195,16 @@ class AnimeService(BaseRecommenderService):
         from pymongo import MongoClient
         import os
         from dotenv import load_dotenv
+        from app.core.pinecone_client import PineconeClient
         
         load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
         uri = os.environ.get("MONGODB_URI", "")
         client = MongoClient(uri or "mongodb://localhost:27017")
-        db = client.get_default_database()
-        if db.name == 'test' and "comparex" in uri:
+        try:
+            db = client.get_default_database()
+            if db.name == 'test' and "comparex" in uri:
+                db = client["comparex"]
+        except Exception:
             db = client["comparex"]
             
         target = db.items.find_one({"domain": "anime", "item_id": str(item_id)})
@@ -238,3 +254,4 @@ class AnimeService(BaseRecommenderService):
             rank += 1
             
         return RecommendationResponse(items=ranked_items)
+ 

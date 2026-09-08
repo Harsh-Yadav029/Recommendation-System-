@@ -57,15 +57,10 @@ class BookCrossingService(BaseRecommenderService):
         for iid in item_ids:
             doc = dict(self.item_metadata.get(iid, {}))
             h = int(hashlib.md5(iid.encode(), usedforsecurity=False).hexdigest(), 16)
-            categories = ['Fiction', 'Non-Fiction', 'Academic', 'Poetry']
-            
             if "metadata" not in doc:
                 doc["metadata"] = {}
-            doc["metadata"]["category"] = categories[h % len(categories)]
-            
-            authors = ['J.K. Rowling', 'Stephen King', 'Agatha Christie', 'George R.R. Martin', 'J.R.R. Tolkien', 'Jane Austen', 'Dan Brown', 'Isaac Asimov']
             if "author" not in doc["metadata"]:
-                doc["metadata"]["author"] = doc.get("Book-Author", doc.get("author", authors[h % len(authors)]))
+                doc["metadata"]["author"] = doc.get("Book-Author", doc.get("author", "not specified"))
             
             res[iid] = doc
         return res
@@ -83,7 +78,7 @@ class BookCrossingService(BaseRecommenderService):
             meta = metadata_map.get(item_id, {})
             m = meta.get("metadata", {})
             
-            if c.category and c.category != m.get("category"): continue
+            if c.category and c.category.lower() not in str(m.get("category", "")).lower(): continue
             if c.author:
                 filter_val = c.author.lower().replace(" ", "")
                 author_val = str(m.get("author") or "").lower().replace(" ", "")
@@ -135,7 +130,7 @@ class BookCrossingService(BaseRecommenderService):
                     meta = metadata_map.get(item_id, {})
                     m = meta.get("metadata", {})
                     
-                    if c.category and c.category != m.get("category"): continue
+                    if c.category and c.category.lower() not in str(m.get("category", "")).lower(): continue
                     if c.author:
                         filter_val = c.author.lower().replace(" ", "")
                         author_val = str(m.get("author") or "").lower().replace(" ", "")
@@ -169,12 +164,9 @@ class BookCrossingService(BaseRecommenderService):
         score_map = {str(item["item_id"]): item["score"] for item in self.baseline_items}
         metadata_map = self._get_item_metadata(item_ids) 
         
-        import hashlib
-        categories = ['Fiction', 'Non-Fiction', 'Academic', 'Poetry']
         for item_id in item_ids:
             meta = metadata_map.get(item_id, {})
-            h = int(hashlib.md5(item_id.encode(), usedforsecurity=False).hexdigest(), 16)
-            category = meta.get("metadata", {}).get("category") or categories[h % len(categories)]
+            category = meta.get("metadata", {}).get("category", "not specified")
             # BookCrossing has rich metadata: Title, Author, Year, Publisher, Cover Images
             item_data = {
                 "item_id": item_id,
@@ -186,11 +178,7 @@ class BookCrossingService(BaseRecommenderService):
                 "image_url_s": meta.get("metadata", {}).get("image_url_s", "not specified"),
                 "image_url_m": meta.get("metadata", {}).get("image_url_m", "not specified"),
                 "image_url_l": meta.get("metadata", {}).get("image_url_l", "not specified"),
-                "popularity_score": score_map.get(item_id, 0),
-                "user_feedback": {
-                    "Total Ratings": f"{int(score_map.get(item_id, 0) * 200):,}",
-                    "Average Rating": f"{min(5.0, max(1.0, 3.5 + (score_map.get(item_id, 0) / 100))):.1f} / 5.0"
-                }
+                "popularity_score": score_map.get(item_id, 0)
             }
             items.append(item_data)
             

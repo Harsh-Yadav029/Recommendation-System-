@@ -4,7 +4,7 @@ from app.models.schemas import Constraints, RecommendationResponse
 def relax_constraints_and_retry(
     fetch_func: Callable[[Constraints], RecommendationResponse],
     original_constraints: Constraints,
-    target_count: int = None
+    target_count: int | None = None
 ) -> RecommendationResponse:
     """
     Attempts to fetch recommendations. If results < target_count, systematically 
@@ -26,7 +26,7 @@ def relax_constraints_and_retry(
 
     # 1. Try exact constraints
     response = fetch_func(original_constraints)
-    if len(response.items) >= target_count:
+    if len(response.items) > 0:
         return response
         
     # Sequence of constraints to relax, from least to most important
@@ -42,7 +42,7 @@ def relax_constraints_and_retry(
     if current_constraints.tags and len(current_constraints.tags) > 0:
         current_constraints.tags = []
         response = fetch_func(current_constraints)
-        if len(response.items) >= target_count:
+        if len(response.items) > 0:
             response.relaxed = True
             response.relaxed_constraint = "tags"
             for item in response.items:
@@ -52,7 +52,7 @@ def relax_constraints_and_retry(
     if current_constraints.budget_max is not None:
         current_constraints.budget_max = None
         response = fetch_func(current_constraints)
-        if len(response.items) >= target_count:
+        if len(response.items) > 0:
             response.relaxed = True
             response.relaxed_constraint = "budget_max"
             for item in response.items:
@@ -62,7 +62,7 @@ def relax_constraints_and_retry(
     if current_constraints.category is not None:
         current_constraints.category = None
         response = fetch_func(current_constraints)
-        if len(response.items) >= target_count:
+        if len(response.items) > 0:
             response.relaxed = True
             response.relaxed_constraint = "category"
             for item in response.items:

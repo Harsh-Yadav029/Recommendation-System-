@@ -40,35 +40,66 @@ async def chat(request: AssistantChatRequest = Body(...)):
             
             # Semantic search handling
             if constraints.similar_to_title:
-                matching_docs = domain_service.search_by_title(constraints.similar_to_title)
-                if not matching_docs:
+                from app.core.embeddings import EmbeddingsClient
+                from app.core.pinecone_client import PineconeClient
+                from app.models.schemas import RankedItem, RecommendationResponse
+                from pymongo import MongoClient
+                import os
+                
+                embedder = EmbeddingsClient.get_instance()
+                vector = embedder.encode(constraints.similar_to_title)
+                
+                pc = PineconeClient.get_instance()
+                matches = pc.query(vector, top_k=5, filter_dict={"domain": request.domain})
+                
+                if not matches:
                     return AssistantChatResponse(
-                        response=f"I couldn't find any exact matches for '{constraints.similar_to_title}'. Could you try another title?",
-                        data={"error": "item_not_found"}
-                    )
-                
-                target_item = matching_docs[0]
-                target_id = target_item["item_id"]
-                
-                # Fetch similar items via vector search
-                rec_response = domain_service.find_similar_items(target_id, k=5)
-                
-                if not rec_response.items:
-                    return AssistantChatResponse(
-                        response=f"I couldn't find semantic recommendations for '{target_item.get('title', 'that item')}'.",
+                        response=f"I couldn't find semantic recommendations for '{constraints.similar_to_title}'.",
                         data={"error": "no_similar_items"}
                     )
+                    
+                uri = os.environ.get("MONGODB_URI")
+                client = MongoClient(uri)
+                db = client.get_default_database()
+                if db.name == 'test' and uri is not None and "comparex" in uri:
+                    db = client["comparex"]
+                    
+                ranked_items = []
+                rank = 1
+                for match in matches:
+                    raw_id = match["id"].replace(f"{request.domain}_", "")
+                    title = match.get("metadata", {}).get("title", "Unknown")
+                    score = float(match.get("score", 0.0))
+                    
+                    meta_doc = db.items.find_one({"domain": request.domain, "item_id": raw_id})
+                    metadata = meta_doc.get("metadata", {}) if meta_doc else {}
+                    
+                    ranked_items.append(
+                        RankedItem(
+                            item_id=raw_id,
+                            title=title,
+                            score=score,
+                            rank=rank,
+                            metadata=metadata,
+                            similarity_basis=f"semantically matches your query: '{constraints.similar_to_title}'",
+                            matched_constraints=[],
+                            domain=request.domain
+                        )
+                    )
+                    rank += 1
+                    
+                rec_response = RecommendationResponse(items=ranked_items)
                 
                 # Explain the top semantic recommendation
                 top_item = rec_response.items[0]
                 explanation = llm_client.explain_recommendation(top_item, request.user_profile)
                 
                 return AssistantChatResponse(
-                    response=f"I found '{target_item.get('title')}'. Based on that:\n\n{explanation}",
+                    response=explanation,
                     data={
                         "recommendations": rec_response.model_dump(), 
                         "constraints": constraints.model_dump(),
-                        "semantic_target": target_item.get("title")
+                        "semantic_target": constraints.similar_to_title
                     }
                 )
                 

@@ -65,16 +65,14 @@ class SteamService(BaseRecommenderService):
         res = {}
         for iid in item_ids:
             doc = dict(self.item_metadata.get(iid, {}))
-            h = int(hashlib.md5(iid.encode(), usedforsecurity=False).hexdigest(), 16)
-            genres = ['Action', 'Adventure', 'RPG', 'Strategy', 'Sports', 'Multiplayer']
-            ratings = ['80-89', '90-100']
-            platforms = ['PC', 'Console', 'Mobile']
-            
             if "metadata" not in doc:
                 doc["metadata"] = {}
-            doc["metadata"]["genre"] = genres[h % len(genres)]
-            doc["metadata"]["rating"] = ratings[(h // 10) % len(ratings)]
-            doc["metadata"]["platform"] = platforms[(h // 100) % len(platforms)]
+            if "genre" not in doc["metadata"]:
+                doc["metadata"]["genre"] = "not specified"
+            if "rating" not in doc["metadata"]:
+                doc["metadata"]["rating"] = "not specified"
+            if "platform" not in doc["metadata"]:
+                doc["metadata"]["platform"] = "not specified"
             res[iid] = doc
         return res
                 
@@ -92,9 +90,9 @@ class SteamService(BaseRecommenderService):
             meta = metadata_map.get(item_id, {})
             m = meta.get("metadata", {})
             
-            if c.genre and c.genre != m.get("genre"): continue
-            if c.rating and c.rating != m.get("rating"): continue
-            if c.platform and c.platform != m.get("platform"): continue
+            if c.genre and c.genre.lower() not in str(m.get("genre", "")).lower(): continue
+            if c.rating and c.rating.lower() not in str(m.get("rating", "")).lower(): continue
+            if c.platform and c.platform.lower() not in str(m.get("platform", "")).lower(): continue
             
             results.append(RankedItem(
                 item_id=item_id,
@@ -127,9 +125,9 @@ class SteamService(BaseRecommenderService):
                             meta = metadata_map.get(item_id, {})
                             m = meta.get("metadata", {})
                             
-                            if c.genre and c.genre != m.get("genre"): continue
-                            if c.rating and c.rating != m.get("rating"): continue
-                            if c.platform and c.platform != m.get("platform"): continue
+                            if c.genre and c.genre.lower() not in str(m.get("genre", "")).lower(): continue
+                            if c.rating and c.rating.lower() not in str(m.get("rating", "")).lower(): continue
+                            if c.platform and c.platform.lower() not in str(m.get("platform", "")).lower(): continue
 
                             results.append(RankedItem(
                                 item_id=item_id,
@@ -150,9 +148,9 @@ class SteamService(BaseRecommenderService):
                     for item in sem_results:
                         meta = metadata_map.get(item.item_id, {})
                         m = meta.get("metadata", {})
-                        if c.genre and c.genre != m.get("genre"): continue
-                        if c.rating and c.rating != m.get("rating"): continue
-                        if c.platform and c.platform != m.get("platform"): continue
+                        if c.genre and c.genre.lower() not in str(m.get("genre", "")).lower(): continue
+                        if c.rating and c.rating.lower() not in str(m.get("rating", "")).lower(): continue
+                        if c.platform and c.platform.lower() not in str(m.get("platform", "")).lower(): continue
                         item.metadata = m
                         item.title = meta.get("title", item.title)
                         results.append(item)
@@ -180,23 +178,16 @@ class SteamService(BaseRecommenderService):
         score_map = {str(item["item_id"]): item["score"] for item in self.baseline_items}
         metadata_map = self._get_item_metadata(item_ids) # Sync call to lazy load
         
-        import hashlib
-        genres = ['Action', 'Adventure', 'RPG', 'Strategy', 'Sports', 'Multiplayer']
         for item_id in item_ids:
             meta = metadata_map.get(item_id, {})
-            h = int(hashlib.md5(item_id.encode(), usedforsecurity=False).hexdigest(), 16)
-            genre = meta.get("metadata", {}).get("genre") or genres[h % len(genres)]
+            genre = meta.get("metadata", {}).get("genre", "not specified")
             item_data = {
                 "item_id": item_id,
                 "title": meta.get("title", f"Steam Item #{item_id}"),
                 "category": genre,
                 "genre": genre,
                 "price": "not specified",
-                "popularity_score": score_map.get(item_id, 0),
-                "user_feedback": {
-                    "Total Players": f"{int(score_map.get(item_id, 0) * 100):,}",
-                    "Average Playtime": f"{max(1, int(score_map.get(item_id, 0) / 1000))} hrs"
-                }
+                "popularity_score": score_map.get(item_id, 0)
             }
             items.append(item_data)
             

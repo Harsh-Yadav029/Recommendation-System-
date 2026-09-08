@@ -8,5 +8,10 @@
     "model_type": "surprise_svd",
     "model_path": "models/bookcrossing_svd.pkl",
     "baseline_path": "models/bookcrossing_baseline.json"
+  },
+  "anime": {
+    "model_type": "surprise_svd",
+    "model_path": "models/anime_svd.pkl",
+    "baseline_path": "models/anime_baseline.json"
   }
 }
