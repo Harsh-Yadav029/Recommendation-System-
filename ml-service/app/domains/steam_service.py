@@ -50,14 +50,8 @@ class SteamService(BaseRecommenderService):
     def _get_item_metadata(self, item_ids: List[str]) -> Dict[str, Dict]:
         missing_ids = [iid for iid in item_ids if iid not in self.item_metadata]
         if missing_ids:
-            from pymongo import MongoClient
-            from dotenv import load_dotenv
-            load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
-            uri = os.environ.get("MONGODB_URI")
-            client = MongoClient(uri)
-            db = client.get_default_database()
-            if db.name == 'test' and uri is not None and "comparex" in uri:
-                db = client["comparex"]
+            from app.core.mongo import MongoManager
+            db = MongoManager.get_db()
             for doc in db.items.find({"domain": "steam", "item_id": {"$in": missing_ids}}):
                 self.item_metadata[str(doc["item_id"])] = doc
                 
@@ -236,15 +230,8 @@ class SteamService(BaseRecommenderService):
         return "matched_constraints=[], similarity_basis='collaborative filtering (ALS implicit feedback)'"
 
     def search_by_title(self, title: str) -> List[Dict]:
-        from pymongo import MongoClient
-        import os
-        from dotenv import load_dotenv
-        load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
-        uri = os.environ.get("MONGODB_URI")
-        client = MongoClient(uri)
-        db = client.get_default_database()
-        if db.name == 'test' and uri is not None and "comparex" in uri:
-            db = client["comparex"]
+        from app.core.mongo import MongoManager
+        db = MongoManager.get_db()
             
         docs = list(db.items.find({
             "domain": "steam", 
@@ -253,17 +240,10 @@ class SteamService(BaseRecommenderService):
         return docs
 
     def find_similar_items(self, item_id: str, k: int = 5) -> RecommendationResponse:
-        from pymongo import MongoClient
-        import os
-        from dotenv import load_dotenv
+        from app.core.mongo import MongoManager
         from app.core.pinecone_client import PineconeClient
         
-        load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
-        uri = os.environ.get("MONGODB_URI")
-        client = MongoClient(uri)
-        db = client.get_default_database()
-        if db.name == 'test' and uri is not None and "comparex" in uri:
-            db = client["comparex"]
+        db = MongoManager.get_db()
             
         target = db.items.find_one({"domain": "steam", "item_id": item_id})
         if not target:

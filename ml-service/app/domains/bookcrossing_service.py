@@ -41,14 +41,8 @@ class BookCrossingService(BaseRecommenderService):
     def _get_item_metadata(self, item_ids: List[str]) -> Dict[str, Dict]:
         missing_ids = [iid for iid in item_ids if iid not in self.item_metadata]
         if missing_ids:
-            from pymongo import MongoClient
-            from dotenv import load_dotenv
-            load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
-            uri = os.environ.get("MONGODB_URI", "")
-            client = MongoClient(uri or "mongodb://localhost:27017")
-            db = client.get_default_database()
-            if db.name == 'test' and "comparex" in uri:
-                db = client["comparex"]
+            from app.core.mongo import MongoManager
+            db = MongoManager.get_db()
             for doc in db.items.find({"domain": "bookcrossing", "item_id": {"$in": missing_ids}}):
                 self.item_metadata[str(doc["item_id"])] = doc
                 

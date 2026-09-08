@@ -25,9 +25,13 @@ class HybridLLMClient(BaseLLMClient):
         """
         try:
             return self.gemini.classify_intent(user_message, history)
-        except LLMUnavailableException as e:
-            print(f"Gemini unavailable for classify_intent: {e}")
-            raise e
+        except Exception as e:
+            print(f"Gemini unavailable for classify_intent: {e}. Falling back to Groq...")
+            try:
+                return self.groq.classify_intent(user_message, history)
+            except Exception as e2:
+                print(f"Groq unavailable for classify_intent: {e2}. Falling back to Claude...")
+                return self.claude.classify_intent(user_message, history)
 
     def extract_constraints(self, user_message: str) -> Constraints:
         """
@@ -35,9 +39,13 @@ class HybridLLMClient(BaseLLMClient):
         """
         try:
             return self.gemini.extract_constraints(user_message)
-        except LLMUnavailableException as e:
-            print(f"Gemini unavailable for extract_constraints: {e}")
-            raise e
+        except Exception as e:
+            print(f"Gemini unavailable for extract_constraints: {e}. Falling back to Groq...")
+            try:
+                return self.groq.extract_constraints(user_message)
+            except Exception as e2:
+                print(f"Groq unavailable for extract_constraints: {e2}. Falling back to Claude...")
+                return self.claude.extract_constraints(user_message)
 
     def format_comparison(self, comparison_data: ComparisonTable) -> str:
         """

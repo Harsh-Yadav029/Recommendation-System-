@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from groq import Groq
 import groq
+import json
 
 load_dotenv()
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -55,11 +56,55 @@ class GroqClient:
         except Exception as e:
             raise LLMUnavailableException(f"Unexpected LLM error: {str(e)}")
 
+    def _extract_json(self, text: str) -> str:
+        text = text.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        elif text.startswith("```"):
+            text = text[3:]
+        if text.endswith("```"):
+            text = text[:-3]
+        return text.strip()
+
     def classify_intent(self, user_message: str, history: list) -> IntentResult:
-        raise NotImplementedError("Use Gemini for structured JSON tasks")
+        prompt = f"""
+You are an intent classification engine for an ecommerce assistant.
+History: {history}
+User message: "{user_message}"
+Determine if the user wants to 'recommend' items, 'compare' items, or something else ('unknown').
+
+Respond with ONLY a valid JSON object. No markdown, no explanations.
+Schema:
+{IntentResult.model_json_schema()}
+"""
+        try:
+            response_text = self._call_groq_text(prompt)
+            clean_json = self._extract_json(response_text)
+            return IntentResult.model_validate_json(clean_json)
+        except Exception as e:
+            raise LLMUnavailableException(f"Failed to classify intent: {str(e)}")
 
     def extract_constraints(self, user_message: str) -> Constraints:
-        raise NotImplementedError("Use Gemini for structured JSON tasks")
+        prompt = f"""
+Extract product constraints from the user message.
+User message: "{user_message}"
+Extract budget_max, category, and tags if present.
+
+IMPORTANT DOMAIN RULES:
+- For BookCrossing and Anime: If the user provides a standard genre, extract it into `category` or `genre` (whichever maps to the category field).
+- For Steam (which lacks a genre field) or if the user provides complex thematic queries (e.g., "a relaxing strategy game", "horror mystery themes"): extract the entire thematic text into `similar_to_title`.
+- If the user is asking for items similar to a specific title (e.g. "similar to Decision in Normandy"), extract that exact title into `similar_to_title`.
+
+Respond with ONLY a valid JSON object. No markdown, no explanations.
+Schema:
+{Constraints.model_json_schema()}
+"""
+        try:
+            response_text = self._call_groq_text(prompt)
+            clean_json = self._extract_json(response_text)
+            return Constraints.model_validate_json(clean_json)
+        except Exception as e:
+            raise LLMUnavailableException(f"Failed to extract constraints: {str(e)}")
 
     def format_comparison(self, comparison_data: ComparisonTable) -> str:
         prompt = f"""
@@ -82,9 +127,17 @@ User profile: {user_profile.model_dump_json()}
 You must strictly ground your explanation in the `matched_constraints` and `similarity_basis` provided in the item data.
 Do NOT fabricate a product title, category, or price if it is not explicitly provided. Do not guess.
 
+CRITICAL RULE FOR MISSING GENRES/CATEGORIES: 
+If the user asked for a specific theme or genre (like "suspense" or "non-fiction"), and the item's `category` is missing or "not specified", but the `similarity_basis` states that it semantically matches the query, you MUST rely on the `similarity_basis` to validate the recommendation. Explain that "while the specific genre isn't explicitly listed in the database, the recommendation engine found this item to be a strong semantic match for your request." Do not refuse to recommend the item.
+
 REQUIRED STRUCTURE:
 1. **Item Details**: Provide a detailed breakdown of the item using *only* available fields from the JSON. If a field is missing, state plainly that it is not specified.
 2. **Summary**: A short synthesis explaining why this item is a good fit. Do not invent any new details or claims not present in the data.
+
+STYLE INSTRUCTIONS:
+Write in a natural, engaging, conversational tone — the way a knowledgeable friend would describe these books/games to you, not a database printout. Vary your sentence structure between items; do not repeat the same sentence template for each one. Where relevant, connect related facts into a flowing observation (e.g. note when items share a publication era, or when one clearly stands out) rather than listing them as disconnected bullet facts. Use natural transitions between items rather than restarting each paragraph the same way.
+
+You may express mild, natural-sounding opinion or framing about what the DATA shows (e.g. 'interestingly, all three are remarkably close in popularity' or 'this one edges out the others by a clear margin') — but you may NEVER state anything as fact that is not explicitly present in the provided data. Personality in phrasing is welcome; invented facts are never acceptable, under any circumstance.
 """
         try:
             return self._call_groq_text(prompt)
@@ -107,6 +160,9 @@ Guidelines:
 User's query: "{user_message}"
 
 Answer the user's query directly and naturally based ONLY on the provided data.
+
+CRITICAL RULE FOR MISSING GENRES/CATEGORIES: 
+If the user asked for a specific theme or genre (like "suspense" or "non-fiction"), and the items' `category` fields are missing or "not specified", but you were provided these items as recommendations, you should acknowledge that while their exact genres aren't explicitly listed in the database, they were retrieved as semantic matches for the user's request. Do not refuse to discuss them just because the category field is missing.
 """
         else:
             prompt = base_prompt + """
@@ -117,6 +173,11 @@ You MUST format your initial summary using the following three sections in Markd
 3. **Conclusion**: A `## Conclusion` section that summarizes the comparison.
 
 Provide a clear side-by-side summary comparing these items based ONLY on the provided data.
+
+STYLE INSTRUCTIONS:
+Write in a natural, engaging, conversational tone — the way a knowledgeable friend would describe these books/games to you, not a database printout. Vary your sentence structure between items; do not repeat the same sentence template for each one. Where relevant, connect related facts into a flowing observation (e.g. note when items share a publication era, or when one clearly stands out) rather than listing them as disconnected bullet facts. Use natural transitions between items rather than restarting each paragraph the same way.
+
+You may express mild, natural-sounding opinion or framing about what the DATA shows (e.g. 'interestingly, all three are remarkably close in popularity' or 'this one edges out the others by a clear margin') — but you may NEVER state anything as fact that is not explicitly present in the provided data. Personality in phrasing is welcome; invented facts are never acceptable, under any circumstance.
 """
         try:
             return self._call_groq_text(prompt)

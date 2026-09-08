@@ -42,9 +42,8 @@ async def chat(request: AssistantChatRequest = Body(...)):
             if constraints.similar_to_title:
                 from app.core.embeddings import EmbeddingsClient
                 from app.core.pinecone_client import PineconeClient
+                from app.core.mongo import MongoManager
                 from app.models.schemas import RankedItem, RecommendationResponse
-                from pymongo import MongoClient
-                import os
                 
                 embedder = EmbeddingsClient.get_instance()
                 vector = embedder.encode(constraints.similar_to_title)
@@ -58,11 +57,7 @@ async def chat(request: AssistantChatRequest = Body(...)):
                         data={"error": "no_similar_items"}
                     )
                     
-                uri = os.environ.get("MONGODB_URI")
-                client = MongoClient(uri)
-                db = client.get_default_database()
-                if db.name == 'test' and uri is not None and "comparex" in uri:
-                    db = client["comparex"]
+                db = MongoManager.get_db()
                     
                 ranked_items = []
                 rank = 1
