@@ -274,7 +274,7 @@ class SteamService(BaseRecommenderService):
         if db.name == 'test' and uri is not None and "comparex" in uri:
             db = client["comparex"]
             
-        target = db.items.find_one({"domain": "bookcrossing", "item_id": item_id})
+        target = db.items.find_one({"domain": "steam", "item_id": item_id})
         if not target:
             return RecommendationResponse(items=[])
             
