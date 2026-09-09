@@ -37,10 +37,14 @@ async def chat(request: AssistantChatRequest = Body(...)):
         if intent_res.intent == 'recommend':
             # Extract constraints
             constraints = llm_client.extract_constraints(request.message)
+            print(f"DEBUG EXTRACTED CONSTRAINTS: category={constraints.category}, genre={constraints.genre}, "
+                  f"similar_to_title={constraints.similar_to_title}, soft_preference_text={constraints.soft_preference_text}, "
+                  f"tags={constraints.tags}")
             
             # Semantic Search for Soft Preferences (Vibe Search)
             if constraints.soft_preference_text and not constraints.similar_to_title:
                 rec_response = domain_service.find_similar_by_text(constraints.soft_preference_text, k=10)
+                print(f"DEBUG VIBE SEARCH: '{constraints.soft_preference_text}' returned {len(rec_response.items)} items")
                 if rec_response.items:
                     top_item = rec_response.items[0]
                     explanation = llm_client.explain_recommendation(top_item, request.user_profile)
@@ -118,9 +122,24 @@ async def chat(request: AssistantChatRequest = Body(...)):
             rec_response = domain_service.get_recommendations(request.user_profile, constraints)
             
             if not rec_response.items:
+                # Graceful fallback: drop all hard constraints and return popular items
+                from app.models.schemas import Constraints as FreshConstraints
+                fallback_constraints = FreshConstraints(limit=constraints.limit, offset=constraints.offset)
+                rec_response = domain_service.get_recommendations(request.user_profile, fallback_constraints)
+                
+                if not rec_response.items:
+                    return AssistantChatResponse(
+                        response="I couldn't find any recommendations matching those constraints.",
+                        data={"recommendations": rec_response.model_dump()}
+                    )
+                
+                # We found items via fallback — explain with context
+                top_item = rec_response.items[0]
+                explanation = llm_client.explain_recommendation(top_item, request.user_profile)
+                fallback_note = f"I couldn't find an exact match for your filters, but here are some top-rated picks you might enjoy:\n\n{explanation}"
                 return AssistantChatResponse(
-                    response="I couldn't find any recommendations matching those constraints.",
-                    data={"recommendations": rec_response.model_dump()}
+                    response=fallback_note,
+                    data={"recommendations": rec_response.model_dump(), "constraints": constraints.model_dump(), "relaxed": True}
                 )
                 
             # Explain the top recommendation

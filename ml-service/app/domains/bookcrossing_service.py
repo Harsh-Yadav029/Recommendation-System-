@@ -190,15 +190,8 @@ class BookCrossingService(BaseRecommenderService):
         return "matched_constraints=[], similarity_basis='explicit matrix factorization (SVD)'"
 
     def search_by_title(self, title: str) -> List[Dict]:
-        from pymongo import MongoClient
-        import os
-        from dotenv import load_dotenv
-        load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
-        uri = os.environ.get("MONGODB_URI", "")
-        client = MongoClient(uri or "mongodb://localhost:27017")
-        db = client.get_default_database()
-        if db.name == 'test' and "comparex" in uri:
-            db = client["comparex"]
+        from app.core.mongo import MongoManager
+        db = MongoManager.get_db()
             
         # Case insensitive exact match or contains
         docs = list(db.items.find({
@@ -208,17 +201,10 @@ class BookCrossingService(BaseRecommenderService):
         return docs
 
     def find_similar_items(self, item_id: str, k: int = 5) -> RecommendationResponse:
-        from pymongo import MongoClient
-        import os
-        from dotenv import load_dotenv
+        from app.core.mongo import MongoManager
         from app.core.pinecone_client import PineconeClient
         
-        load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
-        uri = os.environ.get("MONGODB_URI", "")
-        client = MongoClient(uri or "mongodb://localhost:27017")
-        db = client.get_default_database()
-        if db.name == 'test' and "comparex" in uri:
-            db = client["comparex"]
+        db = MongoManager.get_db()
             
         target = db.items.find_one({"domain": "bookcrossing", "item_id": item_id})
         if not target:
