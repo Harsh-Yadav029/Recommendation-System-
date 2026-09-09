@@ -43,7 +43,12 @@ class BookCrossingService(BaseRecommenderService):
         if missing_ids:
             from app.core.mongo import MongoManager
             db = MongoManager.get_db()
-            for doc in db.items.find({"domain": "bookcrossing", "item_id": {"$in": missing_ids}}):
+            
+            # Ensure index is hit by querying both string and integer types
+            int_ids = [int(i) for i in missing_ids if str(i).isdigit()]
+            query_ids = missing_ids + int_ids
+            
+            for doc in db.items.find({"domain": "bookcrossing", "item_id": {"$in": query_ids}}):
                 self.item_metadata[str(doc["item_id"])] = doc
                 
         import hashlib

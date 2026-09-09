@@ -138,7 +138,13 @@ const googleLogin = async (req, res) => {
     const payload = ticket.getPayload();
     const { email, sub: googleId } = payload;
     
-    let user = await User.findOne({ $or: [{ email }, { googleId }] });
+    // Parallel indexed lookups instead of slower $or query
+    const [userByEmail, userByGoogleId] = await Promise.all([
+      User.findOne({ email }),
+      User.findOne({ googleId })
+    ]);
+    
+    let user = userByEmail || userByGoogleId;
     
     if (user) {
       if (!user.googleId) {

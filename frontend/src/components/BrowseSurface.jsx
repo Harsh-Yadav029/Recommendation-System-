@@ -461,8 +461,7 @@ export function BrowseSurface({
         <button
           type="button"
           onClick={() => setChatOpen(true)}
-          className="fixed z-50 group cursor-pointer"
-          style={{ bottom: selectedItems.length > 0 ? '5.5rem' : '1.5rem', right: '1.5rem' }}
+          className="fixed bottom-6 right-6 z-50 group cursor-pointer"
           title="Open AI Assistant"
         >
           {/* Pulse ring animation */}
@@ -480,7 +479,7 @@ export function BrowseSurface({
 
       {/* Floating Compare Basket (When items are selected) */}
       {selectedItems.length > 0 && (
-        <div className="fixed bottom-6 right-6 z-40 bg-white/95 backdrop-blur-xl border border-[#2D7D7D]/20 rounded-2xl p-4 shadow-[0_12px_40px_rgba(45,125,125,0.18)] flex items-center gap-4 animate-spring">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-white/95 backdrop-blur-xl border border-[#2D7D7D]/20 rounded-2xl p-4 shadow-[0_12px_40px_rgba(45,125,125,0.18)] flex items-center gap-4 animate-spring w-max max-w-[90vw]">
           <div className="flex items-center gap-2">
             <span className="w-8 h-8 rounded-xl bg-[#E7F2F2] text-[#2D7D7D] flex items-center justify-center font-bold text-xs">
               {selectedItems.length}/4

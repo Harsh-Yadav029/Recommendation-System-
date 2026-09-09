@@ -30,13 +30,18 @@ async def chat(request: AssistantChatRequest = Body(...)):
     domain_service = get_service(request.domain)
     
     try:
-        # Step 1: Classify Intent
-        intent_res = llm_client.classify_intent(request.message, request.history)
+        # Step 1: Run Intent Classification and Constraint Extraction in PARALLEL to save latency
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            future_intent = executor.submit(llm_client.classify_intent, request.message, request.history)
+            future_constraints = executor.submit(llm_client.extract_constraints, request.message)
+            
+            intent_res = future_intent.result()
+            # We already have constraints extracted in parallel if intent is 'recommend'
         
         # Step 2: Route based on intent
         if intent_res.intent == 'recommend':
-            # Extract constraints
-            constraints = llm_client.extract_constraints(request.message)
+            constraints = future_constraints.result()
             print(f"DEBUG EXTRACTED CONSTRAINTS: category={constraints.category}, genre={constraints.genre}, "
                   f"similar_to_title={constraints.similar_to_title}, soft_preference_text={constraints.soft_preference_text}, "
                   f"tags={constraints.tags}")
