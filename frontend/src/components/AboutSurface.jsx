@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { DocumentationModal } from './DocumentationModal';
 
 export function AboutSurface({ onNavigate, onSignIn, onSignUp, user, onLogout, onStart }) {
+  const [showDocModal, setShowDocModal] = useState(false);
+
   return (
     <div className="min-h-screen flex flex-col font-sans w-full antialiased selection:bg-[#2D7D7D] selection:text-white bg-[#F7F5F0] relative text-[#192A2A]">
       
@@ -147,6 +150,8 @@ export function AboutSurface({ onNavigate, onSignIn, onSignUp, user, onLogout, o
           </div>
         </div>
       </footer>
+
+      <DocumentationModal isOpen={showDocModal} onClose={() => setShowDocModal(false)} />
     </div>
   );
 }

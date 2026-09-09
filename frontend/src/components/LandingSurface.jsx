@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { DocumentationModal } from './DocumentationModal';
 
 export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout, onNavigate }) {
+  const [showDocModal, setShowDocModal] = useState(false);
+
   return (
     <div className="min-h-screen flex flex-col font-sans w-full antialiased selection:bg-[#2D7D7D] selection:text-white bg-[#F7F5F0] relative text-[#192A2A]">
       
@@ -92,16 +95,23 @@ export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout, on
           </h1>
 
           <p className="text-base sm:text-lg text-white/95 mb-10 max-w-2xl mx-auto leading-relaxed font-medium drop-shadow">
-            The analytical bridge for high-sparsity datasets. Browse, recommend, and compare candidates across BookCrossing and Steam with deterministic precision.
+            The analytical bridge for high-sparsity datasets. Browse, recommend, and compare candidates across BookCrossing, Steam, and Anime with deterministic precision.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <button 
               onClick={onStart} 
-              className="bg-[#E8935C] hover:bg-[#d68048] text-white font-black text-sm px-8 py-4 rounded-2xl transition-all flex items-center gap-2 shadow-2xl shadow-black/25 hover:scale-102 cursor-pointer"
+              className="h-14 px-8 min-w-[240px] bg-[#E8935C] hover:bg-[#d68048] text-white font-black text-sm rounded-2xl transition-all flex items-center justify-center shadow-2xl shadow-black/25 hover:scale-102 cursor-pointer"
             >
               <span>Launch Recommendation Engine</span>
-              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </button>
+
+            <button 
+              onClick={() => setShowDocModal(true)} 
+              className="h-14 px-8 min-w-[240px] bg-white/15 hover:bg-white/25 text-white font-black text-sm rounded-2xl transition-all flex items-center justify-center gap-2 border border-white/30 shadow-xl backdrop-blur-md hover:scale-102 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px] text-white">description</span>
+              <span>Documentation</span>
             </button>
           </div>
         </div>
@@ -137,7 +147,7 @@ export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout, on
               </h3>
             </div>
             <p className="text-[#586666] leading-relaxed text-xs font-medium flex-1">
-              Normalize metrics across diverse domains. Compare video game playtime engagement directly against book ratings and author catalog trends.
+              Normalize metrics across diverse domains. Compare video game playtime engagement directly against book ratings, anime series, and author catalog trends.
             </p>
           </div>
 
@@ -164,11 +174,11 @@ export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout, on
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-black text-[#192A2A] mb-4">Supported Production Domains</h2>
             <p className="text-sm md:text-base text-[#586666] max-w-2xl mx-auto font-medium">
-              Browse and compare items seamlessly across BookCrossing and Steam with isolated collaborative filtering pipelines.
+              Browse and compare items seamlessly across BookCrossing, Steam, and Anime with isolated collaborative filtering pipelines.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
             {/* BookCrossing */}
             <div className="bg-white border border-[#2D7D7D]/15 rounded-3xl p-7 shadow-[0_4px_24px_rgba(45,125,125,0.04)] hover:shadow-[0_12px_32px_rgba(45,125,125,0.1)] transition-all group flex flex-col justify-between h-full">
               <div>
@@ -228,6 +238,36 @@ export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout, on
                 </div>
               </div>
             </div>
+
+            {/* Anime Catalog */}
+            <div className="bg-white border border-[#2D7D7D]/15 rounded-3xl p-7 shadow-[0_4px_24px_rgba(45,125,125,0.04)] hover:shadow-[0_12px_32px_rgba(45,125,125,0.1)] transition-all group flex flex-col justify-between h-full">
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <span className="text-[11px] font-extrabold tracking-wider text-[#8A8680]">DOMAIN</span>
+                  <span className="text-[11px] font-extrabold px-3 py-1 bg-[#E7F2F2] text-[#2D7D7D] rounded-full border border-[#2D7D7D]/20">Media / Series</span>
+                </div>
+                <div className="flex items-center gap-3.5 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-[#2D7D7D] text-white flex items-center justify-center shadow-xs">
+                    <span className="material-symbols-outlined text-xl">tv</span>
+                  </div>
+                  <h3 className="text-lg font-black text-[#192A2A]">Anime Series</h3>
+                </div>
+                <div className="space-y-3.5">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <span className="text-xs font-semibold text-[#586666]">Ratings & Feedback</span>
+                    <span className="text-xs font-bold text-[#192A2A]">User Ratings & Members</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <span className="text-xs font-semibold text-[#586666]">Metadata</span>
+                    <span className="text-xs font-bold text-[#192A2A]">Format, Episodes, Genres</span>
+                  </div>
+                  <div className="flex justify-between items-center pb-1">
+                    <span className="text-xs font-semibold text-[#586666]">Vector Embeddings</span>
+                    <span className="text-xs font-bold text-[#2D7D7D]">Dense SVD Matrix</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -241,10 +281,9 @@ export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout, on
           </p>
           <button 
             onClick={onStart} 
-            className="bg-[#2D7D7D] hover:bg-[#1E5C5C] text-white font-extrabold text-xs px-8 py-3.5 rounded-2xl transition-all shadow-lg shadow-[#2D7D7D]/25 flex items-center gap-2 mx-auto cursor-pointer"
+            className="bg-[#2D7D7D] hover:bg-[#1E5C5C] text-white font-extrabold text-xs px-8 py-3.5 rounded-2xl transition-all shadow-lg shadow-[#2D7D7D]/25 flex items-center justify-center mx-auto cursor-pointer"
           >
             <span>Start Your Analysis</span>
-            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
           </button>
         </div>
       </section>
@@ -262,6 +301,9 @@ export function LandingSurface({ onStart, onSignIn, onSignUp, user, onLogout, on
           </div>
         </div>
       </footer>
+
+      {/* Interactive PDF Documentation & Whitepaper Viewer Modal */}
+      <DocumentationModal isOpen={showDocModal} onClose={() => setShowDocModal(false)} />
     </div>
   );
 }
