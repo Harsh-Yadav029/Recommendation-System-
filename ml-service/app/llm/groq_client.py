@@ -171,10 +171,13 @@ If the user asked for a specific theme or genre (like "suspense" or "non-fiction
         else:
             prompt = base_prompt + """
 REQUIRED STRUCTURE:
-You MUST format your initial summary using the following three sections in Markdown:
-1. **Individual Item Breakdown**: Describe each item in its own subsection (e.g. `### [Item Title]`). Only use real fields provided in the JSON data. If a field is missing, state plainly that it is not specified. Do not invent details, ratings, genres, or descriptions.
-2. **Analysis**: A `## Analysis` section comparing the items directly against each other, highlighting trade-offs, similarities, and differences strictly based on the provided data.
-3. **Conclusion**: A `## Conclusion` section that summarizes the comparison.
+Format your initial summary using the following three sections:
+1. **Individual Item Breakdown**: Describe each item under a bold title (e.g. **[Item Title]**). Only use real fields provided in the JSON data. If a field is missing, state plainly that it is not specified. Do not invent details, ratings, genres, or descriptions.
+2. **Analysis**: An **Analysis** section comparing the items directly against each other, highlighting trade-offs, similarities, and differences strictly based on the provided data.
+3. **Conclusion**: A **Conclusion** section that summarizes the comparison.
+
+CRITICAL FORMATTING RULE:
+Do NOT use '#' or '##' or '###' markdown heading tags anywhere in your response. Use bold section titles (e.g. **Individual Item Breakdown**, **Analysis**, **Conclusion**) instead.
 
 Provide a clear side-by-side summary comparing these items based ONLY on the provided data.
 

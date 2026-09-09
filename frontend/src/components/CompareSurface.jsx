@@ -11,6 +11,7 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
   const [chatHistory, setChatHistory] = useState([]);
   const [userMessage, setUserMessage] = useState("");
   const chatEndRef = useRef(null);
+  const fetchedRef = useRef("");
 
   useEffect(() => {
     if (!selectedItems || selectedItems.length === 0) {
@@ -19,6 +20,12 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
     }
 
     const itemIds = selectedItems.map(i => i.item_id);
+    const itemKey = itemIds.slice().sort().join(",");
+
+    if (fetchedRef.current === itemKey) {
+      return;
+    }
+    fetchedRef.current = itemKey;
 
     setLoading(true);
     fetch(`/api/compare/${domain}`, {
@@ -61,8 +68,8 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
         setItems(mergedItems);
         setLoading(false);
         
-        // Trigger initial AI Comparison Summary
-        fetchAiResponse(itemIds, null);
+        // Trigger initial AI Comparison Summary once
+        fetchAiResponse(itemIds, null, true);
       })
       .catch(err => {
         setError(err.message);
@@ -70,7 +77,7 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
       });
   }, [domain, selectedItems, csrfToken]);
 
-  const fetchAiResponse = async (itemIds, message) => {
+  const fetchAiResponse = async (itemIds, message, isInitial = false) => {
     setAiLoading(true);
     if (message) {
       setChatHistory(prev => [...prev, { role: 'user', content: message }]);
@@ -89,9 +96,18 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
       if (!res.ok) throw new Error("AI request failed");
       const data = await res.json();
       
-      setChatHistory(prev => [...prev, { role: 'ai', content: data.response }]);
+      if (isInitial) {
+        setChatHistory([{ role: 'ai', content: data.response }]);
+      } else {
+        setChatHistory(prev => [...prev, { role: 'ai', content: data.response }]);
+      }
     } catch (err) {
-      setChatHistory(prev => [...prev, { role: 'ai', content: "Failed to get AI response. Please try again." }]);
+      const fallback = "Failed to get AI response. Please try again.";
+      if (isInitial) {
+        setChatHistory([{ role: 'ai', content: fallback }]);
+      } else {
+        setChatHistory(prev => [...prev, { role: 'ai', content: fallback }]);
+      }
     } finally {
       setAiLoading(false);
     }
@@ -327,11 +343,18 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
             )}
 
             {chatHistory.map((msg, idx) => {
-              if (msg.role === 'ai' && msg.content.includes('## Expert Analysis') && msg.content.includes('## Conclusion')) {
-                const parts1 = msg.content.split('## Expert Analysis');
-                const parts2 = parts1[1].split('## Conclusion');
-                const analytics = parts2[0].trim();
-                const conclusion = parts2[1].trim();
+              const cleaned = (msg.content || "")
+                .replace(/^#{1,6}\s*/gm, "")
+                .replace(/\n{3,}/g, "\n\n")
+                .trim();
+              
+              const analysisMatch = cleaned.match(/(?:(?:Expert\s+)?Analysis|Comparative\s+Analysis)/i);
+              const conclusionMatch = cleaned.match(/(?:Conclusion|Summary|Verdict)/i);
+
+              if (msg.role === 'ai' && analysisMatch && conclusionMatch && analysisMatch.index < conclusionMatch.index) {
+                const breakdown = cleaned.substring(0, analysisMatch.index).trim();
+                const analytics = cleaned.substring(analysisMatch.index + analysisMatch[0].length, conclusionMatch.index).replace(/^[\:\s*]+/, '').trim();
+                const conclusion = cleaned.substring(conclusionMatch.index + conclusionMatch[0].length).replace(/^[\:\s*]+/, '').trim();
 
                 return (
                   <div key={idx} className="flex gap-3 justify-start w-full">
@@ -360,8 +383,21 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
                         ))}
                       </div>
 
+                      {/* Item Breakdown Box */}
+                      {breakdown && (
+                        <div className="bg-white border border-[#2D7D7D]/15 p-4 rounded-2xl shadow-2xs rounded-tl-none">
+                          <h4 className="font-bold text-[#2D7D7D] mb-2 text-xs flex items-center gap-1.5 uppercase tracking-wide">
+                            <span className="material-symbols-outlined text-[16px]">list_alt</span>
+                            Item Breakdown
+                          </h4>
+                          <div className="text-xs text-[#192A2A] whitespace-pre-wrap leading-relaxed font-medium">
+                            {breakdown}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Analytics Box */}
-                      <div className="bg-[#E7F2F2] border border-[#2D7D7D]/20 p-4 rounded-2xl shadow-2xs rounded-tl-none">
+                      <div className="bg-[#E7F2F2] border border-[#2D7D7D]/20 p-4 rounded-2xl shadow-2xs">
                         <h4 className="font-bold text-[#2D7D7D] mb-2 text-xs flex items-center gap-1.5 uppercase tracking-wide">
                           <span className="material-symbols-outlined text-[16px]">analytics</span>
                           Expert Analytics
@@ -404,7 +440,7 @@ export function CompareSurface({ selectedItems, domain, onBack, csrfToken, user,
                         : 'bg-white border border-[#2D7D7D]/15 text-[#192A2A] shadow-2xs rounded-tl-none font-medium'
                     }`}
                   >
-                    {msg.content}
+                    {cleaned}
                   </div>
                 </div>
               );

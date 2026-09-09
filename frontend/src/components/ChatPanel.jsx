@@ -94,7 +94,7 @@ export function ChatPanel({ domain, csrfToken, onToggleSelect, selectedItems }) 
                 ? "bg-amber-50 text-amber-900 border border-amber-200 rounded-tl-none font-medium"
                 : "bg-[#F7F5F0] border border-[#2D7D7D]/10 text-[#192A2A] rounded-tl-none font-medium"
             }`}>
-              {msg.text}
+              {(msg.text || "").replace(/^#{1,6}\s*/gm, "").replace(/\n{3,}/g, "\n\n").trim()}
               
               {/* Inline recommendation cards */}
               {msg.recommendations && msg.recommendations.length > 0 && (
