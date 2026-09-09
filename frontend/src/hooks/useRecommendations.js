@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { FALLBACK_DATA } from "./fallbackData";
 
 export function useRecommendations(domain, filters, csrfToken, initialPageSize = 24) {
   const [items, setItems] = useState([]);
@@ -6,13 +7,26 @@ export function useRecommendations(domain, filters, csrfToken, initialPageSize =
   const [error, setError] = useState(null);
   const [isRelaxed, setIsRelaxed] = useState(false);
   const [relaxedConstraint, setRelaxedConstraint] = useState(null);
-  
+  const [isFallback, setIsFallback] = useState(false);
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(initialPageSize);
   const [hasNextPage, setHasNextPage] = useState(true);
 
   const filtersString = JSON.stringify(filters);
   const isFetchingRef = useRef(false);
+
+  // Load static fallback data for the given domain
+  const loadFallback = useCallback((domainKey) => {
+    const key = domainKey === 'bookcrossing' ? 'books' : domainKey === 'steam' ? 'steam' : 'anime';
+    const staticItems = FALLBACK_DATA[key] || [];
+    setItems(staticItems);
+    setHasNextPage(false);
+    setIsRelaxed(false);
+    setRelaxedConstraint(null);
+    setIsFallback(true);
+    setError(null);
+  }, []);
 
   const fetchPage = useCallback(async (targetPage = 1, currentSize = pageSize) => {
     if (!domain || !csrfToken) return;
@@ -21,6 +35,7 @@ export function useRecommendations(domain, filters, csrfToken, initialPageSize =
     isFetchingRef.current = true;
     setLoading(true);
     setError(null);
+    setIsFallback(false);
 
     try {
       let parsedFilters = {};
@@ -43,22 +58,37 @@ export function useRecommendations(domain, filters, csrfToken, initialPageSize =
       activeFilters.limit = currentSize;
       activeFilters.offset = currentOffset;
 
-      const response = await fetch(`/api/recommend/${domain}`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'CSRF-Token': csrfToken
-        },
-        body: JSON.stringify({
-          user_profile: { user_id: "anonymous", history: [] },
-          constraints: activeFilters
-        })
-      });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s timeout
+
+      let response;
+      try {
+        response = await fetch(`/api/recommend/${domain}`, {
+          method: 'POST',
+          credentials: 'include',
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            'CSRF-Token': csrfToken
+          },
+          body: JSON.stringify({
+            user_profile: { user_id: "anonymous", history: [] },
+            constraints: activeFilters
+          })
+        });
+        clearTimeout(timeoutId);
+      } catch (fetchErr) {
+        clearTimeout(timeoutId);
+        // Network error or timeout — use fallback silently
+        loadFallback(domain);
+        return;
+      }
 
       if (!response.ok) {
-        if (response.status === 429) {
-          throw new Error("Rate limit exceeded. Please wait a moment before retrying.");
+        // Rate limit or server error — use fallback silently
+        if (response.status === 429 || response.status === 503 || response.status === 502 || response.status >= 500) {
+          loadFallback(domain);
+          return;
         }
         throw new Error(`API error: ${response.statusText}`);
       }
@@ -69,17 +99,19 @@ export function useRecommendations(domain, filters, csrfToken, initialPageSize =
       setItems(newItems);
       setIsRelaxed(data.relaxed || false);
       setRelaxedConstraint(data.relaxed_constraint || null);
+      setIsFallback(false);
       
       // If we got as many items as requested, there is likely a next page
       setHasNextPage(newItems.length >= currentSize);
       
     } catch (err) {
-      setError(err.message);
+      // Any unexpected error — use fallback
+      loadFallback(domain);
     } finally {
       setLoading(false);
       isFetchingRef.current = false;
     }
-  }, [domain, filtersString, csrfToken, pageSize]);
+  }, [domain, filtersString, csrfToken, pageSize, loadFallback]);
 
   // Reset to page 1 whenever domain or filters change
   useEffect(() => {
@@ -114,6 +146,7 @@ export function useRecommendations(domain, filters, csrfToken, initialPageSize =
     items, 
     loading, 
     error, 
+    isFallback,
     isRelaxed, 
     relaxedConstraint, 
     page, 
@@ -127,4 +160,3 @@ export function useRecommendations(domain, filters, csrfToken, initialPageSize =
     refresh: () => fetchPage(page, pageSize)
   };
 }
-

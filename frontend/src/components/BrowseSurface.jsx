@@ -26,7 +26,8 @@ export function BrowseSurface({
   const { 
     items, 
     loading, 
-    error, 
+    error,
+    isFallback,
     isRelaxed, 
     relaxedConstraint, 
     page, 
@@ -383,74 +384,81 @@ export function BrowseSurface({
                 </div>
                 <p className="text-sm font-bold text-[#586666]">Computing collaborative ranking vectors...</p>
               </div>
-            ) : error ? (
-              <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] gap-3 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center border border-red-200">
-                  <span className="material-symbols-outlined text-2xl">error</span>
-                </div>
-                <h3 className="text-sm font-extrabold text-[#192A2A]">Failed to load recommendations</h3>
-                <p className="text-xs text-[#586666] max-w-sm">{error}</p>
-              </div>
-            ) : displayItems.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] gap-3 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-[#F7F5F0] text-[#8A8680] flex items-center justify-center border border-[#2D7D7D]/15">
-                  <span className="material-symbols-outlined text-2xl">search_off</span>
-                </div>
-                <h3 className="text-sm font-extrabold text-[#192A2A]">No items match your criteria</h3>
-                <p className="text-xs text-[#586666] max-w-sm font-medium">Try clearing the search query or adjusting your filters.</p>
-                <button
-                  type="button"
-                  onClick={handleResetFilters}
-                  className="mt-2 px-4 py-2 rounded-xl bg-[#2D7D7D] text-white text-xs font-bold shadow-md shadow-[#2D7D7D]/20 cursor-pointer"
-                >
-                  Reset Filters
-                </button>
-              </div>
             ) : (
               <>
-                {/* Product Cards Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                  {displayItems.map((item) => (
-                    <DomainProductCard
-                      key={item.item_id}
-                      domain={selectedDomain}
-                      item={item}
-                      isSelected={selectedItems.some(i => i.item_id === item.item_id)}
-                      onToggleSelect={() => handleToggleSelect(item)}
-                    />
-                  ))}
-                </div>
+                {/* Soft fallback banner when ML service is rate-limited / warming up */}
+                {isFallback && (
+                  <div className="mb-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5">
+                    <span className="material-symbols-outlined text-amber-600 text-base shrink-0">cloud_off</span>
+                    <p className="text-xs text-amber-800 font-semibold">
+                      Live service is warming up — showing curated picks for now. Refresh in a moment for personalized results.
+                    </p>
+                  </div>
+                )}
 
-                {/* Pagination Controls */}
-                <div className="mt-10 pt-6 border-t border-[#2D7D7D]/10 flex items-center justify-center">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={prevPage}
-                      disabled={!hasPrevPage}
-                      className="px-3.5 py-2 rounded-xl bg-white border border-[#2D7D7D]/15 text-[#192A2A] text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:border-[#2D7D7D]/40 transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">chevron_left</span>
-                      <span>Previous</span>
-                    </button>
-
-                    <div className="flex items-center gap-1.5">
-                      {renderPaginationButtons()}
+                {displayItems.length === 0 ? (
+                  <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] gap-3 text-center">
+                    <div className="w-14 h-14 rounded-2xl bg-[#F7F5F0] text-[#8A8680] flex items-center justify-center border border-[#2D7D7D]/15">
+                      <span className="material-symbols-outlined text-2xl">search_off</span>
                     </div>
-
+                    <h3 className="text-sm font-extrabold text-[#192A2A]">No items match your criteria</h3>
+                    <p className="text-xs text-[#586666] max-w-sm font-medium">Try clearing the search query or adjusting your filters.</p>
                     <button
                       type="button"
-                      onClick={nextPage}
-                      disabled={!hasNextPage}
-                      className="px-3.5 py-2 rounded-xl bg-white border border-[#2D7D7D]/15 text-[#192A2A] text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:border-[#2D7D7D]/40 transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
+                      onClick={handleResetFilters}
+                      className="mt-2 px-4 py-2 rounded-xl bg-[#2D7D7D] text-white text-xs font-bold shadow-md shadow-[#2D7D7D]/20 cursor-pointer"
                     >
-                      <span>Next</span>
-                      <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                      Reset Filters
                     </button>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    {/* Product Cards Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                      {displayItems.map((item) => (
+                        <DomainProductCard
+                          key={item.item_id}
+                          domain={selectedDomain}
+                          item={item}
+                          isSelected={selectedItems.some(i => i.item_id === item.item_id)}
+                          onToggleSelect={() => handleToggleSelect(item)}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Pagination Controls */}
+                    <div className="mt-10 pt-6 border-t border-[#2D7D7D]/10 flex items-center justify-center">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={prevPage}
+                          disabled={!hasPrevPage}
+                          className="px-3.5 py-2 rounded-xl bg-white border border-[#2D7D7D]/15 text-[#192A2A] text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:border-[#2D7D7D]/40 transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                          <span>Previous</span>
+                        </button>
+
+                        <div className="flex items-center gap-1.5">
+                          {renderPaginationButtons()}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={nextPage}
+                          disabled={!hasNextPage}
+                          className="px-3.5 py-2 rounded-xl bg-white border border-[#2D7D7D]/15 text-[#192A2A] text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:border-[#2D7D7D]/40 transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
+                        >
+                          <span>Next</span>
+                          <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </>
             )}
+
           </main>
         </div>
       </div>
