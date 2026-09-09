@@ -18,6 +18,7 @@ class Constraints(BaseModel):
     platform: Optional[str] = None
     similar_to_item: Optional[str] = None
     similar_to_title: Optional[str] = None
+    soft_preference_text: Optional[str] = None
     limit: int = 24
     offset: int = 0
 

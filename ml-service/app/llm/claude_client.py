@@ -94,8 +94,12 @@ Extract budget_max, category, and tags if present.
 
 IMPORTANT DOMAIN RULES:
 - For BookCrossing and Anime: If the user provides a standard genre, extract it into `category` or `genre` (whichever maps to the category field).
-- For Steam (which lacks a genre field) or if the user provides complex thematic queries (e.g., "a relaxing strategy game", "horror mystery themes"): extract the entire thematic text into `similar_to_title`.
-- If the user is asking for items similar to a specific title (e.g. "similar to Decision in Normandy"), extract that exact title into `similar_to_title`.
+- If the user is asking for items similar to a specific title (e.g. "similar to Decision in Normandy"), extract that exact title into `similar_to_title`. DO NOT extract thematic/vibe queries into similar_to_title.
+
+Separately, capture any descriptive, mood, tone, or vibe-based language
+(e.g. "cozy", "slow-paced", "not too dark", "relaxing", "similar feel to X")
+verbatim into `soft_preference_text` — even if no exact title, genre, or tag was mentioned.
+Do not discard this kind of language just because it doesn't fit another field.
 
 Respond with ONLY a valid JSON object. No markdown, no explanations.
 Schema:

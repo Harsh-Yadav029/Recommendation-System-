@@ -455,6 +455,29 @@ export function BrowseSurface({
         </div>
       </div>
 
+
+      {/* 🤖 Floating AI Assistant Chat Bubble */}
+      {!chatOpen && (
+        <button
+          type="button"
+          onClick={() => setChatOpen(true)}
+          className="fixed z-50 group cursor-pointer"
+          style={{ bottom: selectedItems.length > 0 ? '5.5rem' : '1.5rem', right: '1.5rem' }}
+          title="Open AI Assistant"
+        >
+          {/* Pulse ring animation */}
+          <span className="absolute inset-0 rounded-full bg-[#2D7D7D]/30 animate-ping opacity-50" />
+          {/* Main button */}
+          <div className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-[#2D7D7D] to-[#3A9A8C] text-white flex items-center justify-center shadow-[0_8px_30px_rgba(45,125,125,0.4)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_12px_40px_rgba(45,125,125,0.5)] group-active:scale-95">
+            <span className="material-symbols-outlined text-2xl">smart_toy</span>
+          </div>
+          {/* Label tooltip */}
+          <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-[#192A2A] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-lg pointer-events-none">
+            AI Assistant
+          </span>
+        </button>
+      )}
+
       {/* Floating Compare Basket (When items are selected) */}
       {selectedItems.length > 0 && (
         <div className="fixed bottom-6 right-6 z-40 bg-white/95 backdrop-blur-xl border border-[#2D7D7D]/20 rounded-2xl p-4 shadow-[0_12px_40px_rgba(45,125,125,0.18)] flex items-center gap-4 animate-spring">

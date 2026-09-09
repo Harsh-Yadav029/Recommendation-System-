@@ -225,4 +225,43 @@ class AnimeService(BaseRecommenderService):
             rank += 1
             
         return RecommendationResponse(items=ranked_items)
- 
+
+    def find_similar_by_text(self, text: str, k: int = 10) -> RecommendationResponse:
+        from app.core.mongo import MongoManager
+        from app.core.pinecone_client import PineconeClient
+        from app.core.embeddings import EmbeddingsClient
+        
+        vector = EmbeddingsClient.get_instance().encode(text)
+        if not vector:
+            return RecommendationResponse(items=[])
+            
+        pc = PineconeClient.get_instance()
+        matches = pc.query(vector, top_k=k, filter_dict={"domain": "anime"})
+        
+        db = MongoManager.get_db()
+        ranked_items = []
+        rank = 1
+        for match in matches:
+            raw_id = match["id"].replace("anime_", "")
+                
+            title = match.get("metadata", {}).get("title", "Unknown")
+            score = float(match.get("score", 0.0))
+            
+            meta_doc = db.items.find_one({"domain": "anime", "item_id": raw_id})
+            metadata = meta_doc.get("metadata", {}) if meta_doc else {}
+            
+            ranked_items.append(
+                RankedItem(
+                    item_id=raw_id,
+                    title=title,
+                    score=score,
+                    rank=rank,
+                    metadata=metadata,
+                    similarity_basis=f"matches the description: '{text}'",
+                    matched_constraints=[],
+                    domain="anime"
+                )
+            )
+            rank += 1
+            
+        return RecommendationResponse(items=ranked_items)

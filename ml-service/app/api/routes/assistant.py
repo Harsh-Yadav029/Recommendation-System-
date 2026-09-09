@@ -38,7 +38,23 @@ async def chat(request: AssistantChatRequest = Body(...)):
             # Extract constraints
             constraints = llm_client.extract_constraints(request.message)
             
-            # Semantic search handling
+            # Semantic Search for Soft Preferences (Vibe Search)
+            if constraints.soft_preference_text and not constraints.similar_to_title:
+                rec_response = domain_service.find_similar_by_text(constraints.soft_preference_text, k=10)
+                if rec_response.items:
+                    top_item = rec_response.items[0]
+                    explanation = llm_client.explain_recommendation(top_item, request.user_profile)
+                    return AssistantChatResponse(
+                        response=explanation,
+                        data={
+                            "recommendations": rec_response.model_dump(), 
+                            "constraints": constraints.model_dump(),
+                            "semantic_target": constraints.soft_preference_text
+                        }
+                    )
+                # falls through to existing logic if nothing found
+            
+            # Semantic search handling for explicit titles
             if constraints.similar_to_title:
                 from app.core.embeddings import EmbeddingsClient
                 from app.core.pinecone_client import PineconeClient
