@@ -28,10 +28,10 @@ const corsMiddleware = cors({
   credentials: true, // required to send HttpOnly cookies
 });
 
-// Rate limiting setup (1000 requests per 15 minutes per client IP)
+// Rate limiting setup (2000 requests per 15 minutes per client IP)
 const rateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
-  max: 1000,
+  max: 2000,
   message: { error: 'Too many requests from this IP, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
