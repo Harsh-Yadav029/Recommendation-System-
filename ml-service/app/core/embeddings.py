@@ -1,5 +1,3 @@
-from sentence_transformers import SentenceTransformer
-
 class EmbeddingsClient:
     _instance = None
     
@@ -10,8 +8,20 @@ class EmbeddingsClient:
         return cls._instance
         
     def __init__(self):
-        print("Loading SentenceTransformer model...")
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.model = None
+        try:
+            print("Loading SentenceTransformer model...")
+            from sentence_transformers import SentenceTransformer
+            self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        except Exception as e:
+            print(f"Warning: SentenceTransformer failed to load (App Control / DLL policy): {e}")
+            self.model = None
         
     def encode(self, text: str) -> list[float]:
-        return self.model.encode([text])[0].tolist()
+        if not self.model:
+            return []
+        try:
+            return self.model.encode([text])[0].tolist()
+        except Exception as e:
+            print(f"Embedding encoding failed: {e}")
+            return []

@@ -73,14 +73,23 @@ async def chat(request: AssistantChatRequest = Body(...)):
                 embedder = EmbeddingsClient.get_instance()
                 vector = embedder.encode(constraints.similar_to_title)
                 
+                if not vector:
+                    # Fallback to deterministic recommendation if vector encoding fails
+                    rec_response = domain_service.get_recommendations(request.user_profile, constraints)
+                    if rec_response.items:
+                        top_item = rec_response.items[0]
+                        explanation = llm_client.explain_recommendation(top_item, request.user_profile)
+                        return AssistantChatResponse(
+                            response=explanation,
+                            data={"recommendations": rec_response.model_dump(), "constraints": constraints.model_dump()}
+                        )
+                    return AssistantChatResponse(
+                        response=f"I couldn't process vector search for '{constraints.similar_to_title}'.",
+                        data={"error": "vector_encoding_failed"}
+                    )
+                
                 pc = PineconeClient.get_instance()
                 matches = pc.query(vector, top_k=5, filter_dict={"domain": request.domain})
-                
-                if not matches:
-                    return AssistantChatResponse(
-                        response=f"I couldn't find semantic recommendations for '{constraints.similar_to_title}'.",
-                        data={"error": "no_similar_items"}
-                    )
                     
                 db = MongoManager.get_db()
                     
